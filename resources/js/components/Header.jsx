@@ -2,43 +2,88 @@ import {
     Menu,
     Search,
     MapPin,
-    CloudSun
+    CloudSun,
 } from "lucide-react";
 
-function Header() {
+import { NavLink } from "react-router-dom";
+
+export default function Header() {
     return (
-        <header className="site-header">
-            <a href="/" className="brand">
-                <span className="brand-icon">
-                    <CloudSun size={22} strokeWidth={2} />
-                </span>
+        <header className="header">
+            <div className="container header-inner">
 
-                <span>WeatherWatch</span>
-            </a>
+                <NavLink to="/" className="brand">
+                    <div className="brand-icon">
+                        <CloudSun size={22} />
+                    </div>
 
-            <nav className="desktop-nav">
-                <a href="#live-weather">Live Weather</a>
-                <a href="#forecast">Forecast</a>
-                <a href="#satellite">Satellite & Radar</a>
-                <a href="#alerts">Alerts</a>
-            </nav>
+                    <span>WeatherWatch</span>
+                </NavLink>
 
-            <div className="header-actions">
-                <button className="header-search" aria-label="Search">
-                    <Search size={19} />
-                    <span>Search</span>
-                </button>
+                <nav className="desktop-nav">
 
-                <button className="location-header" aria-label="Location">
-                    <MapPin size={18} />
-                </button>
+                    <NavLink
+                        to="/"
+                        end
+                        className={({ isActive }) =>
+                            isActive ? "active" : ""
+                        }
+                    >
+                        Live Weather
+                    </NavLink>
 
-                <button className="menu-button" aria-label="Menu">
-                    <Menu size={24} />
-                </button>
+                    <NavLink
+                        to="/forecast"
+                        className={({ isActive }) =>
+                            isActive ? "active" : ""
+                        }
+                    >
+                        Forecast
+                    </NavLink>
+
+                    <NavLink
+                        to="/satellite-radar"
+                        className={({ isActive }) =>
+                            isActive ? "active" : ""
+                        }
+                    >
+                        Satellite & Radar
+                    </NavLink>
+
+                    <NavLink
+                        to="/alerts"
+                        className={({ isActive }) =>
+                            isActive ? "active" : ""
+                        }
+                    >
+                        Alerts
+                    </NavLink>
+
+                </nav>
+
+                <div className="header-actions">
+
+                    <button className="header-icon-button">
+                        <Search size={19} />
+                    </button>
+
+                    <button
+                        className="header-location"
+                        onClick={() => {
+                            window.location.href = "/";
+                        }}
+                    >
+                        <MapPin size={18} />
+                        <span>My Location</span>
+                    </button>
+
+                    <button className="header-icon-button mobile-menu">
+                        <Menu size={21} />
+                    </button>
+
+                </div>
+
             </div>
         </header>
     );
 }
-
-export default Header;

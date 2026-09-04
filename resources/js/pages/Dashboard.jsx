@@ -1,22 +1,23 @@
 import {
-    Activity,
-    AlertTriangle,
-    Cloud,
     CloudRain,
     Droplets,
     Eye,
     Gauge,
-    HeartPulse,
     MapPin,
-    Navigation,
-    Phone,
-    ShieldAlert,
     Sun,
+    Thermometer,
+    Wind,
     Sunrise,
     Sunset,
-    Thermometer,
-    Wind
+    AlertTriangle,
+    Phone,
+    RefreshCw,
 } from "lucide-react";
+
+import {
+    useEffect,
+    useState,
+} from "react";
 
 import Header from "../components/Header";
 import LiveWeatherMap from "../components/LiveWeatherMap";
@@ -24,206 +25,408 @@ import WeatherCard from "../components/WeatherCard";
 import ForecastCard from "../components/ForecastCard";
 import RiskCard from "../components/RiskCard";
 
-function Dashboard() {
+import {
+    getCurrentWeather,
+    getForecast,
+    getRisk,
+    getAlerts,
+    reverseLocation,
+} from "../services/api";
+
+function weatherDescription(code) {
+    if (code === 0) {
+        return "Clear sky";
+    }
+
+    if (code === 1) {
+        return "Mainly clear";
+    }
+
+    if (code === 2) {
+        return "Partly cloudy";
+    }
+
+    if (code === 3) {
+        return "Overcast";
+    }
+
+    if (
+        code >= 51 &&
+        code <= 67
+    ) {
+        return "Rain";
+    }
+
+    if (
+        code >= 80 &&
+        code <= 82
+    ) {
+        return "Rain showers";
+    }
+
+    if (code >= 95) {
+        return "Thunderstorm";
+    }
+
+    return "Variable conditions";
+}
+
+export default function Dashboard() {
+    const [location, setLocation] =
+        useState(null);
+
+    const [locationName, setLocationName] =
+        useState("");
+
+    const [weather, setWeather] =
+        useState(null);
+
+    const [forecast, setForecast] =
+        useState(null);
+
+    const [risk, setRisk] =
+        useState(null);
+
+    const [alerts, setAlerts] =
+        useState(null);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+    const loadWeather = (
+        latitude,
+        longitude
+    ) => {
+        setLoading(true);
+        setError("");
+
+        Promise.all([
+            getCurrentWeather(
+                latitude,
+                longitude
+            ),
+            getForecast(
+                latitude,
+                longitude
+            ),
+            getRisk(
+                latitude,
+                longitude
+            ),
+            getAlerts(
+                latitude,
+                longitude
+            ),
+            reverseLocation(
+                latitude,
+                longitude
+            ),
+        ])
+            .then(
+                ([
+                    weatherData,
+                    forecastData,
+                    riskData,
+                    alertData,
+                    locationData,
+                ]) => {
+                    setWeather(
+                        weatherData
+                    );
+
+                    setForecast(
+                        forecastData
+                    );
+
+                    setRisk(
+                        riskData
+                    );
+
+                    setAlerts(
+                        alertData
+                    );
+
+                    setLocationName(
+                        locationData.city ||
+                        locationData.display_name ||
+                        "Current Location"
+                    );
+                }
+            )
+            .catch(() => {
+                setError(
+                    "Unable to retrieve weather information."
+                );
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
+
+    const requestLocation =
+        () => {
+            if (
+                !navigator.geolocation
+            ) {
+                setError(
+                    "Geolocation is not supported by this browser."
+                );
+
+                setLoading(false);
+
+                return;
+            }
+
+            setLoading(true);
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const latitude =
+                        position.coords
+                            .latitude;
+
+                    const longitude =
+                        position.coords
+                            .longitude;
+
+                    setLocation({
+                        latitude,
+                        longitude,
+                    });
+
+                    loadWeather(
+                        latitude,
+                        longitude
+                    );
+                },
+                () => {
+                    setError(
+                        "Location permission was denied. Please allow location access to view local weather."
+                    );
+
+                    setLoading(false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000,
+                }
+            );
+        };
+
+    useEffect(() => {
+        requestLocation();
+    }, []);
+
+    const daily =
+        forecast?.daily;
+
     return (
-        <div className="weatherwatch-app">
+        <div className="weather-app">
 
             <Header />
 
             <main>
 
-                {/* HERO */}
-
                 <section className="hero-section">
-                    <div className="hero-content">
 
-                        <div className="hero-badge">
-                            <span className="live-dot"></span>
-                            REAL-TIME WEATHER MONITORING
+                    <div className="container">
+
+                        <div className="hero-heading">
+
+                            <div>
+
+                                <span className="eyebrow">
+                                    REAL-TIME WEATHER MONITORING
+                                </span>
+
+                                <h1>
+                                    Live Weather Watch
+                                </h1>
+
+                                <p>
+                                    Monitor current weather,
+                                    radar movement, forecasts,
+                                    and local weather risks
+                                    from your actual location.
+                                </p>
+
+                            </div>
+
+                            {locationName && (
+                                <div className="current-location-badge">
+
+                                    <MapPin size={17} />
+
+                                    <span>
+                                        {locationName}
+                                    </span>
+
+                                </div>
+                            )}
+
                         </div>
 
-                        <h1>
-                            Know Your Weather.
-                            <br />
-                            <span>Before It Reaches You.</span>
-                        </h1>
+                        <LiveWeatherMap
+                            latitude={
+                                location?.latitude
+                            }
+                            longitude={
+                                location?.longitude
+                            }
+                        />
 
-                        <p>
-                            WeatherWatch helps you monitor current
-                            weather conditions, understand upcoming
-                            forecasts, track weather systems, and stay
-                            prepared for changing conditions.
-                        </p>
+                    </div>
 
-                        <div className="hero-search">
+                </section>
 
-                            <MapPin size={19} />
+                {error && (
+                    <section className="container">
 
-                            <input
-                                type="text"
-                                placeholder="Search for a city"
+                        <div className="error-panel">
+
+                            <AlertTriangle
+                                size={20}
                             />
 
-                            <button>
-                                Search
+                            <span>
+                                {error}
+                            </span>
+
+                            <button
+                                onClick={
+                                    requestLocation
+                                }
+                            >
+                                <RefreshCw
+                                    size={17}
+                                />
+
+                                Retry
                             </button>
 
                         </div>
 
-                        <button className="use-location-button">
-                            <Navigation size={17} />
-                            Use My Location
-                        </button>
+                    </section>
+                )}
 
-                    </div>
-
-                    <div className="hero-weather-preview">
-
-                        <div className="preview-header">
-                            <div>
-                                <span>WEATHERWATCH</span>
-                                <strong>Current Conditions</strong>
-                            </div>
-
-                            <Activity size={21} />
-                        </div>
-
-                        <div className="preview-main">
-
-                            <div className="preview-icon">
-                                <Cloud size={52} />
-                            </div>
-
-                            <div>
-                                <span>Temperature</span>
-                                <strong>--°</strong>
-                            </div>
-
-                        </div>
-
-                        <div className="preview-location">
-                            <MapPin size={15} />
-                            <span>
-                                Waiting for your location
-                            </span>
-                        </div>
-
-                        <div className="preview-stats">
-
-                            <div>
-                                <span>Humidity</span>
-                                <strong>--%</strong>
-                            </div>
-
-                            <div>
-                                <span>Wind</span>
-                                <strong>-- km/h</strong>
-                            </div>
-
-                            <div>
-                                <span>Rain</span>
-                                <strong>--%</strong>
-                            </div>
-
-                        </div>
-
-                    </div>
-                </section>
-
-
-                {/* LIVE MAP */}
-
-                <LiveWeatherMap />
-
-
-                {/* CURRENT CONDITIONS */}
-
-                <section
-                    className="content-section"
-                    id="live-weather"
-                >
+                <section className="container dashboard-section">
 
                     <div className="section-heading">
 
                         <div>
-                            <span className="section-kicker">
+                            <span className="eyebrow">
                                 CURRENT CONDITIONS
                             </span>
 
                             <h2>
-                                Weather right now
+                                Weather Now
                             </h2>
-
-                            <p>
-                                A quick overview of the weather
-                                conditions at your selected location.
-                            </p>
                         </div>
+
+                        {weather?.updated_at && (
+                            <span className="updated-time">
+                                Updated{" "}
+                                {new Date(
+                                    weather.updated_at
+                                ).toLocaleTimeString(
+                                    [],
+                                    {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    }
+                                )}
+                            </span>
+                        )}
 
                     </div>
 
-                    <div className="weather-grid">
+                    <div className="weather-card-grid">
 
                         <WeatherCard
-                            icon={<Thermometer size={22} />}
+                            icon={Thermometer}
                             label="Temperature"
-                            value="--°C"
-                            description="Current temperature"
+                            value={
+                                weather?.temperature
+                            }
+                            unit="°C"
+                            description={
+                                weather
+                                    ? weatherDescription(
+                                        weather.weather_code
+                                    )
+                                    : ""
+                            }
                         />
 
                         <WeatherCard
-                            icon={<Thermometer size={22} />}
+                            icon={Thermometer}
                             label="Feels Like"
-                            value="--°C"
-                            description="Perceived temperature"
+                            value={
+                                weather?.feels_like
+                            }
+                            unit="°C"
                         />
 
                         <WeatherCard
-                            icon={<Droplets size={22} />}
+                            icon={Droplets}
                             label="Humidity"
-                            value="--%"
-                            description="Relative humidity"
+                            value={
+                                weather?.humidity
+                            }
+                            unit="%"
                         />
 
                         <WeatherCard
-                            icon={<Wind size={22} />}
+                            icon={Wind}
                             label="Wind"
-                            value="-- km/h"
-                            description="Current wind speed"
+                            value={
+                                weather?.wind_speed
+                            }
+                            unit="km/h"
                         />
 
                         <WeatherCard
-                            icon={<Gauge size={22} />}
+                            icon={Gauge}
                             label="Pressure"
-                            value="-- hPa"
-                            description="Atmospheric pressure"
+                            value={
+                                weather?.pressure
+                            }
+                            unit="hPa"
                         />
 
                         <WeatherCard
-                            icon={<Eye size={22} />}
+                            icon={Eye}
                             label="Visibility"
-                            value="-- km"
-                            description="Current visibility"
+                            value={
+                                weather?.visibility
+                                    ? Math.round(
+                                        weather.visibility /
+                                        1000
+                                    )
+                                    : null
+                            }
+                            unit="km"
                         />
 
                     </div>
 
                 </section>
 
-
-                {/* WEATHER OVERVIEW */}
-
-                <section className="content-section">
+                <section className="container dashboard-section">
 
                     <div className="section-heading">
 
                         <div>
-                            <span className="section-kicker">
+                            <span className="eyebrow">
                                 WEATHER OVERVIEW
                             </span>
 
                             <h2>
-                                Understand the conditions
+                                Atmospheric Conditions
                             </h2>
                         </div>
 
@@ -232,355 +435,274 @@ function Dashboard() {
                     <div className="overview-grid">
 
                         <div className="overview-card">
-                            <CloudRain size={23} />
-                            <span>Chance of Rain</span>
-                            <strong>--%</strong>
-                            <small>Precipitation probability</small>
+                            <CloudRain size={20} />
+                            <span>
+                                Precipitation
+                            </span>
+                            <strong>
+                                {weather?.precipitation ?? "--"} mm
+                            </strong>
                         </div>
 
                         <div className="overview-card">
-                            <Droplets size={23} />
-                            <span>Precipitation</span>
-                            <strong>-- mm</strong>
-                            <small>Expected precipitation</small>
+                            <CloudRain size={20} />
+                            <span>
+                                Cloud Cover
+                            </span>
+                            <strong>
+                                {weather?.cloud_cover ?? "--"}%
+                            </strong>
                         </div>
 
                         <div className="overview-card">
-                            <Sun size={23} />
-                            <span>UV Index</span>
-                            <strong>--</strong>
-                            <small>Solar exposure level</small>
+                            <Wind size={20} />
+                            <span>
+                                Wind Gust
+                            </span>
+                            <strong>
+                                {weather?.wind_gust ?? "--"} km/h
+                            </strong>
                         </div>
 
                         <div className="overview-card">
-                            <Cloud size={23} />
-                            <span>Cloud Cover</span>
-                            <strong>--%</strong>
-                            <small>Sky coverage</small>
-                        </div>
-
-                        <div className="overview-card">
-                            <Wind size={23} />
-                            <span>Wind Gust</span>
-                            <strong>-- km/h</strong>
-                            <small>Maximum expected gust</small>
-                        </div>
-
-                        <div className="overview-card">
-                            <HeartPulse size={23} />
-                            <span>Air Quality</span>
-                            <strong>--</strong>
-                            <small>Local air quality</small>
+                            <Gauge size={20} />
+                            <span>
+                                Wind Direction
+                            </span>
+                            <strong>
+                                {weather?.wind_direction ?? "--"}°
+                            </strong>
                         </div>
 
                     </div>
 
                 </section>
 
+                <section className="container dashboard-section">
 
-                {/* FORECAST */}
-
-                <section
-                    className="content-section"
-                    id="forecast"
-                >
-
-                    <div className="section-heading forecast-heading">
+                    <div className="section-heading">
 
                         <div>
-                            <span className="section-kicker">
-                                WEATHER FORECAST
+                            <span className="eyebrow">
+                                7-DAY FORECAST
                             </span>
 
                             <h2>
-                                The next 5 days
+                                Weekly Outlook
                             </h2>
-
-                            <p>
-                                Plan ahead with WeatherWatch's
-                                upcoming weather forecast.
-                            </p>
                         </div>
-
-                        <button className="outline-button">
-                            View Full Forecast
-                        </button>
 
                     </div>
 
                     <div className="forecast-grid">
 
-                        <ForecastCard
-                            day="Monday"
-                            date="--"
-                            icon={<Cloud size={30} />}
-                            condition="Waiting for data"
-                            high="--°"
-                            low="--°"
-                            rain="--%"
-                        />
-
-                        <ForecastCard
-                            day="Tuesday"
-                            date="--"
-                            icon={<CloudRain size={30} />}
-                            condition="Waiting for data"
-                            high="--°"
-                            low="--°"
-                            rain="--%"
-                        />
-
-                        <ForecastCard
-                            day="Wednesday"
-                            date="--"
-                            icon={<Sun size={30} />}
-                            condition="Waiting for data"
-                            high="--°"
-                            low="--°"
-                            rain="--%"
-                        />
-
-                        <ForecastCard
-                            day="Thursday"
-                            date="--"
-                            icon={<Cloud size={30} />}
-                            condition="Waiting for data"
-                            high="--°"
-                            low="--°"
-                            rain="--%"
-                        />
-
-                        <ForecastCard
-                            day="Friday"
-                            date="--"
-                            icon={<CloudRain size={30} />}
-                            condition="Waiting for data"
-                            high="--°"
-                            low="--°"
-                            rain="--%"
-                        />
+                        {daily?.time?.map(
+                            (date, index) => (
+                                <ForecastCard
+                                    key={date}
+                                    date={date}
+                                    weatherCode={
+                                        daily.weather_code?.[
+                                            index
+                                        ]
+                                    }
+                                    max={
+                                        daily.temperature_2m_max?.[
+                                            index
+                                        ]
+                                    }
+                                    min={
+                                        daily.temperature_2m_min?.[
+                                            index
+                                        ]
+                                    }
+                                    precipitation={
+                                        daily.precipitation_probability_max?.[
+                                            index
+                                        ]
+                                    }
+                                />
+                            )
+                        )}
 
                     </div>
 
                 </section>
 
+                <section className="container dashboard-section">
 
-                {/* SUN */}
+                    <div className="sun-grid">
 
-                <section className="sun-section">
+                        <div className="sun-card">
 
-                    <div className="sun-card">
+                            <div className="sun-icon">
+                                <Sunrise size={25} />
+                            </div>
 
-                        <div className="sun-icon">
-                            <Sunrise size={25} />
+                            <div>
+                                <span>
+                                    SUNRISE
+                                </span>
+
+                                <strong>
+                                    {daily?.sunrise?.[0]
+                                        ? new Date(
+                                            daily.sunrise[0]
+                                        ).toLocaleTimeString(
+                                            [],
+                                            {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            }
+                                        )
+                                        : "--"}
+                                </strong>
+                            </div>
+
                         </div>
 
-                        <div>
-                            <span>Sunrise</span>
-                            <strong>--:-- AM</strong>
-                        </div>
+                        <div className="sun-card">
 
-                    </div>
+                            <div className="sun-icon">
+                                <Sunset size={25} />
+                            </div>
 
-                    <div className="daylight-line">
+                            <div>
+                                <span>
+                                    SUNSET
+                                </span>
 
-                        <div className="daylight-top">
-                            <span>DAYLIGHT</span>
-                            <span>WeatherWatch</span>
-                        </div>
+                                <strong>
+                                    {daily?.sunset?.[0]
+                                        ? new Date(
+                                            daily.sunset[0]
+                                        ).toLocaleTimeString(
+                                            [],
+                                            {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            }
+                                        )
+                                        : "--"}
+                                </strong>
+                            </div>
 
-                        <div className="daylight-track">
-                            <div className="daylight-position"></div>
-                        </div>
-
-                        <div className="daylight-bottom">
-                            <span>Morning</span>
-                            <span>Afternoon</span>
-                            <span>Evening</span>
-                        </div>
-
-                    </div>
-
-                    <div className="sun-card">
-
-                        <div className="sun-icon">
-                            <Sunset size={25} />
-                        </div>
-
-                        <div>
-                            <span>Sunset</span>
-                            <strong>--:-- PM</strong>
                         </div>
 
                     </div>
 
                 </section>
 
-
-                {/* RISK */}
-
-                <section className="content-section">
+                <section className="container dashboard-section">
 
                     <div className="section-heading">
 
                         <div>
-                            <span className="section-kicker">
-                                WEATHER SAFETY
+                            <span className="eyebrow">
+                                SAFETY
                             </span>
 
                             <h2>
-                                Stay aware of weather risks
+                                Weather Risk Assessment
                             </h2>
-
-                            <p>
-                                WeatherWatch analyzes weather
-                                conditions to help you understand
-                                potential local risks.
-                            </p>
                         </div>
 
                     </div>
 
-                    <RiskCard />
+                    <RiskCard
+                        risk={risk}
+                    />
 
                 </section>
 
+                <section className="container dashboard-section">
 
-                {/* ALERTS */}
+                    <div className="alert-panel">
 
-                <section
-                    className="content-section"
-                    id="alerts"
-                >
+                        <div className="alert-panel-icon">
+                            <AlertTriangle
+                                size={24}
+                            />
+                        </div>
 
-                    <div className="section-heading">
+                        <div className="alert-panel-content">
 
-                        <div>
-                            <span className="section-kicker">
+                            <span>
                                 LOCAL WEATHER ALERTS
                             </span>
 
-                            <h2>
-                                Stay informed
-                            </h2>
-
-                            <p>
-                                Important weather information for
-                                your selected location.
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <div className="alerts-empty">
-
-                        <div className="alerts-empty-icon">
-                            <ShieldAlert size={27} />
-                        </div>
-
-                        <div>
                             <h3>
-                                Weather alerts will appear here
+                                {alerts?.official_alerts?.length
+                                    ? "Official alerts are active"
+                                    : "No official alerts available"}
                             </h3>
 
                             <p>
-                                WeatherWatch will display relevant
-                                weather alerts and safety information
-                                when available.
+                                {alerts?.message ||
+                                    "Weather alert information is currently unavailable."}
                             </p>
+
                         </div>
 
                     </div>
 
                 </section>
 
+                <section className="container dashboard-section">
 
-                {/* EMERGENCY */}
+                    <div className="emergency-panel">
 
-                <section className="emergency-section">
+                        <div>
 
-                    <div className="emergency-icon">
-                        <Phone size={28} />
+                            <span>
+                                WEATHER EMERGENCY
+                            </span>
+
+                            <h2>
+                                Need immediate emergency assistance?
+                            </h2>
+
+                            <p>
+                                For emergencies in the
+                                Philippines, contact the
+                                national emergency hotline.
+                            </p>
+
+                        </div>
+
+                        <a
+                            href="tel:911"
+                            className="emergency-button"
+                        >
+                            <Phone size={20} />
+                            CALL 911
+                        </a>
+
                     </div>
-
-                    <div className="emergency-content">
-
-                        <span>EMERGENCY ASSISTANCE</span>
-
-                        <h2>
-                            Need emergency assistance?
-                        </h2>
-
-                        <p>
-                            If you are experiencing an emergency,
-                            contact the appropriate emergency services.
-                        </p>
-
-                    </div>
-
-                    <a
-                        href="tel:911"
-                        className="emergency-button"
-                    >
-                        <Phone size={19} />
-                        CALL 911
-                    </a>
 
                 </section>
 
             </main>
 
+            <footer className="footer">
 
-            {/* FOOTER */}
+                <div className="container footer-inner">
 
-            <footer className="site-footer">
+                    <div>
+                        <strong>
+                            WeatherWatch
+                        </strong>
 
-                <div className="footer-brand">
-
-                    <div className="brand">
-                        <span className="brand-icon">
-                            <CloudSunIcon />
-                        </span>
-
-                        <span>WeatherWatch</span>
+                        <p>
+                            Real-time weather monitoring
+                            and forecasting platform.
+                        </p>
                     </div>
 
-                    <p>
-                        Real-time weather monitoring for better
-                        awareness, preparation, and safety.
-                    </p>
-
-                </div>
-
-                <div className="footer-links">
-
-                    <a href="#live-weather">
-                        Live Weather
-                    </a>
-
-                    <a href="#forecast">
-                        Forecast
-                    </a>
-
-                    <a href="#satellite">
-                        Satellite & Radar
-                    </a>
-
-                    <a href="#alerts">
-                        Alerts & Safety
-                    </a>
-
-                </div>
-
-                <div className="footer-bottom">
-
-                    <span>
-                        © 2026 WeatherWatch
-                    </span>
-
-                    <span>
-                        Weather monitoring system
-                    </span>
+                    <div className="footer-right">
+                        Weather data powered by
+                        Open-Meteo and RainViewer.
+                    </div>
 
                 </div>
 
@@ -589,25 +711,3 @@ function Dashboard() {
         </div>
     );
 }
-
-function CloudSunIcon() {
-    return (
-        <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <circle cx="17" cy="5" r="3" />
-            <path d="M3 16a4 4 0 0 1 4-4h1" />
-            <path d="M8 20h8a4 4 0 0 0 .88-7.9A5 5 0 0 0 7.1 14.4" />
-            <path d="M7 16v.01" />
-        </svg>
-    );
-}
-
-export default Dashboard;

@@ -12,17 +12,29 @@ class WeatherController extends Controller
     ) {
     }
 
-    public function current(Request $request)
-    {
-        $validated = $request->validate([
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
-            'longitude' => ['required', 'numeric', 'between:-180,180'],
-        ]);
+    public function current(
+        Request $request
+    ) {
+        $validated =
+            $request->validate([
+                'latitude' => [
+                    'required',
+                    'numeric',
+                    'between:-90,90',
+                ],
 
-        $weather = $this->weatherService->getCurrentWeather(
-            (float) $validated['latitude'],
-            (float) $validated['longitude']
-        );
+                'longitude' => [
+                    'required',
+                    'numeric',
+                    'between:-180,180',
+                ],
+            ]);
+
+        $weather =
+            $this->weatherService->getCurrentWeather(
+                (float) $validated['latitude'],
+                (float) $validated['longitude']
+            );
 
         return response()->json([
             'success' => true,

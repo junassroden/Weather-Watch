@@ -12,17 +12,29 @@ class ForecastController extends Controller
     ) {
     }
 
-    public function index(Request $request)
-    {
-        $validated = $request->validate([
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
-            'longitude' => ['required', 'numeric', 'between:-180,180'],
-        ]);
+    public function index(
+        Request $request
+    ) {
+        $validated =
+            $request->validate([
+                'latitude' => [
+                    'required',
+                    'numeric',
+                    'between:-90,90',
+                ],
 
-        $forecast = $this->forecastService->getForecast(
-            (float) $validated['latitude'],
-            (float) $validated['longitude']
-        );
+                'longitude' => [
+                    'required',
+                    'numeric',
+                    'between:-180,180',
+                ],
+            ]);
+
+        $forecast =
+            $this->forecastService->getForecast(
+                (float) $validated['latitude'],
+                (float) $validated['longitude']
+            );
 
         return response()->json([
             'success' => true,

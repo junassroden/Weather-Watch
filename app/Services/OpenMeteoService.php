@@ -7,38 +7,54 @@ use RuntimeException;
 
 class OpenMeteoService
 {
-    private string $forecastUrl = 'https://api.open-meteo.com/v1/forecast';
-    private string $geocodingUrl = 'https://geocoding-api.open-meteo.com/v1/search';
+    private string $forecastUrl =
+        'https://api.open-meteo.com/v1/forecast';
 
-    public function forecast(float $latitude, float $longitude, array $parameters = []): array
-    {
+    private string $geocodingUrl =
+        'https://geocoding-api.open-meteo.com/v1/search';
+
+    public function forecast(
+        float $latitude,
+        float $longitude,
+        array $parameters = []
+    ): array {
         $response = Http::timeout(15)
             ->retry(2, 500)
-            ->get($this->forecastUrl, array_merge([
-                'latitude' => $latitude,
-                'longitude' => $longitude,
-                'timezone' => 'auto',
-            ], $parameters));
+            ->get(
+                $this->forecastUrl,
+                array_merge(
+                    [
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'timezone' => 'auto',
+                    ],
+                    $parameters
+                )
+            );
 
         if ($response->failed()) {
             throw new RuntimeException(
-                'Unable to retrieve weather data from Open-Meteo.'
+                'Unable to retrieve weather data.'
             );
         }
 
         return $response->json();
     }
 
-    public function searchLocation(string $name): array
-    {
+    public function searchLocation(
+        string $name
+    ): array {
         $response = Http::timeout(15)
             ->retry(2, 500)
-            ->get($this->geocodingUrl, [
-                'name' => $name,
-                'count' => 10,
-                'language' => 'en',
-                'format' => 'json',
-            ]);
+            ->get(
+                $this->geocodingUrl,
+                [
+                    'name' => $name,
+                    'count' => 10,
+                    'language' => 'en',
+                    'format' => 'json',
+                ]
+            );
 
         if ($response->failed()) {
             throw new RuntimeException(

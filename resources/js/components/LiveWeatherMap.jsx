@@ -1,245 +1,711 @@
-import { useEffect, useRef, useState } from "react";
 import {
-    Layers,
-    LocateFixed,
-    Minus,
-    Pause,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
+import {
+    MapContainer,
+    TileLayer,
+    Marker,
+    Popup,
+    useMap,
+} from "react-leaflet";
+
+import L from "leaflet";
+
+import {
     Play,
-    Plus,
-    Satellite
+    Pause,
+    ChevronLeft,
+    ChevronRight,
+    LocateFixed,
+    Radar,
+    Layers,
+    LoaderCircle,
 } from "lucide-react";
 
-function LiveWeatherMap() {
-    const mapRef = useRef(null);
-    const leafletMap = useRef(null);
-    const userMarker = useRef(null);
+import {
+    getRadarFrames,
+    reverseLocation,
+} from "../services/api";
 
-    const [location, setLocation] = useState(null);
-    const [locationStatus, setLocationStatus] = useState("locating");
-    const [playing, setPlaying] = useState(false);
+import "leaflet/dist/leaflet.css";
+
+const DEFAULT_VIEW = [20, 0];
+
+const userIcon = L.divIcon({
+    className: "weather-user-marker",
+    html: `
+        <div class="user-marker">
+            <div class="user-marker-pulse"></div>
+            <div class="user-marker-dot"></div>
+        </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+});
+
+function MapController({
+    latitude,
+    longitude,
+}) {
+    const map = useMap();
 
     useEffect(() => {
-        let mounted = true;
-
-        const loadMap = async () => {
-            const L = await import("leaflet");
-            await import("leaflet/dist/leaflet.css");
-
-            if (!mounted || !mapRef.current || leafletMap.current) {
-                return;
-            }
-
-            const map = L.map(mapRef.current, {
-                zoomControl: false,
-                attributionControl: true
-            }).setView([20, 0], 2);
-
-            leafletMap.current = map;
-
-            L.tileLayer(
-                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        if (
+            typeof latitude === "number" &&
+            typeof longitude === "number"
+        ) {
+            map.flyTo(
+                [latitude, longitude],
+                7,
                 {
-                    maxZoom: 18,
-                    attribution:
-                        "Tiles © Esri"
+                    duration: 1.2,
                 }
-            ).addTo(map);
+            );
+        }
+    }, [latitude, longitude, map]);
 
-            requestLocation(L);
-        };
+    return null;
+}
 
-        loadMap();
+function LocationController({
+    onLocation,
+}) {
+    const map = useMap();
 
-        return () => {
-            mounted = false;
-
-            if (leafletMap.current) {
-                leafletMap.current.remove();
-                leafletMap.current = null;
-            }
-        };
-    }, []);
-
-    const requestLocation = async (L = null) => {
-        const leaflet = L || await import("leaflet");
-
+    const locate = () => {
         if (!navigator.geolocation) {
-            setLocationStatus("unavailable");
             return;
         }
 
-        setLocationStatus("locating");
-
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
+                const latitude =
+                    position.coords.latitude;
 
-                setLocation({
-                    lat,
-                    lng
-                });
+                const longitude =
+                    position.coords.longitude;
 
-                setLocationStatus("available");
-
-                if (leafletMap.current) {
-                    leafletMap.current.setView([lat, lng], 11);
-
-                    if (userMarker.current) {
-                        userMarker.current.remove();
+                map.flyTo(
+                    [latitude, longitude],
+                    7,
+                    {
+                        duration: 1.2,
                     }
+                );
 
-                    const icon = leaflet.divIcon({
-                        className: "weatherwatch-location-marker",
-                        html: `
-                            <div class="location-pulse">
-                                <div class="location-dot"></div>
-                            </div>
-                        `,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15]
-                    });
-
-                    userMarker.current = leaflet
-                        .marker([lat, lng], { icon })
-                        .addTo(leafletMap.current);
-                }
-            },
-            () => {
-                setLocationStatus("denied");
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000
+                onLocation(
+                    latitude,
+                    longitude
+                );
             }
         );
     };
 
-    const zoomIn = () => {
-        leafletMap.current?.zoomIn();
+    return (
+        <button
+            className="map-control locate-control"
+            onClick={locate}
+            title="Use my location"
+        >
+            <LocateFixed size={18} />
+        </button>
+    );
+}
+
+export default function LiveWeatherMap({
+    latitude: propLatitude = null,
+    longitude: propLongitude = null,
+}) {
+    const [latitude, setLatitude] =
+        useState(propLatitude);
+
+    const [longitude, setLongitude] =
+        useState(propLongitude);
+
+    const [locationName, setLocationName] =
+        useState("Locating your position...");
+
+    const [frames, setFrames] =
+        useState([]);
+
+    const [currentFrame, setCurrentFrame] =
+        useState(0);
+
+    const [isPlaying, setIsPlaying] =
+        useState(false);
+
+    const [radarVisible, setRadarVisible] =
+        useState(true);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [locationLoading, setLocationLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+    useEffect(() => {
+        if (
+            typeof propLatitude === "number" &&
+            typeof propLongitude === "number"
+        ) {
+            setLatitude(propLatitude);
+            setLongitude(propLongitude);
+
+            setLocationLoading(false);
+
+            reverseLocation(
+                propLatitude,
+                propLongitude
+            )
+                .then((location) => {
+                    setLocationName(
+                        location.city ||
+                        location.display_name ||
+                        "Current Location"
+                    );
+                })
+                .catch(() => {
+                    setLocationName(
+                        "Current Location"
+                    );
+                });
+
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            setLocationLoading(false);
+            setLocationName(
+                "Location unavailable"
+            );
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const currentLatitude =
+                    position.coords.latitude;
+
+                const currentLongitude =
+                    position.coords.longitude;
+
+                setLatitude(currentLatitude);
+                setLongitude(currentLongitude);
+                setLocationLoading(false);
+
+                try {
+                    const location =
+                        await reverseLocation(
+                            currentLatitude,
+                            currentLongitude
+                        );
+
+                    setLocationName(
+                        location.city ||
+                        location.display_name ||
+                        "Current Location"
+                    );
+                } catch {
+                    setLocationName(
+                        "Current Location"
+                    );
+                }
+            },
+            () => {
+                setLocationLoading(false);
+                setLocationName(
+                    "Location unavailable"
+                );
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000,
+            }
+        );
+    }, [
+        propLatitude,
+        propLongitude,
+    ]);
+
+    useEffect(() => {
+        async function loadRadar() {
+            try {
+                setLoading(true);
+                setError("");
+
+                const radar =
+                    await getRadarFrames();
+
+                const radarFrames =
+                    radar.frames || [];
+
+                setFrames(radarFrames);
+
+                if (radarFrames.length > 0) {
+                    setCurrentFrame(
+                        radarFrames.length - 1
+                    );
+                }
+            } catch (err) {
+                setError(
+                    "Unable to load radar data."
+                );
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadRadar();
+    }, []);
+
+    useEffect(() => {
+        if (
+            !isPlaying ||
+            frames.length < 2
+        ) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setCurrentFrame((previous) => {
+                if (
+                    previous >=
+                    frames.length - 1
+                ) {
+                    return 0;
+                }
+
+                return previous + 1;
+            });
+        }, 900);
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [
+        isPlaying,
+        frames.length,
+    ]);
+
+    const activeFrame =
+        frames[currentFrame];
+
+    const radarUrl = useMemo(() => {
+        if (!activeFrame) {
+            return null;
+        }
+
+        return activeFrame.tile_url;
+    }, [activeFrame]);
+
+    const frameTime = useMemo(() => {
+        if (!activeFrame) {
+            return "No radar frame";
+        }
+
+        const date =
+            new Date(
+                activeFrame.time * 1000
+            );
+
+        return date.toLocaleString(
+            [],
+            {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            }
+        );
+    }, [activeFrame]);
+
+    const moveFrame = (direction) => {
+        if (!frames.length) {
+            return;
+        }
+
+        setIsPlaying(false);
+
+        setCurrentFrame((previous) => {
+            const next =
+                previous + direction;
+
+            if (next < 0) {
+                return frames.length - 1;
+            }
+
+            if (
+                next >= frames.length
+            ) {
+                return 0;
+            }
+
+            return next;
+        });
     };
 
-    const zoomOut = () => {
-        leafletMap.current?.zoomOut();
+    const updateLocation = async (
+        newLatitude,
+        newLongitude
+    ) => {
+        setLatitude(newLatitude);
+        setLongitude(newLongitude);
+
+        try {
+            const location =
+                await reverseLocation(
+                    newLatitude,
+                    newLongitude
+                );
+
+            setLocationName(
+                location.city ||
+                location.display_name ||
+                "Current Location"
+            );
+        } catch {
+            setLocationName(
+                "Current Location"
+            );
+        }
     };
 
-    const centerLocation = async () => {
-        await requestLocation();
-    };
+    const hasLocation =
+        typeof latitude === "number" &&
+        typeof longitude === "number";
 
     return (
-        <section className="live-map-section" id="satellite">
-            <div className="map-heading">
+        <section className="live-map-section">
+
+            <div className="live-map-header">
+
                 <div>
-                    <div className="section-kicker">
-                        <span className="live-dot"></span>
-                        LIVE MONITORING
+                    <div className="map-eyebrow">
+                        LIVE WEATHER WATCH
                     </div>
 
-                    <h2>Live Weather Watch</h2>
+                    <h2>
+                        Radar Monitoring
+                    </h2>
 
                     <p>
-                        Observe your surroundings through satellite imagery
-                        and monitor developing weather conditions.
+                        {locationLoading
+                            ? "Determining your current location..."
+                            : locationName}
                     </p>
                 </div>
 
                 <div className="map-status">
-                    <Satellite size={17} />
-                    Satellite View
+
+                    <span className="status-dot"></span>
+
+                    <span>
+                        {loading
+                            ? "Loading"
+                            : "Radar online"}
+                    </span>
+
                 </div>
+
             </div>
 
-            <div className="weather-map-wrapper">
-                <div
-                    ref={mapRef}
-                    className="weather-map"
-                />
+            <div className="live-map-wrapper">
 
-                <div className="map-overlay-top">
-                    <div className="map-location-status">
-                        <LocateFixed size={15} />
+                <MapContainer
+                    center={
+                        hasLocation
+                            ? [
+                                latitude,
+                                longitude,
+                            ]
+                            : DEFAULT_VIEW
+                    }
+                    zoom={
+                        hasLocation
+                            ? 7
+                            : 2
+                    }
+                    minZoom={2}
+                    maxZoom={7}
+                    scrollWheelZoom={true}
+                    zoomControl={true}
+                    className="live-weather-map"
+                >
 
-                        {locationStatus === "locating" &&
-                            "Finding your location..."}
+                    <TileLayer
+                        attribution="Tiles &copy; Esri"
+                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                        maxZoom={7}
+                    />
 
-                        {locationStatus === "available" &&
-                            "Your current location"}
+                    {radarVisible &&
+                        radarUrl && (
+                            <TileLayer
+                                key={radarUrl}
+                                url={radarUrl}
+                                opacity={0.72}
+                                maxZoom={7}
+                                attribution="Weather radar by RainViewer"
+                            />
+                        )}
 
-                        {locationStatus === "denied" &&
-                            "Location unavailable"}
+                    {hasLocation && (
+                        <>
+                            <Marker
+                                position={[
+                                    latitude,
+                                    longitude,
+                                ]}
+                                icon={userIcon}
+                            >
+                                <Popup>
+                                    <strong>
+                                        Your Location
+                                    </strong>
+                                    <br />
+                                    {locationName}
+                                    <br />
+                                    {latitude.toFixed(4)},{" "}
+                                    {longitude.toFixed(4)}
+                                </Popup>
+                            </Marker>
 
-                        {locationStatus === "unavailable" &&
-                            "Location not supported"}
-                    </div>
+                            <MapController
+                                latitude={latitude}
+                                longitude={longitude}
+                            />
+                        </>
+                    )}
 
-                    <div className="map-layer-button">
-                        <Layers size={16} />
-                        Layers
-                    </div>
+                    <LocationController
+                        onLocation={
+                            updateLocation
+                        }
+                    />
+
+                </MapContainer>
+
+                <div className="map-top-controls">
+
+                    <button
+                        className={
+                            radarVisible
+                                ? "map-control active"
+                                : "map-control"
+                        }
+                        onClick={() =>
+                            setRadarVisible(
+                                !radarVisible
+                            )
+                        }
+                        title="Toggle radar"
+                    >
+                        <Radar size={18} />
+                    </button>
+
+                    <button
+                        className="map-control"
+                        title="Map layers"
+                    >
+                        <Layers size={18} />
+                    </button>
+
                 </div>
 
-                <div className="map-overlay-bottom">
-                    <div className="map-time">
-                        <span>WEATHERWATCH</span>
-                        <strong>Live satellite imagery</strong>
+                {loading && (
+                    <div className="map-loading">
+
+                        <LoaderCircle
+                            size={22}
+                            className="spin"
+                        />
+
+                        <span>
+                            Loading radar data
+                        </span>
+
+                    </div>
+                )}
+
+                {error && (
+                    <div className="map-error">
+                        {error}
+                    </div>
+                )}
+
+                <div className="map-overlay">
+
+                    <div className="radar-frame-info">
+
+                        <span className="radar-label">
+                            RADAR FRAME
+                        </span>
+
+                        <strong>
+                            {frameTime}
+                        </strong>
+
                     </div>
 
-                    <div className="map-timeline">
+                    <div className="timeline">
+
                         <button
-                            className="timeline-button"
-                            onClick={() => setPlaying(!playing)}
+                            onClick={() =>
+                                moveFrame(-1)
+                            }
+                            disabled={
+                                frames.length < 2
+                            }
                         >
-                            {playing ? (
-                                <Pause size={16} />
+                            <ChevronLeft
+                                size={18}
+                            />
+                        </button>
+
+                        <button
+                            className="play-button"
+                            onClick={() =>
+                                setIsPlaying(
+                                    !isPlaying
+                                )
+                            }
+                            disabled={
+                                frames.length < 2
+                            }
+                        >
+                            {isPlaying ? (
+                                <Pause size={17} />
                             ) : (
-                                <Play size={16} />
+                                <Play size={17} />
                             )}
                         </button>
 
                         <div className="timeline-track">
-                            <div className="timeline-progress"></div>
+
+                            <input
+                                type="range"
+                                min="0"
+                                max={Math.max(
+                                    frames.length - 1,
+                                    0
+                                )}
+                                value={
+                                    currentFrame
+                                }
+                                onChange={(event) => {
+                                    setIsPlaying(false);
+
+                                    setCurrentFrame(
+                                        Number(
+                                            event.target.value
+                                        )
+                                    );
+                                }}
+                                disabled={
+                                    frames.length < 2
+                                }
+                            />
+
+                            <div className="timeline-labels">
+
+                                <span>
+                                    Past
+                                </span>
+
+                                <span>
+                                    {frames.length
+                                        ? `${currentFrame + 1} / ${frames.length}`
+                                        : "No frames"}
+                                </span>
+
+                                <span>
+                                    Latest
+                                </span>
+
+                            </div>
+
                         </div>
 
-                        <span className="timeline-time">
-                            LIVE
-                        </span>
+                        <button
+                            onClick={() =>
+                                moveFrame(1)
+                            }
+                            disabled={
+                                frames.length < 2
+                            }
+                        >
+                            <ChevronRight
+                                size={18}
+                            />
+                        </button>
+
                     </div>
+
                 </div>
 
-                <div className="map-controls">
-                    <button
-                        onClick={zoomIn}
-                        aria-label="Zoom in"
+                <div className="map-attribution">
+                    Radar data by{" "}
+                    <a
+                        href="https://www.rainviewer.com/"
+                        target="_blank"
+                        rel="noreferrer"
                     >
-                        <Plus size={19} />
-                    </button>
-
-                    <button
-                        onClick={zoomOut}
-                        aria-label="Zoom out"
-                    >
-                        <Minus size={19} />
-                    </button>
-
-                    <button
-                        onClick={centerLocation}
-                        aria-label="Use my location"
-                    >
-                        <LocateFixed size={18} />
-                    </button>
+                        RainViewer
+                    </a>
                 </div>
 
-                {location && (
-                    <div className="coordinates-display">
-                        {location.lat.toFixed(4)}°,{" "}
-                        {location.lng.toFixed(4)}°
-                    </div>
-                )}
             </div>
+
+            <div className="map-footer-info">
+
+                <div>
+                    <span>LOCATION</span>
+
+                    <strong>
+                        {locationName}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>COORDINATES</span>
+
+                    <strong>
+                        {hasLocation
+                            ? `${latitude.toFixed(
+                                4
+                            )}, ${longitude.toFixed(
+                                4
+                            )}`
+                            : "Unavailable"}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>RADAR FRAMES</span>
+
+                    <strong>
+                        {frames.length || 0}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>DATA TYPE</span>
+
+                    <strong>
+                        Past Radar
+                    </strong>
+                </div>
+
+            </div>
+
         </section>
     );
-}
-
-export default LiveWeatherMap;
+};

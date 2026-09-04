@@ -1,30 +1,41 @@
-function WeatherCard({
-    icon,
+export default function WeatherCard({
+    icon: Icon,
     label,
     value,
-    description
+    unit = "",
+    description = "",
 }) {
     return (
         <div className="weather-card">
+
             <div className="weather-card-icon">
-                {icon}
+                <Icon size={21} />
             </div>
 
             <div className="weather-card-content">
+
                 <span className="weather-card-label">
                     {label}
                 </span>
 
-                <strong className="weather-card-value">
-                    {value}
-                </strong>
+                <div className="weather-card-value">
+                    {value ?? "--"}
 
-                <span className="weather-card-description">
-                    {description}
-                </span>
+                    {unit && (
+                        <span>
+                            {unit}
+                        </span>
+                    )}
+                </div>
+
+                {description && (
+                    <span className="weather-card-description">
+                        {description}
+                    </span>
+                )}
+
             </div>
+
         </div>
     );
-}
-
-export default WeatherCard;
+};

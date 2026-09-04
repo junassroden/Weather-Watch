@@ -10,8 +10,11 @@ class AlertService
     ): array {
         return [
             'location' => [
-                'latitude' => $latitude,
-                'longitude' => $longitude,
+                'latitude' =>
+                    $latitude,
+
+                'longitude' =>
+                    $longitude,
             ],
 
             'official_alerts' => [],
@@ -19,7 +22,8 @@ class AlertService
             'message' =>
                 'No official weather warning source has been connected yet.',
 
-            'source_status' => 'not_configured',
+            'source_status' =>
+                'not_configured',
         ];
     }
 }

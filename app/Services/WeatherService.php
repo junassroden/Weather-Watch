@@ -37,42 +37,66 @@ class WeatherService
             ]
         );
 
-        $current = $data['current'] ?? [];
+        $current =
+            $data['current'] ?? [];
 
         return [
             'location' => [
                 'latitude' => $latitude,
                 'longitude' => $longitude,
-                'timezone' => $data['timezone'] ?? null,
+                'timezone' =>
+                    $data['timezone'] ?? null,
             ],
 
-            'updated_at' => $current['time'] ?? null,
+            'updated_at' =>
+                $current['time'] ?? null,
 
-            'temperature' => $current['temperature_2m'] ?? null,
-            'feels_like' => $current['apparent_temperature'] ?? null,
-            'humidity' => $current['relative_humidity_2m'] ?? null,
+            'temperature' =>
+                $current['temperature_2m'] ?? null,
 
-            'precipitation' => $current['precipitation'] ?? null,
-            'rain' => $current['rain'] ?? null,
-            'showers' => $current['showers'] ?? null,
+            'feels_like' =>
+                $current['apparent_temperature'] ?? null,
 
-            'weather_code' => $current['weather_code'] ?? null,
+            'humidity' =>
+                $current['relative_humidity_2m'] ?? null,
 
-            'cloud_cover' => $current['cloud_cover'] ?? null,
+            'precipitation' =>
+                $current['precipitation'] ?? null,
 
-            'pressure' => $current['pressure_msl']
+            'rain' =>
+                $current['rain'] ?? null,
+
+            'showers' =>
+                $current['showers'] ?? null,
+
+            'weather_code' =>
+                $current['weather_code'] ?? null,
+
+            'cloud_cover' =>
+                $current['cloud_cover'] ?? null,
+
+            'pressure' =>
+                $current['pressure_msl']
                 ?? $current['surface_pressure']
                 ?? null,
 
-            'wind_speed' => $current['wind_speed_10m'] ?? null,
-            'wind_direction' => $current['wind_direction_10m'] ?? null,
-            'wind_gust' => $current['wind_gusts_10m'] ?? null,
+            'wind_speed' =>
+                $current['wind_speed_10m'] ?? null,
 
-            'visibility' => $current['visibility'] ?? null,
+            'wind_direction' =>
+                $current['wind_direction_10m'] ?? null,
 
-            'is_day' => $current['is_day'] ?? null,
+            'wind_gust' =>
+                $current['wind_gusts_10m'] ?? null,
 
-            'units' => $data['current_units'] ?? [],
+            'visibility' =>
+                $current['visibility'] ?? null,
+
+            'is_day' =>
+                $current['is_day'] ?? null,
+
+            'units' =>
+                $data['current_units'] ?? [],
         ];
     }
 }

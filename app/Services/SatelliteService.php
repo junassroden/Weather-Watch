@@ -12,9 +12,12 @@ class SatelliteService
 
     public function getRadarFrames(): array
     {
-        $response = Http::timeout(15)
-            ->retry(2, 500)
-            ->get($this->rainViewerUrl);
+        $response =
+            Http::timeout(15)
+                ->retry(2, 500)
+                ->get(
+                    $this->rainViewerUrl
+                );
 
         if ($response->failed()) {
             throw new RuntimeException(
@@ -22,10 +25,14 @@ class SatelliteService
             );
         }
 
-        $data = $response->json();
+        $data =
+            $response->json();
 
-        $host = $data['host'] ?? null;
-        $frames = $data['radar']['past'] ?? [];
+        $host =
+            $data['host'] ?? null;
+
+        $frames =
+            $data['radar']['past'] ?? [];
 
         if (!$host) {
             throw new RuntimeException(
@@ -34,23 +41,34 @@ class SatelliteService
         }
 
         return [
-            'provider' => 'RainViewer',
-            'host' => $host,
+            'provider' =>
+                'RainViewer',
 
-            'frames' => collect($frames)
-                ->map(function ($frame) use ($host) {
-                    return [
-                        'time' => $frame['time'],
-                        'path' => $frame['path'],
+            'host' =>
+                $host,
 
-                        'tile_url' =>
-                            $host .
-                            $frame['path'] .
-                            '/256/{z}/{x}/{y}/2/1_0.png',
-                    ];
-                })
-                ->values()
-                ->all(),
+            'frames' =>
+                collect($frames)
+                    ->map(
+                        function ($frame) use (
+                            $host
+                        ) {
+                            return [
+                                'time' =>
+                                    $frame['time'],
+
+                                'path' =>
+                                    $frame['path'],
+
+                                'tile_url' =>
+                                    $host .
+                                    $frame['path'] .
+                                    '/256/{z}/{x}/{y}/2/1_0.png',
+                            ];
+                        }
+                    )
+                    ->values()
+                    ->all(),
 
             'attribution' =>
                 'Radar data by RainViewer',

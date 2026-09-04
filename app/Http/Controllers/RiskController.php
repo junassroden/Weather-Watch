@@ -16,30 +16,49 @@ class RiskController extends Controller
     ) {
     }
 
-    public function show(Request $request)
-    {
-        $validated = $request->validate([
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
-            'longitude' => ['required', 'numeric', 'between:-180,180'],
-        ]);
+    public function show(
+        Request $request
+    ) {
+        $validated =
+            $request->validate([
+                'latitude' => [
+                    'required',
+                    'numeric',
+                    'between:-90,90',
+                ],
 
-        $latitude = (float) $validated['latitude'];
-        $longitude = (float) $validated['longitude'];
+                'longitude' => [
+                    'required',
+                    'numeric',
+                    'between:-180,180',
+                ],
+            ]);
 
-        $weather = $this->weatherService->getCurrentWeather(
-            $latitude,
-            $longitude
-        );
+        $latitude =
+            (float) $validated['latitude'];
 
-        $forecast = $this->forecastService->getForecast(
-            $latitude,
-            $longitude
-        );
+        $longitude =
+            (float) $validated['longitude'];
 
-        $risk = $this->riskService->assess(
-            $weather,
-            $forecast
-        );
+        $weather =
+            $this->weatherService
+                ->getCurrentWeather(
+                    $latitude,
+                    $longitude
+                );
+
+        $forecast =
+            $this->forecastService
+                ->getForecast(
+                    $latitude,
+                    $longitude
+                );
+
+        $risk =
+            $this->riskService->assess(
+                $weather,
+                $forecast
+            );
 
         return response()->json([
             'success' => true,
