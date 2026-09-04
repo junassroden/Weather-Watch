@@ -22,6 +22,7 @@ import {
     LocateFixed,
     Radar,
     Layers,
+    Satellite,
     LoaderCircle,
 } from "lucide-react";
 
@@ -33,6 +34,13 @@ import {
 import "leaflet/dist/leaflet.css";
 
 const DEFAULT_VIEW = [20, 0];
+
+const satelliteDate = new Date(Date.now() - 86400000)
+    .toISOString()
+    .slice(0, 10);
+
+const satelliteUrl =
+    `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${satelliteDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
 
 const userIcon = L.divIcon({
     className: "weather-user-marker",
@@ -138,6 +146,9 @@ export default function LiveWeatherMap({
         useState(false);
 
     const [radarVisible, setRadarVisible] =
+        useState(true);
+
+    const [satelliteVisible, setSatelliteVisible] =
         useState(true);
 
     const [loading, setLoading] =
@@ -408,7 +419,9 @@ export default function LiveWeatherMap({
                     <span className="status-dot"></span>
 
                     <span>
-                        {loading
+                        {isPlaying
+                            ? "Live radar loop"
+                            : loading
                             ? "Loading"
                             : "Radar online"}
                     </span>
@@ -445,6 +458,16 @@ export default function LiveWeatherMap({
                         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                         maxZoom={7}
                     />
+
+                    {satelliteVisible && (
+                        <TileLayer
+                            key={satelliteDate}
+                            url={satelliteUrl}
+                            opacity={0.76}
+                            maxZoom={7}
+                            attribution="Satellite imagery &copy; NASA GIBS"
+                        />
+                    )}
 
                     {radarVisible &&
                         radarUrl && (
@@ -512,10 +535,23 @@ export default function LiveWeatherMap({
                     </button>
 
                     <button
-                        className="map-control"
-                        title="Map layers"
+                        className={
+                            satelliteVisible
+                                ? "map-control active"
+                                : "map-control"
+                        }
+                        onClick={() =>
+                            setSatelliteVisible(
+                                !satelliteVisible
+                            )
+                        }
+                        title="Toggle satellite imagery"
                     >
-                        <Layers size={18} />
+                        {satelliteVisible ? (
+                            <Satellite size={18} />
+                        ) : (
+                            <Layers size={18} />
+                        )}
                     </button>
 
                 </div>
@@ -582,9 +618,15 @@ export default function LiveWeatherMap({
                             }
                         >
                             {isPlaying ? (
-                                <Pause size={17} />
+                                <>
+                                    <Pause size={17} />
+                                    <span>Stop</span>
+                                </>
                             ) : (
-                                <Play size={17} />
+                                <>
+                                    <Play size={17} />
+                                    <span>Play live</span>
+                                </>
                             )}
                         </button>
 

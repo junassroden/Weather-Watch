@@ -352,7 +352,16 @@ a {
 }
 
 .play-button {
+    width: auto !important;
+    min-width: 88px;
+    padding: 0 10px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     color: #6cb9ed !important;
+    font-size: 10px;
+    font-weight: 700;
 }
 
 .timeline-track {
@@ -942,6 +951,102 @@ a {
     font-size: 15px;
 }
 
+.satellite-command-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 11px;
+    margin-top: 16px;
+}
+
+.satellite-panel,
+.satellite-alert {
+    min-height: 176px;
+    padding: 18px;
+    border: 1px solid #1a2a3e;
+    background: #091422;
+    border-radius: 11px;
+}
+
+.satellite-panel-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #71b8e7;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.satellite-panel-heading svg {
+    flex: 0 0 auto;
+}
+
+.satellite-panel > p,
+.satellite-alert > p {
+    min-height: 36px;
+    margin: 12px 0 10px;
+    color: #9baabd;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.satellite-panel small,
+.satellite-alert small {
+    color: #617084;
+    font-size: 10px;
+}
+
+.satellite-reading {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-top: 17px;
+}
+
+.satellite-reading strong,
+.satellite-alert > strong {
+    color: #f0f6fb;
+    font-size: 25px;
+    letter-spacing: -0.04em;
+}
+
+.satellite-reading span {
+    color: #8292a6;
+    font-size: 11px;
+}
+
+.satellite-alert {
+    background: #101923;
+}
+
+.satellite-alert-watch {
+    border-color: #735c2f;
+    background: #19170f;
+}
+
+.satellite-alert-watch .satellite-panel-heading {
+    color: #e1b75b;
+}
+
+.satellite-alert-severe {
+    border-color: #7c3f46;
+    background: #1b1117;
+}
+
+.satellite-alert-severe .satellite-panel-heading {
+    color: #ef8994;
+}
+
+.satellite-alert-clear .satellite-panel-heading {
+    color: #78c8ad;
+}
+
+.satellite-alert > strong {
+    display: block;
+    margin-top: 18px;
+    font-size: 20px;
+}
+
 .data-source-note {
     margin-top: 14px;
     color: #617084;
@@ -1078,7 +1183,8 @@ a {
     }
 
     .sun-grid,
-    .radar-information {
+    .radar-information,
+    .satellite-command-grid {
         grid-template-columns: 1fr;
     }
 
