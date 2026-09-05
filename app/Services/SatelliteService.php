@@ -49,6 +49,13 @@ class SatelliteService
 
             'frames' =>
                 collect($frames)
+                    ->filter(
+                        fn ($frame) => isset(
+                            $frame['time'],
+                            $frame['path']
+                        )
+                    )
+                    ->sortBy('time')
                     ->map(
                         function ($frame) use (
                             $host

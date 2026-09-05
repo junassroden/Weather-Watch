@@ -35,12 +35,27 @@ import "leaflet/dist/leaflet.css";
 
 const DEFAULT_VIEW = [20, 0];
 
-const satelliteDate = new Date(Date.now() - 86400000)
-    .toISOString()
-    .slice(0, 10);
+const CLOUD_FRAME_COUNT = 18;
+const CLOUD_FRAME_INTERVAL = 10 * 60 * 1000;
 
-const satelliteUrl =
-    `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${satelliteDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+function getCloudFrames() {
+    const currentTime = Math.floor(
+        Date.now() / CLOUD_FRAME_INTERVAL
+    ) * CLOUD_FRAME_INTERVAL;
+
+    return Array.from(
+        { length: CLOUD_FRAME_COUNT },
+        (_, index) => new Date(
+            currentTime -
+            (CLOUD_FRAME_COUNT - 1 - index) *
+            CLOUD_FRAME_INTERVAL
+        ).toISOString()
+    );
+}
+
+function getCloudTileUrl(timestamp) {
+    return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GOES-East_ABI_Band13_Clean_Infrared/default/${timestamp}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
+}
 
 const userIcon = L.divIcon({
     className: "weather-user-marker",
@@ -144,6 +159,12 @@ export default function LiveWeatherMap({
 
     const [isPlaying, setIsPlaying] =
         useState(false);
+
+    const [cloudFrames] =
+        useState(getCloudFrames);
+
+    const [currentCloudFrame, setCurrentCloudFrame] =
+        useState(cloudFrames.length - 1);
 
     const [radarVisible, setRadarVisible] =
         useState(true);
@@ -277,6 +298,14 @@ export default function LiveWeatherMap({
     }, []);
 
     useEffect(() => {
+        if (currentFrame >= frames.length) {
+            setCurrentFrame(
+                Math.max(frames.length - 1, 0)
+            );
+        }
+    }, [currentFrame, frames.length]);
+
+    useEffect(() => {
         if (
             !isPlaying ||
             frames.length < 2
@@ -295,6 +324,14 @@ export default function LiveWeatherMap({
 
                 return previous + 1;
             });
+
+            setCurrentCloudFrame((previous) => {
+                if (previous >= cloudFrames.length - 1) {
+                    return 0;
+                }
+
+                return previous + 1;
+            });
         }, 900);
 
         return () => {
@@ -303,6 +340,7 @@ export default function LiveWeatherMap({
     }, [
         isPlaying,
         frames.length,
+        cloudFrames.length,
     ]);
 
     const activeFrame =
@@ -315,6 +353,10 @@ export default function LiveWeatherMap({
 
         return activeFrame.tile_url;
     }, [activeFrame]);
+
+    const cloudUrl = getCloudTileUrl(
+        cloudFrames[currentCloudFrame]
+    );
 
     const frameTime = useMemo(() => {
         if (!activeFrame) {
@@ -404,7 +446,7 @@ export default function LiveWeatherMap({
                     </div>
 
                     <h2>
-                        Radar Monitoring
+                        Cloud & Radar Monitoring
                     </h2>
 
                     <p>
@@ -461,11 +503,12 @@ export default function LiveWeatherMap({
 
                     {satelliteVisible && (
                         <TileLayer
-                            key={satelliteDate}
-                            url={satelliteUrl}
-                            opacity={0.76}
+                            key={cloudUrl}
+                            url={cloudUrl}
+                            opacity={0.58}
                             maxZoom={7}
-                            attribution="Satellite imagery &copy; NASA GIBS"
+                            maxNativeZoom={6}
+                            attribution="Cloud imagery &copy; NASA GIBS"
                         />
                     )}
 
@@ -582,7 +625,7 @@ export default function LiveWeatherMap({
                     <div className="radar-frame-info">
 
                         <span className="radar-label">
-                            RADAR FRAME
+                            RADAR CAPTURE TIME
                         </span>
 
                         <strong>
@@ -610,7 +653,7 @@ export default function LiveWeatherMap({
                             className="play-button"
                             onClick={() =>
                                 setIsPlaying(
-                                    !isPlaying
+                                    (playing) => !playing
                                 )
                             }
                             disabled={
