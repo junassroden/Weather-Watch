@@ -63,7 +63,7 @@ function getWeatherLabel(code) {
         code >= 51 &&
         code <= 67
     ) {
-        return "Rain";
+        return code <= 55 ? "Drizzle" : "Rain";
     }
 
     if (
@@ -77,7 +77,21 @@ function getWeatherLabel(code) {
         return "Thunderstorm";
     }
 
+    if (code >= 71 && code <= 77) {
+        return "Snow";
+    }
+
+    if (code >= 45 && code <= 48) {
+        return "Fog";
+    }
+
     return "Variable";
+}
+
+function parseLocalDate(date) {
+    const [year, month, day] = date.split("-").map(Number);
+
+    return new Date(year, month - 1, day);
 }
 
 export default function ForecastCard({
@@ -93,8 +107,10 @@ export default function ForecastCard({
     const label =
         getWeatherLabel(weatherCode);
 
+    const localDate = parseLocalDate(date);
+
     const day =
-        new Date(date).toLocaleDateString(
+        localDate.toLocaleDateString(
             "en-US",
             {
                 weekday: "short",
@@ -109,9 +125,7 @@ export default function ForecastCard({
             </div>
 
             <div className="forecast-card-date">
-                {new Date(
-                    date
-                ).toLocaleDateString(
+                {localDate.toLocaleDateString(
                     "en-US",
                     {
                         month: "short",
@@ -131,11 +145,15 @@ export default function ForecastCard({
             <div className="forecast-card-temperatures">
 
                 <strong>
-                    {Math.round(max ?? 0)}°
+                    {max === null || max === undefined
+                        ? "Unavailable"
+                        : `${Math.round(max)}°`}
                 </strong>
 
                 <span>
-                    {Math.round(min ?? 0)}°
+                    {min === null || min === undefined
+                        ? "Unavailable"
+                        : `${Math.round(min)}°`}
                 </span>
 
             </div>
@@ -144,7 +162,9 @@ export default function ForecastCard({
                 <CloudRain size={14} />
 
                 <span>
-                    {precipitation ?? 0}% rain
+                    {precipitation === null || precipitation === undefined
+                        ? "Unavailable"
+                        : `${precipitation}% rain`}
                 </span>
             </div>
 

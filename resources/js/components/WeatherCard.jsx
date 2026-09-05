@@ -5,6 +5,8 @@ export default function WeatherCard({
     unit = "",
     description = "",
 }) {
+    const isAvailable = value !== null && value !== undefined;
+
     return (
         <div className="weather-card">
 
@@ -19,9 +21,9 @@ export default function WeatherCard({
                 </span>
 
                 <div className="weather-card-value">
-                    {value ?? "--"}
+                    {isAvailable ? value : "Unavailable"}
 
-                    {unit && (
+                    {isAvailable && unit && (
                         <span>
                             {unit}
                         </span>

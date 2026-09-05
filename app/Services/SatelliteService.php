@@ -34,51 +34,51 @@ class SatelliteService
         $frames =
             $data['radar']['past'] ?? [];
 
-        if (!$host) {
+        if (! $host) {
             throw new RuntimeException(
                 'RainViewer did not return a radar host.'
             );
         }
 
         return [
-            'provider' =>
-                'RainViewer',
+            'provider' => 'RainViewer',
 
-            'host' =>
-                $host,
+            'data_type' => 'Precipitation Radar',
 
-            'frames' =>
-                collect($frames)
-                    ->filter(
-                        fn ($frame) => isset(
-                            $frame['time'],
-                            $frame['path']
-                        )
+            'host' => $host,
+
+            'frames' => collect($frames)
+                ->filter(
+                    fn ($frame) => isset(
+                        $frame['time'],
+                        $frame['path']
                     )
-                    ->sortBy('time')
-                    ->map(
-                        function ($frame) use (
-                            $host
-                        ) {
-                            return [
-                                'time' =>
-                                    $frame['time'],
+                )
+                ->sortBy('time')
+                ->map(
+                    function ($frame) use (
+                        $host
+                    ) {
+                        return [
+                            'time' => $frame['time'],
 
-                                'path' =>
-                                    $frame['path'],
+                            'path' => $frame['path'],
 
-                                'tile_url' =>
-                                    $host .
-                                    $frame['path'] .
-                                    '/256/{z}/{x}/{y}/2/1_0.png',
-                            ];
-                        }
-                    )
-                    ->values()
-                    ->all(),
+                            'tile_url' => $host.
+                                $frame['path'].
+                                '/256/{z}/{x}/{y}/2/1_0.png',
+                        ];
+                    }
+                )
+                ->values()
+                ->all(),
 
-            'attribution' =>
-                'Radar data by RainViewer',
+            'attribution' => 'Radar data by RainViewer',
+
+            'cloud_imagery' => [
+                'available' => false,
+                'message' => 'Cloud imagery unavailable.',
+            ],
         ];
     }
 }

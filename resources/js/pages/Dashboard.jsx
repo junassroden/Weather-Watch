@@ -352,7 +352,7 @@ export default function Dashboard() {
                             value={
                                 weather?.temperature
                             }
-                            unit="°C"
+                            unit={weather?.units?.temperature_2m || "°C"}
                             description={
                                 weather
                                     ? weatherDescription(
@@ -368,7 +368,7 @@ export default function Dashboard() {
                             value={
                                 weather?.feels_like
                             }
-                            unit="°C"
+                            unit={weather?.units?.apparent_temperature || "°C"}
                         />
 
                         <WeatherCard
@@ -377,7 +377,7 @@ export default function Dashboard() {
                             value={
                                 weather?.humidity
                             }
-                            unit="%"
+                            unit={weather?.units?.relative_humidity_2m || "%"}
                         />
 
                         <WeatherCard
@@ -386,7 +386,7 @@ export default function Dashboard() {
                             value={
                                 weather?.wind_speed
                             }
-                            unit="km/h"
+                            unit={weather?.units?.wind_speed_10m || "km/h"}
                         />
 
                         <WeatherCard
@@ -395,21 +395,25 @@ export default function Dashboard() {
                             value={
                                 weather?.pressure
                             }
-                            unit="hPa"
+                            unit={weather?.units?.pressure_msl || "hPa"}
                         />
 
                         <WeatherCard
                             icon={Eye}
                             label="Visibility"
-                            value={
-                                weather?.visibility
-                                    ? Math.round(
-                                        weather.visibility /
-                                        1000
-                                    )
-                                    : null
-                            }
+                            value={weather?.visibility == null
+                                ? null
+                                : Math.round(
+                                    weather.visibility / 1000
+                                )}
                             unit="km"
+                        />
+
+                        <WeatherCard
+                            icon={Sun}
+                            label="UV Index"
+                            value={weather?.uv_index}
+                            unit={weather?.units?.uv_index || ""}
                         />
 
                     </div>
@@ -440,7 +444,9 @@ export default function Dashboard() {
                                 Precipitation
                             </span>
                             <strong>
-                                {weather?.precipitation ?? "--"} mm
+                                {weather?.precipitation == null
+                                    ? "Unavailable"
+                                    : `${weather.precipitation} ${weather.units?.precipitation || "mm"}`}
                             </strong>
                         </div>
 
@@ -450,7 +456,9 @@ export default function Dashboard() {
                                 Cloud Cover
                             </span>
                             <strong>
-                                {weather?.cloud_cover ?? "--"}%
+                                {weather?.cloud_cover == null
+                                    ? "Unavailable"
+                                    : `${weather.cloud_cover} ${weather.units?.cloud_cover || "%"}`}
                             </strong>
                         </div>
 
@@ -460,7 +468,9 @@ export default function Dashboard() {
                                 Wind Gust
                             </span>
                             <strong>
-                                {weather?.wind_gust ?? "--"} km/h
+                                {weather?.wind_gust == null
+                                    ? "Unavailable"
+                                    : `${weather.wind_gust} ${weather.units?.wind_gusts_10m || "km/h"}`}
                             </strong>
                         </div>
 
@@ -470,7 +480,9 @@ export default function Dashboard() {
                                 Wind Direction
                             </span>
                             <strong>
-                                {weather?.wind_direction ?? "--"}°
+                                {weather?.wind_direction == null
+                                    ? "Unavailable"
+                                    : `${weather.wind_direction} ${weather.units?.wind_direction_10m || "°"}`}
                             </strong>
                         </div>
 
@@ -496,7 +508,7 @@ export default function Dashboard() {
 
                     <div className="forecast-grid">
 
-                        {daily?.time?.map(
+                        {daily?.time?.slice(0, 5).map(
                             (date, index) => (
                                 <ForecastCard
                                     key={date}

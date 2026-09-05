@@ -6,8 +6,7 @@ class ForecastService
 {
     public function __construct(
         private OpenMeteoService $openMeteo
-    ) {
-    }
+    ) {}
 
     public function getForecast(
         float $latitude,
@@ -54,20 +53,17 @@ class ForecastService
             );
 
         return [
-            'timezone' =>
-                $data['timezone'] ?? null,
+            'timezone' => $data['timezone'] ?? null,
 
-            'daily' =>
-                $data['daily'] ?? [],
+            'timezone_abbreviation' => $data['timezone_abbreviation'] ?? null,
 
-            'daily_units' =>
-                $data['daily_units'] ?? [],
+            'daily' => $data['daily'] ?? [],
 
-            'hourly' =>
-                $data['hourly'] ?? [],
+            'daily_units' => $data['daily_units'] ?? [],
 
-            'hourly_units' =>
-                $data['hourly_units'] ?? [],
+            'hourly' => $data['hourly'] ?? [],
+
+            'hourly_units' => $data['hourly_units'] ?? [],
         ];
     }
 }
