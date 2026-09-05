@@ -24,6 +24,9 @@ import LiveWeatherMap from "../components/LiveWeatherMap";
 import WeatherCard from "../components/WeatherCard";
 import ForecastCard from "../components/ForecastCard";
 import RiskCard from "../components/RiskCard";
+import WeatherVisual, {
+    getWeatherLabel,
+} from "../components/WeatherVisual";
 
 import {
     getCurrentWeather,
@@ -38,37 +41,7 @@ function weatherDescription(code) {
         return "Clear sky";
     }
 
-    if (code === 1) {
-        return "Mainly clear";
-    }
-
-    if (code === 2) {
-        return "Partly cloudy";
-    }
-
-    if (code === 3) {
-        return "Overcast";
-    }
-
-    if (
-        code >= 51 &&
-        code <= 67
-    ) {
-        return "Rain";
-    }
-
-    if (
-        code >= 80 &&
-        code <= 82
-    ) {
-        return "Rain showers";
-    }
-
-    if (code >= 95) {
-        return "Thunderstorm";
-    }
-
-    return "Variable conditions";
+    return getWeatherLabel(code);
 }
 
 export default function Dashboard() {
@@ -244,14 +217,11 @@ export default function Dashboard() {
                                 </span>
 
                                 <h1>
-                                    Live Weather Watch
+                                    {locationName || "Your local weather"}
                                 </h1>
 
-                                <p>
-                                    Monitor current weather,
-                                    radar movement, forecasts,
-                                    and local weather risks
-                                    from your actual location.
+                                <p className="hero-kicker">
+                                    Live conditions and precipitation radar
                                 </p>
 
                             </div>
@@ -268,6 +238,26 @@ export default function Dashboard() {
                                 </div>
                             )}
 
+                        </div>
+
+                        <div className="current-weather-hero">
+                            <WeatherVisual
+                                weatherCode={weather?.weather_code}
+                                isDay={weather?.is_day !== 0}
+                                size="large"
+                            />
+
+                            <div className="current-weather-copy">
+                                <span className="eyebrow">CURRENT CONDITIONS</span>
+                                <div className="current-temperature">
+                                    {weather?.temperature == null ? "--" : Math.round(weather.temperature)}
+                                    <span>{weather?.units?.temperature_2m || "°C"}</span>
+                                </div>
+                                <strong>{weather ? weatherDescription(weather.weather_code) : "Waiting for conditions"}</strong>
+                                <span className="current-weather-meta">
+                                    Feels like {weather?.feels_like == null ? "--" : `${Math.round(weather.feels_like)}${weather?.units?.apparent_temperature || "°C"}`}
+                                </span>
+                            </div>
                         </div>
 
                         <LiveWeatherMap

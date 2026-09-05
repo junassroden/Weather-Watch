@@ -412,7 +412,7 @@ export default function LiveWeatherMap({
                     </div>
 
                     <h2>
-                        Radar Monitoring
+                        Precipitation Radar
                     </h2>
 
                     <p>
@@ -556,7 +556,7 @@ export default function LiveWeatherMap({
 
                     {!cloudAvailable && (
                         <span className="map-layer-status">
-                            Cloud imagery unavailable
+                            CLOUD SATELLITE UNAVAILABLE
                         </span>
                     )}
 

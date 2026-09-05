@@ -1,102 +1,8 @@
-import {
-    Cloud,
-    CloudRain,
-    CloudSun,
-    Sun,
-    CloudLightning,
-    CloudFog,
-    Snowflake,
-} from "lucide-react";
+import { CloudRain } from "lucide-react";
 
-function getWeatherIcon(code) {
-    if (code === 0) {
-        return Sun;
-    }
-
-    if (
-        code === 1 ||
-        code === 2 ||
-        code === 3
-    ) {
-        return CloudSun;
-    }
-
-    if (
-        code >= 51 &&
-        code <= 67
-    ) {
-        return CloudRain;
-    }
-
-    if (code >= 45 && code <= 48) {
-        return CloudFog;
-    }
-
-    if (code >= 71 && code <= 77) {
-        return Snowflake;
-    }
-
-    if (
-        code >= 80 &&
-        code <= 82
-    ) {
-        return CloudRain;
-    }
-
-    if (
-        code >= 95
-    ) {
-        return CloudLightning;
-    }
-
-    return Cloud;
-}
-
-function getWeatherLabel(code) {
-    if (code === 0) {
-        return "Clear sky";
-    }
-
-    if (code === 1) {
-        return "Mainly clear";
-    }
-
-    if (code === 2) {
-        return "Partly cloudy";
-    }
-
-    if (code === 3) {
-        return "Overcast";
-    }
-
-    if (
-        code >= 51 &&
-        code <= 67
-    ) {
-        return code <= 55 ? "Drizzle" : "Rain";
-    }
-
-    if (
-        code >= 80 &&
-        code <= 82
-    ) {
-        return "Rain showers";
-    }
-
-    if (code >= 95) {
-        return "Thunderstorm";
-    }
-
-    if (code >= 71 && code <= 77) {
-        return "Snow";
-    }
-
-    if (code >= 45 && code <= 48) {
-        return "Fog";
-    }
-
-    return "Variable";
-}
+import WeatherVisual, {
+    getWeatherLabel,
+} from "./WeatherVisual";
 
 function parseLocalDate(date) {
     const [year, month, day] = date.split("-").map(Number);
@@ -111,9 +17,6 @@ export default function ForecastCard({
     min,
     precipitation,
 }) {
-    const Icon =
-        getWeatherIcon(weatherCode);
-
     const label =
         getWeatherLabel(weatherCode);
 
@@ -144,9 +47,11 @@ export default function ForecastCard({
                 )}
             </div>
 
-            <div className="forecast-card-icon">
-                <Icon size={32} />
-            </div>
+            <WeatherVisual
+                weatherCode={weatherCode}
+                isDay={true}
+                size="small"
+            />
 
             <div className="forecast-card-condition">
                 {label}

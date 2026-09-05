@@ -18,16 +18,26 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/forecast" element={<Forecast />} />
+                <Route
+                    path="/"
+                    element={<Dashboard />}
+                />
+
+                <Route
+                    path="/forecast"
+                    element={<Forecast />}
+                />
+
                 <Route
                     path="/satellite-radar"
                     element={<SatelliteRadar />}
                 />
+
                 <Route
                     path="/weather-history"
                     element={<WeatherHistory />}
                 />
+
                 <Route
                     path="/alerts"
                     element={<AlertsSafety />}
