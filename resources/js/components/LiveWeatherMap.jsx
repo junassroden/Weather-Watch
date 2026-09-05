@@ -35,28 +35,6 @@ import "leaflet/dist/leaflet.css";
 
 const DEFAULT_VIEW = [20, 0];
 
-const CLOUD_FRAME_COUNT = 18;
-const CLOUD_FRAME_INTERVAL = 10 * 60 * 1000;
-
-function getCloudFrames() {
-    const currentTime = Math.floor(
-        Date.now() / CLOUD_FRAME_INTERVAL
-    ) * CLOUD_FRAME_INTERVAL;
-
-    return Array.from(
-        { length: CLOUD_FRAME_COUNT },
-        (_, index) => new Date(
-            currentTime -
-            (CLOUD_FRAME_COUNT - 1 - index) *
-            CLOUD_FRAME_INTERVAL
-        ).toISOString()
-    );
-}
-
-function getCloudTileUrl(timestamp) {
-    return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GOES-East_ABI_Band13_Clean_Infrared/default/${timestamp}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
-}
-
 const userIcon = L.divIcon({
     className: "weather-user-marker",
     html: `
@@ -160,17 +138,14 @@ export default function LiveWeatherMap({
     const [isPlaying, setIsPlaying] =
         useState(false);
 
-    const [cloudFrames] =
-        useState(getCloudFrames);
-
-    const [currentCloudFrame, setCurrentCloudFrame] =
-        useState(cloudFrames.length - 1);
-
     const [radarVisible, setRadarVisible] =
         useState(true);
 
-    const [satelliteVisible, setSatelliteVisible] =
+    const [basemapVisible, setBasemapVisible] =
         useState(true);
+
+    const [cloudAvailable, setCloudAvailable] =
+        useState(false);
 
     const [loading, setLoading] =
         useState(true);
@@ -279,15 +254,18 @@ export default function LiveWeatherMap({
                     radar.frames || [];
 
                 setFrames(radarFrames);
+                setCloudAvailable(
+                    radar.cloud_imagery?.available === true
+                );
 
                 if (radarFrames.length > 0) {
                     setCurrentFrame(
                         radarFrames.length - 1
                     );
                 }
-            } catch (err) {
+            } catch {
                 setError(
-                    "Unable to load radar data."
+                    "Radar data unavailable."
                 );
             } finally {
                 setLoading(false);
@@ -325,13 +303,6 @@ export default function LiveWeatherMap({
                 return previous + 1;
             });
 
-            setCurrentCloudFrame((previous) => {
-                if (previous >= cloudFrames.length - 1) {
-                    return 0;
-                }
-
-                return previous + 1;
-            });
         }, 900);
 
         return () => {
@@ -340,7 +311,6 @@ export default function LiveWeatherMap({
     }, [
         isPlaying,
         frames.length,
-        cloudFrames.length,
     ]);
 
     const activeFrame =
@@ -353,10 +323,6 @@ export default function LiveWeatherMap({
 
         return activeFrame.tile_url;
     }, [activeFrame]);
-
-    const cloudUrl = getCloudTileUrl(
-        cloudFrames[currentCloudFrame]
-    );
 
     const frameTime = useMemo(() => {
         if (!activeFrame) {
@@ -446,7 +412,7 @@ export default function LiveWeatherMap({
                     </div>
 
                     <h2>
-                        Cloud & Radar Monitoring
+                        Radar Monitoring
                     </h2>
 
                     <p>
@@ -495,20 +461,11 @@ export default function LiveWeatherMap({
                     className="live-weather-map"
                 >
 
-                    <TileLayer
-                        attribution="Tiles &copy; Esri"
-                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                        maxZoom={7}
-                    />
-
-                    {satelliteVisible && (
+                    {basemapVisible && (
                         <TileLayer
-                            key={cloudUrl}
-                            url={cloudUrl}
-                            opacity={0.58}
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                             maxZoom={7}
-                            maxNativeZoom={6}
-                            attribution="Cloud imagery &copy; NASA GIBS"
+                            attribution="Satellite basemap &copy; Esri"
                         />
                     )}
 
@@ -579,23 +536,29 @@ export default function LiveWeatherMap({
 
                     <button
                         className={
-                            satelliteVisible
+                            basemapVisible
                                 ? "map-control active"
                                 : "map-control"
                         }
                         onClick={() =>
-                            setSatelliteVisible(
-                                !satelliteVisible
+                            setBasemapVisible(
+                                !basemapVisible
                             )
                         }
-                        title="Toggle satellite imagery"
+                        title="Toggle satellite basemap"
                     >
-                        {satelliteVisible ? (
+                        {basemapVisible ? (
                             <Satellite size={18} />
                         ) : (
                             <Layers size={18} />
                         )}
                     </button>
+
+                    {!cloudAvailable && (
+                        <span className="map-layer-status">
+                            Cloud imagery unavailable
+                        </span>
+                    )}
 
                 </div>
 

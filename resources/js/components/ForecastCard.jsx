@@ -4,6 +4,8 @@ import {
     CloudSun,
     Sun,
     CloudLightning,
+    CloudFog,
+    Snowflake,
 } from "lucide-react";
 
 function getWeatherIcon(code) {
@@ -24,6 +26,14 @@ function getWeatherIcon(code) {
         code <= 67
     ) {
         return CloudRain;
+    }
+
+    if (code >= 45 && code <= 48) {
+        return CloudFog;
+    }
+
+    if (code >= 71 && code <= 77) {
+        return Snowflake;
     }
 
     if (
