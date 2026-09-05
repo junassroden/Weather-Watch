@@ -1,135 +1,375 @@
-const WEATHER_TYPES = {
-    clear: "clear",
-    partly: "partly",
-    cloudy: "cloudy",
-    fog: "fog",
-    drizzle: "drizzle",
-    rain: "rain",
-    snow: "snow",
-    storm: "storm",
-};
+import {
+    Cloud,
+    CloudFog,
+    CloudLightning,
+    Snowflake,
+} from "lucide-react";
 
-export function getWeatherType(weatherCode) {
-    if (weatherCode === 0) {
-        return WEATHER_TYPES.clear;
+export function getWeatherType(code) {
+    if (code === 0) {
+        return "clear";
     }
 
-    if (weatherCode === 1 || weatherCode === 2) {
-        return WEATHER_TYPES.partly;
+    if (
+        code === 1 ||
+        code === 2
+    ) {
+        return "partly";
     }
 
-    if (weatherCode === 3) {
-        return WEATHER_TYPES.cloudy;
+    if (code === 3) {
+        return "overcast";
     }
 
-    if (weatherCode === 45 || weatherCode === 48) {
-        return WEATHER_TYPES.fog;
+    if (
+        code === 45 ||
+        code === 48
+    ) {
+        return "fog";
     }
 
-    if (weatherCode >= 51 && weatherCode <= 55) {
-        return WEATHER_TYPES.drizzle;
+    if (
+        code >= 51 &&
+        code <= 57
+    ) {
+        return "drizzle";
     }
 
-    if ((weatherCode >= 56 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) {
-        return WEATHER_TYPES.rain;
+    if (
+        code >= 61 &&
+        code <= 67
+    ) {
+        return "rain";
     }
 
-    if (weatherCode >= 71 && weatherCode <= 77) {
-        return WEATHER_TYPES.snow;
+    if (
+        code >= 71 &&
+        code <= 77
+    ) {
+        return "snow";
     }
 
-    if (weatherCode >= 95) {
-        return WEATHER_TYPES.storm;
+    if (
+        code >= 80 &&
+        code <= 82
+    ) {
+        return "showers";
     }
 
-    return WEATHER_TYPES.cloudy;
+    if (code >= 95) {
+        return "storm";
+    }
+
+    return "overcast";
 }
 
-export function getWeatherLabel(weatherCode) {
-    const labels = {
-        0: "Clear sky",
-        1: "Mainly clear",
-        2: "Partly cloudy",
-        3: "Overcast",
-        45: "Fog",
-        48: "Freezing fog",
-        51: "Light drizzle",
-        53: "Drizzle",
-        55: "Dense drizzle",
-        56: "Freezing drizzle",
-        57: "Dense freezing drizzle",
-        61: "Light rain",
-        63: "Rain",
-        65: "Heavy rain",
-        66: "Freezing rain",
-        67: "Heavy freezing rain",
-        71: "Light snow",
-        73: "Snow",
-        75: "Heavy snow",
-        77: "Snow grains",
-        80: "Light showers",
-        81: "Rain showers",
-        82: "Heavy showers",
-        95: "Thunderstorm",
-        96: "Thunderstorm with hail",
-        99: "Thunderstorm with heavy hail",
-    };
+export function weatherLabel(code) {
+    if (code === 0) {
+        return "Clear sky";
+    }
 
-    return labels[weatherCode] || "Variable conditions";
+    if (code === 1) {
+        return "Mainly clear";
+    }
+
+    if (code === 2) {
+        return "Partly cloudy";
+    }
+
+    if (code === 3) {
+        return "Overcast";
+    }
+
+    if (
+        code === 45 ||
+        code === 48
+    ) {
+        return "Fog";
+    }
+
+    if (
+        code >= 51 &&
+        code <= 55
+    ) {
+        return "Drizzle";
+    }
+
+    if (
+        code >= 56 &&
+        code <= 57
+    ) {
+        return "Freezing drizzle";
+    }
+
+    if (
+        code >= 61 &&
+        code <= 65
+    ) {
+        return "Rain";
+    }
+
+    if (
+        code >= 66 &&
+        code <= 67
+    ) {
+        return "Freezing rain";
+    }
+
+    if (
+        code >= 71 &&
+        code <= 77
+    ) {
+        return "Snow";
+    }
+
+    if (
+        code >= 80 &&
+        code <= 82
+    ) {
+        return "Rain showers";
+    }
+
+    if (code === 95) {
+        return "Thunderstorm";
+    }
+
+    if (
+        code === 96 ||
+        code === 99
+    ) {
+        return "Thunderstorm with hail";
+    }
+
+    return "Variable conditions";
+}
+
+function SunVisual({
+    night = false,
+}) {
+    if (night) {
+        return (
+            <div className="visual-moon">
+                <div className="moon-body" />
+                <span className="moon-shadow moon-shadow-one" />
+                <span className="moon-shadow moon-shadow-two" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="visual-sun">
+            <div className="sun-glow" />
+            <div className="sun-core" />
+
+            <div className="sun-rays">
+                {Array.from({
+                    length: 8,
+                }).map((_, index) => (
+                    <span
+                        key={index}
+                        style={{
+                            transform: `rotate(${index * 45}deg)`,
+                        }}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function CloudVisual({
+    dark = false,
+}) {
+    return (
+        <div
+            className={`visual-cloud ${
+                dark
+                    ? "visual-cloud-dark"
+                    : ""
+            }`}
+        >
+            <span className="cloud-one" />
+            <span className="cloud-two" />
+            <span className="cloud-three" />
+        </div>
+    );
+}
+
+function RainVisual({
+    heavy = false,
+}) {
+    const count = heavy ? 12 : 8;
+
+    return (
+        <div className="visual-rain">
+            <CloudVisual dark />
+
+            <div className="rain-lines">
+                {Array.from({
+                    length: count,
+                }).map((_, index) => (
+                    <span
+                        key={index}
+                        style={{
+                            left: `${8 + index * 8}%`,
+                            animationDelay: `${
+                                (index % 4) * 0.18
+                            }s`,
+                        }}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function StormVisual() {
+    return (
+        <div className="visual-storm">
+            <CloudVisual dark />
+
+            <svg
+                className="storm-bolt"
+                viewBox="0 0 80 110"
+                aria-hidden="true"
+            >
+                <path
+                    d="M47 2 L16 60 H38 L28 108 L66 46 H44 Z"
+                />
+            </svg>
+
+            <div className="storm-rain">
+                {Array.from({
+                    length: 6,
+                }).map((_, index) => (
+                    <span
+                        key={index}
+                        style={{
+                            left: `${12 + index * 13}%`,
+                        }}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function FogVisual() {
+    return (
+        <div className="visual-fog">
+            <CloudFog
+                size={58}
+                strokeWidth={1}
+            />
+
+            <span />
+            <span />
+            <span />
+        </div>
+    );
+}
+
+function SnowVisual() {
+    return (
+        <div className="visual-snow">
+            <CloudVisual dark />
+
+            <div className="snowflakes">
+                {Array.from({
+                    length: 8,
+                }).map((_, index) => (
+                    <span key={index}>
+                        <Snowflake size={11} />
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 export default function WeatherVisual({
-    weatherCode,
+    code,
     isDay = true,
-    size = "medium",
+    size = "large",
 }) {
-    const type = getWeatherType(weatherCode);
-    const isNight = !isDay;
+    const type =
+        getWeatherType(code);
+
+    const night =
+        !isDay;
 
     return (
         <div
-            className={`weather-visual weather-visual-${type} weather-visual-${size} ${isNight ? "weather-visual-night" : ""}`}
-            role="img"
-            aria-label={getWeatherLabel(weatherCode)}
+            className={`weather-visual weather-visual-${size} weather-type-${type} ${
+                night
+                    ? "weather-night"
+                    : "weather-day"
+            }`}
         >
-            {(type === WEATHER_TYPES.clear || type === WEATHER_TYPES.partly) && (
-                <span className="weather-visual-orb" />
+            {type === "clear" && (
+                <SunVisual
+                    night={night}
+                />
             )}
 
-            {isNight && type === WEATHER_TYPES.clear && (
-                <span className="weather-visual-stars" />
+            {type === "partly" && (
+                <>
+                    <SunVisual
+                        night={night}
+                    />
+
+                    <CloudVisual />
+                </>
             )}
 
-            {[
-                WEATHER_TYPES.partly,
-                WEATHER_TYPES.cloudy,
-                WEATHER_TYPES.fog,
-                WEATHER_TYPES.drizzle,
-                WEATHER_TYPES.rain,
-                WEATHER_TYPES.snow,
-                WEATHER_TYPES.storm,
+            {type === "overcast" && (
+                <>
+                    <CloudVisual dark />
+                    <CloudVisual />
+                </>
+            )}
+
+            {type === "fog" && (
+                <FogVisual />
+            )}
+
+            {type === "drizzle" && (
+                <RainVisual />
+            )}
+
+            {type === "rain" && (
+                <RainVisual
+                    heavy={code >= 65}
+                />
+            )}
+
+            {type === "showers" && (
+                <RainVisual />
+            )}
+
+            {type === "storm" && (
+                <StormVisual />
+            )}
+
+            {type === "snow" && (
+                <SnowVisual />
+            )}
+
+            {![
+                "clear",
+                "partly",
+                "overcast",
+                "fog",
+                "drizzle",
+                "rain",
+                "showers",
+                "storm",
+                "snow",
             ].includes(type) && (
-                <span className="weather-visual-cloud">
-                    <i />
-                    <b />
-                    <em />
-                </span>
-            )}
-
-            {(type === WEATHER_TYPES.drizzle || type === WEATHER_TYPES.rain || type === WEATHER_TYPES.storm) && (
-                <span className="weather-visual-precipitation" />
-            )}
-
-            {type === WEATHER_TYPES.snow && (
-                <span className="weather-visual-snow" />
-            )}
-
-            {type === WEATHER_TYPES.storm && (
-                <span className="weather-visual-lightning" />
-            )}
-
-            {type === WEATHER_TYPES.fog && (
-                <span className="weather-visual-mist" />
+                <Cloud
+                    size={56}
+                    strokeWidth={1}
+                />
             )}
         </div>
     );

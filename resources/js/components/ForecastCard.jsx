@@ -1,13 +1,25 @@
-import { CloudRain } from "lucide-react";
+import {
+    CloudRain,
+} from "lucide-react";
 
 import WeatherVisual, {
-    getWeatherLabel,
+    weatherLabel,
 } from "./WeatherVisual";
 
-function parseLocalDate(date) {
-    const [year, month, day] = date.split("-").map(Number);
+function parseDate(date) {
+    const [
+        year,
+        month,
+        day,
+    ] = date
+        .split("-")
+        .map(Number);
 
-    return new Date(year, month - 1, day);
+    return new Date(
+        year,
+        month - 1,
+        day
+    );
 }
 
 export default function ForecastCard({
@@ -17,72 +29,83 @@ export default function ForecastCard({
     min,
     precipitation,
 }) {
-    const label =
-        getWeatherLabel(weatherCode);
+    const parsedDate =
+        parseDate(date);
 
-    const localDate = parseLocalDate(date);
-
-    const day =
-        localDate.toLocaleDateString(
+    const weekday =
+        parsedDate.toLocaleDateString(
             "en-US",
             {
-                weekday: "short",
+                weekday: "long",
+            }
+        );
+
+    const shortDate =
+        parsedDate.toLocaleDateString(
+            "en-US",
+            {
+                month: "short",
+                day: "numeric",
             }
         );
 
     return (
-        <div className="forecast-card">
+        <article className="forecast-card">
 
-            <div className="forecast-card-day">
-                {day}
+            <div className="forecast-date">
+                <strong>
+                    {weekday}
+                </strong>
+
+                <span>
+                    {shortDate}
+                </span>
             </div>
 
-            <div className="forecast-card-date">
-                {localDate.toLocaleDateString(
-                    "en-US",
-                    {
-                        month: "short",
-                        day: "numeric",
-                    }
+            <div className="forecast-visual">
+                <WeatherVisual
+                    code={weatherCode}
+                    isDay={true}
+                    size="small"
+                />
+            </div>
+
+            <div className="forecast-condition">
+                {weatherLabel(
+                    weatherCode
                 )}
             </div>
 
-            <WeatherVisual
-                weatherCode={weatherCode}
-                isDay={true}
-                size="small"
-            />
-
-            <div className="forecast-card-condition">
-                {label}
-            </div>
-
-            <div className="forecast-card-temperatures">
+            <div className="forecast-temperature">
 
                 <strong>
-                    {max === null || max === undefined
-                        ? "Unavailable"
+                    {max == null
+                        ? "—"
                         : `${Math.round(max)}°`}
                 </strong>
 
                 <span>
-                    {min === null || min === undefined
-                        ? "Unavailable"
+                    {min == null
+                        ? "—"
                         : `${Math.round(min)}°`}
                 </span>
 
             </div>
 
-            <div className="forecast-card-rain">
-                <CloudRain size={14} />
+            <div className="forecast-rain">
+                <CloudRain
+                    size={14}
+                />
 
                 <span>
-                    {precipitation === null || precipitation === undefined
-                        ? "Unavailable"
-                        : `${precipitation}% rain`}
+                    {precipitation == null
+                        ? "—"
+                        : `${Math.round(
+                              precipitation
+                          )}% rain`}
                 </span>
             </div>
 
-        </div>
+        </article>
     );
 }

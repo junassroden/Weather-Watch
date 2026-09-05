@@ -25,7 +25,7 @@ import WeatherCard from "../components/WeatherCard";
 import ForecastCard from "../components/ForecastCard";
 import RiskCard from "../components/RiskCard";
 import WeatherVisual, {
-    getWeatherLabel,
+    weatherLabel,
 } from "../components/WeatherVisual";
 
 import {
@@ -41,7 +41,7 @@ function weatherDescription(code) {
         return "Clear sky";
     }
 
-    return getWeatherLabel(code);
+    return weatherLabel(code);
 }
 
 export default function Dashboard() {
@@ -242,7 +242,7 @@ export default function Dashboard() {
 
                         <div className="current-weather-hero">
                             <WeatherVisual
-                                weatherCode={weather?.weather_code}
+                                code={weather?.weather_code}
                                 isDay={weather?.is_day !== 0}
                                 size="large"
                             />

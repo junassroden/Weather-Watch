@@ -5,39 +5,48 @@ export default function WeatherCard({
     unit = "",
     description = "",
 }) {
-    const isAvailable = value !== null && value !== undefined;
+    const available =
+        value !== null &&
+        value !== undefined;
 
     return (
-        <div className="weather-card">
+        <article className="weather-card">
 
-            <div className="weather-card-icon">
-                <Icon size={21} />
-            </div>
+            <div className="weather-card-header">
 
-            <div className="weather-card-content">
+                <span className="weather-card-icon">
+                    <Icon
+                        size={18}
+                        strokeWidth={1.8}
+                    />
+                </span>
 
                 <span className="weather-card-label">
                     {label}
                 </span>
 
-                <div className="weather-card-value">
-                    {isAvailable ? value : "Unavailable"}
+            </div>
 
-                    {isAvailable && unit && (
-                        <span>
-                            {unit}
-                        </span>
-                    )}
-                </div>
+            <div className="weather-card-value">
 
-                {description && (
-                    <span className="weather-card-description">
-                        {description}
-                    </span>
+                {available
+                    ? value
+                    : "—"}
+
+                {available && unit && (
+                    <small>
+                        {unit}
+                    </small>
                 )}
 
             </div>
 
-        </div>
+            {description && (
+                <div className="weather-card-description">
+                    {description}
+                </div>
+            )}
+
+        </article>
     );
-};
+}

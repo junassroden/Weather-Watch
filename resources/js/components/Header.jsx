@@ -1,88 +1,100 @@
 import {
-    Menu,
-    Search,
-    MapPin,
     CloudSun,
+    MapPin,
+    Search,
 } from "lucide-react";
 
-import { NavLink } from "react-router-dom";
+import {
+    NavLink,
+    useNavigate,
+} from "react-router-dom";
 
 export default function Header() {
+    const navigate = useNavigate();
+
+    const navClass = ({ isActive }) =>
+        `header-nav-link ${
+            isActive ? "active" : ""
+        }`;
+
     return (
-        <header className="header">
+        <header className="site-header">
             <div className="container header-inner">
 
-                <NavLink to="/" className="brand">
-                    <div className="brand-icon">
-                        <CloudSun size={22} />
-                    </div>
+                <NavLink
+                    to="/"
+                    className="brand"
+                >
+                    <span className="brand-mark">
+                        <CloudSun size={21} />
+                    </span>
 
-                    <span>WeatherWatch</span>
+                    <span className="brand-name">
+                        WeatherWatch
+                    </span>
                 </NavLink>
 
                 <nav className="desktop-nav">
-
                     <NavLink
                         to="/"
                         end
-                        className={({ isActive }) =>
-                            isActive ? "active" : ""
-                        }
+                        className={navClass}
                     >
                         Live Weather
                     </NavLink>
 
                     <NavLink
                         to="/forecast"
-                        className={({ isActive }) =>
-                            isActive ? "active" : ""
-                        }
+                        className={navClass}
                     >
                         Forecast
                     </NavLink>
 
                     <NavLink
                         to="/satellite-radar"
-                        className={({ isActive }) =>
-                            isActive ? "active" : ""
-                        }
+                        className={navClass}
                     >
                         Satellite & Radar
                     </NavLink>
 
                     <NavLink
                         to="/alerts"
-                        className={({ isActive }) =>
-                            isActive ? "active" : ""
-                        }
+                        className={navClass}
                     >
                         Alerts
                     </NavLink>
-
                 </nav>
 
                 <div className="header-actions">
 
-                    <button className="header-icon-button">
-                        <Search size={19} />
+                    <button
+                        className="header-action-button"
+                        onClick={() =>
+                            navigate("/forecast")
+                        }
+                        aria-label="Search weather"
+                    >
+                        <Search size={17} />
+                        <span>Search</span>
                     </button>
 
                     <button
-                        className="header-location"
+                        className="header-action-button location-button"
                         onClick={() => {
-                            window.location.href = "/";
+                            window.dispatchEvent(
+                                new Event(
+                                    "weatherwatch:locate"
+                                )
+                            );
                         }}
                     >
-                        <MapPin size={18} />
-                        <span>My Location</span>
-                    </button>
-
-                    <button className="header-icon-button mobile-menu">
-                        <Menu size={21} />
+                        <MapPin size={17} />
+                        <span>
+                            My Location
+                        </span>
                     </button>
 
                 </div>
-
             </div>
         </header>
     );
