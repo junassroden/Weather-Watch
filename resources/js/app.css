@@ -32,7 +32,7 @@ a {
 }
 
 .container {
-    width: min(1240px, calc(100% - 40px));
+    width: min(1320px, calc(100% - 48px));
     margin: 0 auto;
 }
 
@@ -51,7 +51,7 @@ a {
 }
 
 .header-inner {
-    height: 72px;
+    height: 82px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -64,7 +64,7 @@ a {
     gap: 11px;
     font-weight: 800;
     letter-spacing: -0.03em;
-    font-size: 18px;
+    font-size: 21px;
 }
 
 .brand-icon {
@@ -81,14 +81,14 @@ a {
 .desktop-nav {
     display: flex;
     align-items: center;
-    gap: 28px;
+    gap: 34px;
 }
 
 .desktop-nav a {
     position: relative;
-    padding: 26px 0;
+    padding: 30px 0;
     color: #8c99aa;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     transition: 0.2s ease;
 }
@@ -144,21 +144,21 @@ a {
 }
 
 .hero-section {
-    padding: 48px 0 25px;
+    padding: 58px 0 32px;
 }
 
 .hero-heading {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 30px;
-    margin-bottom: 28px;
+    gap: 24px;
+    margin-bottom: 24px;
 }
 
 .eyebrow {
     display: block;
     color: #62b5ee;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.14em;
     margin-bottom: 9px;
@@ -178,7 +178,7 @@ a {
     margin: 15px 0 0;
     color: #8290a3;
     line-height: 1.7;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .current-location-badge {
@@ -187,10 +187,10 @@ a {
     gap: 8px;
     border: 1px solid #203149;
     background: #0a1422;
-    padding: 10px 14px;
+    padding: 12px 16px;
     border-radius: 9px;
     color: #b9c8d9;
-    font-size: 12px;
+    font-size: 14px;
     white-space: nowrap;
 }
 
@@ -203,7 +203,7 @@ a {
 }
 
 .live-map-header {
-    padding: 19px 21px;
+    padding: 24px 26px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -212,13 +212,13 @@ a {
 
 .live-map-header h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 22px;
 }
 
 .live-map-header p {
     margin: 5px 0 0;
     color: #77869a;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .map-status {
@@ -242,7 +242,7 @@ a {
 
 .live-map-wrapper {
     position: relative;
-    height: 610px;
+    height: 680px;
 }
 
 .live-weather-map {
@@ -275,8 +275,8 @@ a {
 }
 
 .map-control {
-    width: 39px;
-    height: 39px;
+    width: 46px;
+    height: 46px;
     display: grid;
     place-items: center;
     border: 1px solid #26394f;
@@ -306,7 +306,7 @@ a {
     background: rgba(5, 11, 20, 0.92);
     border: 1px solid #25364b;
     border-radius: 11px;
-    padding: 13px 15px;
+    padding: 17px 19px;
     backdrop-filter: blur(14px);
 }
 
@@ -338,8 +338,8 @@ a {
 
 .timeline > button {
     flex: 0 0 auto;
-    width: 33px;
-    height: 33px;
+    width: 40px;
+    height: 40px;
     display: grid;
     place-items: center;
     border: 1px solid #26394e;
@@ -355,14 +355,14 @@ a {
 
 .play-button {
     width: auto !important;
-    min-width: 88px;
+    min-width: 108px;
     padding: 0 10px;
     display: flex !important;
     align-items: center;
     justify-content: center;
     gap: 6px;
     color: #6cb9ed !important;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
 }
 
@@ -393,12 +393,12 @@ a {
     display: flex;
     align-items: center;
     gap: 9px;
-    padding: 11px 15px;
+    padding: 14px 18px;
     border: 1px solid #293d54;
     background: rgba(5, 11, 20, 0.94);
     border-radius: 9px;
     color: #c5d2df;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .spin {
@@ -433,7 +433,7 @@ a {
 }
 
 .map-footer-info > div {
-    padding: 15px 18px;
+    padding: 19px 22px;
     border-right: 1px solid #1a293c;
 }
 
@@ -453,7 +453,7 @@ a {
 
 .map-footer-info strong {
     color: #dbe4ee;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .user-marker {
@@ -501,14 +501,14 @@ a {
 }
 
 .dashboard-section {
-    padding: 55px 0 0;
+    padding: 42px 0 0;
 }
 
 .section-heading {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .section-heading h2 {
@@ -525,12 +525,12 @@ a {
 .weather-card-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 11px;
+    gap: 16px;
 }
 
 .weather-card {
-    min-height: 145px;
-    padding: 17px;
+    min-height: 170px;
+    padding: 21px;
     background: #091422;
     border: 1px solid #1a2a3e;
     border-radius: 12px;
@@ -557,7 +557,7 @@ a {
 
 .weather-card-value {
     color: #edf4fb;
-    font-size: 23px;
+    font-size: 28px;
     font-weight: 700;
 }
 
@@ -577,11 +577,11 @@ a {
 .overview-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 11px;
+    gap: 16px;
 }
 
 .overview-card {
-    padding: 18px;
+    padding: 22px;
     display: grid;
     grid-template-columns: 30px 1fr;
     column-gap: 10px;
@@ -603,18 +603,18 @@ a {
 
 .overview-card strong {
     color: #dce6f0;
-    font-size: 15px;
+    font-size: 18px;
 }
 
 .forecast-grid,
 .forecast-page-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
+    gap: 16px;
 }
 
 .forecast-card {
-    padding: 18px 14px;
+    padding: 22px 17px;
     text-align: center;
     background: #091422;
     border: 1px solid #1a2a3e;
@@ -623,7 +623,7 @@ a {
 
 .forecast-card-day {
     color: #dce6ef;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
 }
 
@@ -672,14 +672,14 @@ a {
 .sun-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 11px;
+    gap: 16px;
 }
 
 .sun-card {
     display: flex;
     align-items: center;
     gap: 13px;
-    padding: 18px;
+    padding: 22px;
     border: 1px solid #1a2a3e;
     background: #091422;
     border-radius: 11px;
@@ -703,7 +703,7 @@ a {
     border: 1px solid #1e3147;
     background: #091422;
     border-radius: 13px;
-    padding: 21px;
+    padding: 25px;
 }
 
 .risk-card-header {
@@ -851,7 +851,7 @@ a {
 }
 
 .footer {
-    margin-top: 75px;
+    margin-top: 52px;
     border-top: 1px solid #182538;
     background: #040912;
 }
@@ -879,11 +879,11 @@ a {
 }
 
 .page-content {
-    padding: 55px 0;
+    padding: 52px 0;
 }
 
 .page-header {
-    margin-bottom: 35px;
+    margin-bottom: 32px;
 }
 
 .page-loading {
@@ -897,7 +897,7 @@ a {
 
 .error-panel {
     margin: 20px 0;
-    padding: 13px 16px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -905,7 +905,7 @@ a {
     background: #0c1523;
     border-radius: 9px;
     color: #b7c2ce;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .error-panel button {
@@ -924,12 +924,12 @@ a {
 .radar-information {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 11px;
-    margin-top: 16px;
+    gap: 16px;
+    margin-top: 20px;
 }
 
 .radar-info-card {
-    padding: 19px;
+    padding: 23px;
     display: grid;
     grid-template-columns: 34px 1fr;
     gap: 2px 10px;
@@ -956,14 +956,14 @@ a {
 .satellite-command-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 11px;
-    margin-top: 16px;
+    gap: 16px;
+    margin-top: 20px;
 }
 
 .satellite-panel,
 .satellite-alert {
-    min-height: 176px;
-    padding: 18px;
+    min-height: 210px;
+    padding: 23px;
     border: 1px solid #1a2a3e;
     background: #091422;
     border-radius: 11px;
@@ -1101,7 +1101,7 @@ a {
 }
 
 .safety-section {
-    margin-bottom: 45px;
+    margin-bottom: 36px;
 }
 
 .official-alert-panel {
@@ -1165,7 +1165,7 @@ a {
     }
 
     .live-map-wrapper {
-        height: 500px;
+        height: 560px;
     }
 
     .map-footer-info {
@@ -1198,11 +1198,11 @@ a {
 
 @media (max-width: 520px) {
     .container {
-        width: min(100% - 24px, 1240px);
+        width: min(100% - 24px, 1320px);
     }
 
     .header-inner {
-        height: 64px;
+        height: 70px;
     }
 
     .header-location span {
@@ -1222,7 +1222,7 @@ a {
     }
 
     .live-map-wrapper {
-        height: 430px;
+        height: 480px;
     }
 
     .map-footer-info {
@@ -1290,12 +1290,12 @@ body {
 
 .hero-heading {
     align-items: center;
-    margin-bottom: 31px;
+    margin-bottom: 24px;
 }
 
 .hero-heading h1 {
     max-width: 680px;
-    font-size: clamp(34px, 5vw, 60px);
+    font-size: clamp(38px, 5vw, 68px);
     text-transform: uppercase;
 }
 
@@ -1309,9 +1309,9 @@ body {
 .current-weather-hero {
     display: flex;
     align-items: center;
-    gap: 24px;
-    min-width: 320px;
-    padding: 18px 22px;
+    gap: 30px;
+    min-width: 360px;
+    padding: 23px 28px;
     border: 1px solid var(--weather-line);
     border-radius: 15px;
     background: var(--weather-glass);
@@ -1325,7 +1325,7 @@ body {
 
 .current-temperature {
     color: var(--weather-ink);
-    font-size: 50px;
+    font-size: 62px;
     font-weight: 700;
     letter-spacing: -0.07em;
     line-height: 0.95;
@@ -1334,7 +1334,7 @@ body {
 .current-temperature span {
     margin-left: 5px;
     color: var(--weather-muted);
-    font-size: 17px;
+    font-size: 20px;
     letter-spacing: 0;
     vertical-align: top;
 }
@@ -1343,14 +1343,14 @@ body {
     display: block;
     margin-top: 8px;
     color: var(--weather-ink);
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .current-weather-meta {
     display: block;
     margin-top: 5px;
     color: var(--weather-muted);
-    font-size: 11px;
+    font-size: 13px;
 }
 
 .live-map-section,
@@ -1616,11 +1616,11 @@ body {
     }
 
     .hero-heading h1 {
-        font-size: 34px;
+        font-size: 38px;
     }
 
     .current-weather-hero {
-        padding: 15px;
+        padding: 19px;
     }
 
     .weather-visual-large {

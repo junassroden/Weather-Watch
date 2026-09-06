@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -12,12 +13,19 @@ class SatelliteService
 
     public function getRadarFrames(): array
     {
-        $response =
-            Http::timeout(15)
-                ->retry(2, 500)
-                ->get(
-                    $this->rainViewerUrl
-                );
+        return Cache::remember(
+            'weatherwatch.radar-frames',
+            120,
+            fn (): array => $this->fetchRadarFrames()
+        );
+    }
+
+    private function fetchRadarFrames(): array
+    {
+        $response = Http::connectTimeout(3)
+            ->timeout(8)
+            ->retry(1, 250)
+            ->get($this->rainViewerUrl);
 
         if ($response->failed()) {
             throw new RuntimeException(

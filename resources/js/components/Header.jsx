@@ -1,17 +1,12 @@
 import {
     CloudSun,
-    MapPin,
-    Search,
 } from "lucide-react";
 
 import {
     NavLink,
-    useNavigate,
 } from "react-router-dom";
 
 export default function Header() {
-    const navigate = useNavigate();
-
     const navClass = ({ isActive }) =>
         `header-nav-link ${
             isActive ? "active" : ""
@@ -65,36 +60,6 @@ export default function Header() {
                     </NavLink>
                 </nav>
 
-                <div className="header-actions">
-
-                    <button
-                        className="header-action-button"
-                        onClick={() =>
-                            navigate("/forecast")
-                        }
-                        aria-label="Search weather"
-                    >
-                        <Search size={17} />
-                        <span>Search</span>
-                    </button>
-
-                    <button
-                        className="header-action-button location-button"
-                        onClick={() => {
-                            window.dispatchEvent(
-                                new Event(
-                                    "weatherwatch:locate"
-                                )
-                            );
-                        }}
-                    >
-                        <MapPin size={17} />
-                        <span>
-                            My Location
-                        </span>
-                    </button>
-
-                </div>
             </div>
         </header>
     );
