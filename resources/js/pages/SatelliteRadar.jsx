@@ -1,4 +1,5 @@
 import {
+    useCallback,
     useEffect,
     useState,
 } from "react";
@@ -19,7 +20,6 @@ import LiveWeatherMap from "../components/LiveWeatherMap";
 import {
     getCurrentWeather,
     getForecast,
-    getRadarFrames,
     getRisk,
     reverseLocation,
 } from "../services/api";
@@ -80,6 +80,9 @@ export default function SatelliteRadar() {
     const [radar, setRadar] =
         useState(null);
 
+    const [coordinates, setCoordinates] =
+        useState(null);
+
     const [loading, setLoading] =
         useState(true);
 
@@ -98,19 +101,14 @@ export default function SatelliteRadar() {
     const [locationName, setLocationName] =
         useState("Current location");
 
-    useEffect(() => {
-        getRadarFrames()
-            .then((data) => {
-                setRadar(data);
-            })
-            .catch(() => {
-                setError(
-                    "Unable to load radar information."
-                );
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+    const handleRadarLoaded = useCallback((data) => {
+        setRadar(data);
+        setLoading(false);
+    }, []);
+
+    const handleRadarError = useCallback(() => {
+        setError("Unable to load radar information.");
+        setLoading(false);
     }, []);
 
     useEffect(() => {
@@ -122,6 +120,11 @@ export default function SatelliteRadar() {
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
+
+                setCoordinates({
+                    latitude,
+                    longitude,
+                });
 
                 try {
                     const [weatherData, forecastData, riskData, location] =
@@ -176,7 +179,14 @@ export default function SatelliteRadar() {
 
                     </div>
 
-                    <LiveWeatherMap />
+                    <LiveWeatherMap
+                        latitude={coordinates?.latitude}
+                        longitude={coordinates?.longitude}
+                        locationName={locationName}
+                        requestLocation={false}
+                        onRadarLoaded={handleRadarLoaded}
+                        onRadarError={handleRadarError}
+                    />
 
                     <section className="satellite-command-grid">
 

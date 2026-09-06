@@ -2,9 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import {
     BrowserRouter,
+    useLocation,
     Routes,
     Route,
 } from "react-router-dom";
+
+import {
+    useLayoutEffect,
+} from "react";
 
 import Dashboard from "./pages/Dashboard";
 import Forecast from "./pages/Forecast";
@@ -14,9 +19,25 @@ import AlertsSafety from "./pages/AlertsSafety";
 
 import "./app.css";
 
+function ScrollToTop() {
+    const { pathname } = useLocation();
+
+    useLayoutEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "auto",
+        });
+    }, [pathname]);
+
+    return null;
+}
+
 function App() {
     return (
         <BrowserRouter>
+            <ScrollToTop />
+
             <Routes>
                 <Route
                     path="/"

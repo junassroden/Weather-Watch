@@ -119,6 +119,10 @@ function LocationController({
 export default function LiveWeatherMap({
     latitude: propLatitude = null,
     longitude: propLongitude = null,
+    locationName: propLocationName = null,
+    requestLocation = true,
+    onRadarLoaded = null,
+    onRadarError = null,
 }) {
     const [latitude, setLatitude] =
         useState(propLatitude);
@@ -166,6 +170,12 @@ export default function LiveWeatherMap({
 
             setLocationLoading(false);
 
+            if (propLocationName) {
+                setLocationName(propLocationName);
+
+                return;
+            }
+
             reverseLocation(
                 propLatitude,
                 propLongitude
@@ -183,6 +193,12 @@ export default function LiveWeatherMap({
                     );
                 });
 
+            return;
+        }
+
+        if (!requestLocation) {
+            setLocationLoading(false);
+            setLocationName("Location unavailable");
             return;
         }
 
@@ -239,6 +255,8 @@ export default function LiveWeatherMap({
     }, [
         propLatitude,
         propLongitude,
+        propLocationName,
+        requestLocation,
     ]);
 
     useEffect(() => {
@@ -263,17 +281,21 @@ export default function LiveWeatherMap({
                         radarFrames.length - 1
                     );
                 }
+
+                onRadarLoaded?.(radar);
             } catch {
                 setError(
                     "Radar data unavailable."
                 );
+
+                onRadarError?.();
             } finally {
                 setLoading(false);
             }
         }
 
         loadRadar();
-    }, []);
+    }, [onRadarError, onRadarLoaded]);
 
     useEffect(() => {
         if (currentFrame >= frames.length) {
