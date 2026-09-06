@@ -44,6 +44,31 @@ function weatherDescription(code) {
     return weatherLabel(code);
 }
 
+function formatHour(time) {
+    if (!time) {
+        return "--";
+    }
+
+    return new Date(time).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+    });
+}
+
+function isForecastHourDay(time, forecast) {
+    const daily = forecast?.daily;
+    const date = time?.slice(0, 10);
+    const dayIndex = daily?.time?.indexOf(date) ?? -1;
+
+    if (dayIndex < 0 || !daily.sunrise?.[dayIndex] || !daily.sunset?.[dayIndex]) {
+        return true;
+    }
+
+    const timestamp = new Date(time).getTime();
+    return timestamp >= new Date(daily.sunrise[dayIndex]).getTime()
+        && timestamp <= new Date(daily.sunset[dayIndex]).getTime();
+}
+
 export default function Dashboard() {
     const [location, setLocation] =
         useState(null);
@@ -71,7 +96,8 @@ export default function Dashboard() {
 
     const loadWeather = (
         latitude,
-        longitude
+        longitude,
+        searchedLocation = ""
     ) => {
         setLoading(true);
         setError("");
@@ -123,6 +149,7 @@ export default function Dashboard() {
                     );
 
                     setLocationName(
+                        searchedLocation ||
                         locationData.city ||
                         locationData.display_name ||
                         "Current Location"
@@ -200,7 +227,16 @@ export default function Dashboard() {
     return (
         <div className="weather-app">
 
-            <Header />
+            <Header
+                onUseLocation={requestLocation}
+                onLocationSelect={(result) =>
+                    loadWeather(
+                        result.latitude,
+                        result.longitude,
+                        result.name
+                    )
+                }
+            />
 
             <main>
 
@@ -259,6 +295,56 @@ export default function Dashboard() {
                                 </span>
                             </div>
                         </div>
+
+                        <section className="hourly-panel glass-panel">
+                            <div className="section-heading">
+                                <div>
+                                    <span className="eyebrow">
+                                        NEXT 24 HOURS
+                                    </span>
+
+                                    <h2>
+                                        Forecast Hourly
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <div className="hourly-strip">
+                                {forecast?.hourly?.time?.slice(0, 6).map(
+                                    (time, index) => (
+                                        <article
+                                            className="hour-card"
+                                            key={time}
+                                        >
+                                            <span>
+                                                {index === 0
+                                                    ? "Now"
+                                                    : formatHour(time)}
+                                            </span>
+
+                                            <WeatherVisual
+                                                code={forecast.hourly.weather_code?.[index]}
+                                                isDay={isForecastHourDay(time, forecast)}
+                                                size="small"
+                                            />
+
+                                            <strong>
+                                                {forecast.hourly.temperature_2m?.[index] == null
+                                                    ? "--"
+                                                    : `${Math.round(forecast.hourly.temperature_2m[index])}°`}
+                                            </strong>
+
+                                            <small>
+                                                <CloudRain size={12} />
+                                                {forecast.hourly.precipitation_probability?.[index] == null
+                                                    ? "--"
+                                                    : `${Math.round(forecast.hourly.precipitation_probability[index])}%`}
+                                            </small>
+                                        </article>
+                                    )
+                                )}
+                            </div>
+                        </section>
 
                         <LiveWeatherMap
                             latitude={
@@ -498,7 +584,7 @@ export default function Dashboard() {
 
                     <div className="forecast-grid">
 
-                        {daily?.time?.slice(0, 5).map(
+                        {daily?.time?.slice(0, 7).map(
                             (date, index) => (
                                 <ForecastCard
                                     key={date}
