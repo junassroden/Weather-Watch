@@ -148,16 +148,18 @@ function SunVisual({
 }) {
     if (night) {
         return (
-            <div className="visual-moon">
+            <div className="visual-moon" aria-hidden="true">
+                <div className="moon-halo" />
                 <div className="moon-body" />
                 <span className="moon-shadow moon-shadow-one" />
                 <span className="moon-shadow moon-shadow-two" />
+                <div className="moon-stars" />
             </div>
         );
     }
 
     return (
-        <div className="visual-sun">
+        <div className="visual-sun" aria-hidden="true">
             <div className="sun-glow" />
             <div className="sun-core" />
 
@@ -182,6 +184,7 @@ function CloudVisual({
 }) {
     return (
         <div
+            aria-hidden="true"
             className={`visual-cloud ${
                 dark
                     ? "visual-cloud-dark"
@@ -191,6 +194,7 @@ function CloudVisual({
             <span className="cloud-one" />
             <span className="cloud-two" />
             <span className="cloud-three" />
+            <span className="cloud-shine" />
         </div>
     );
 }
@@ -201,7 +205,7 @@ function RainVisual({
     const count = heavy ? 12 : 8;
 
     return (
-        <div className="visual-rain">
+        <div className="visual-rain" aria-hidden="true">
             <CloudVisual dark />
 
             <div className="rain-lines">
@@ -225,7 +229,7 @@ function RainVisual({
 
 function StormVisual() {
     return (
-        <div className="visual-storm">
+        <div className="visual-storm" aria-hidden="true">
             <CloudVisual dark />
 
             <svg
@@ -256,7 +260,7 @@ function StormVisual() {
 
 function FogVisual() {
     return (
-        <div className="visual-fog">
+        <div className="visual-fog" aria-hidden="true">
             <CloudFog
                 size={58}
                 strokeWidth={1}
@@ -271,7 +275,7 @@ function FogVisual() {
 
 function SnowVisual() {
     return (
-        <div className="visual-snow">
+        <div className="visual-snow" aria-hidden="true">
             <CloudVisual dark />
 
             <div className="snowflakes">

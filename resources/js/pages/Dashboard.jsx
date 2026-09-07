@@ -12,12 +12,20 @@ import {
     AlertTriangle,
     Phone,
     RefreshCw,
+    BarChart3,
+    CalendarDays,
+    LifeBuoy,
+    Settings,
+    Sparkles,
+    UserCircle2,
 } from "lucide-react";
 
 import {
     useEffect,
     useState,
 } from "react";
+
+import { NavLink } from "react-router-dom";
 
 import Header from "../components/Header";
 import LiveWeatherMap from "../components/LiveWeatherMap";
@@ -239,6 +247,59 @@ export default function Dashboard() {
             />
 
             <main>
+
+                <div className="dashboard-workspace">
+
+                    <aside className="dashboard-sidebar">
+
+                        <div className="dashboard-sidebar-label">
+                            WEATHER DESK
+                        </div>
+
+                        <nav className="dashboard-sidebar-nav" aria-label="Weather sections">
+                            <NavLink to="/" end className="is-current">
+                                <Sun size={16} />
+                                <span>Current Weather</span>
+                            </NavLink>
+                            <NavLink to="/forecast">
+                                <BarChart3 size={16} />
+                                <span>Forecast</span>
+                            </NavLink>
+                            <NavLink to="/weather-history">
+                                <CalendarDays size={16} />
+                                <span>History</span>
+                            </NavLink>
+                            <NavLink to="/satellite-radar">
+                                <MapPin size={16} />
+                                <span>Satellite & Radar</span>
+                            </NavLink>
+                            <NavLink to="/alerts">
+                                <Sparkles size={16} />
+                                <span>Alerts</span>
+                            </NavLink>
+                        </nav>
+
+                        <div className="dashboard-sidebar-footer">
+                            <NavLink to="/alerts">
+                                <LifeBuoy size={16} />
+                                <span>About / Support</span>
+                            </NavLink>
+                            <button type="button">
+                                <Settings size={16} />
+                                <span>Settings</span>
+                            </button>
+                            <div className="dashboard-user-chip">
+                                <UserCircle2 size={25} />
+                                <span>
+                                    <strong>Weather watcher</strong>
+                                    <small>Local forecast desk</small>
+                                </span>
+                            </div>
+                        </div>
+
+                    </aside>
+
+                    <div className="dashboard-content">
 
                 <section className="hero-section">
 
@@ -769,6 +830,10 @@ export default function Dashboard() {
                     </div>
 
                 </section>
+
+                    </div>
+
+                </div>
 
             </main>
 
