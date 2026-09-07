@@ -126,24 +126,39 @@ export default function SatelliteRadar() {
                     longitude,
                 });
 
-                try {
-                    const [weatherData, forecastData, riskData, location] =
-                        await Promise.all([
-                            getCurrentWeather(latitude, longitude),
-                            getForecast(latitude, longitude),
-                            getRisk(latitude, longitude),
-                            reverseLocation(latitude, longitude),
-                        ]);
+                const results = await Promise.allSettled([
+                    getCurrentWeather(latitude, longitude),
+                    getForecast(latitude, longitude),
+                    getRisk(latitude, longitude),
+                    reverseLocation(latitude, longitude),
+                ]);
 
-                    setWeather(weatherData);
-                    setForecast(forecastData);
-                    setRisk(riskData);
+                const [weatherResult, forecastResult, riskResult, locationResult] = results;
+
+                if (weatherResult.status === "fulfilled") {
+                    setWeather(weatherResult.value);
+                }
+
+                if (forecastResult.status === "fulfilled") {
+                    setForecast(forecastResult.value);
+                }
+
+                if (riskResult.status === "fulfilled") {
+                    setRisk(riskResult.value);
+                }
+
+                if (locationResult.status === "fulfilled") {
+                    const location = locationResult.value;
+
                     setLocationName(
                         location.city || location.display_name || "Current location"
                     );
-                } catch {
+                }
+
+                if (results.every((result) => result.status === "rejected")) {
                     setError("Weather telemetry is temporarily unavailable.");
                 }
+
             },
             () => setError("Allow location access to view local satellite telemetry."),
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }

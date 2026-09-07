@@ -23,6 +23,7 @@ import {
     Radar,
     Layers,
     Satellite,
+    Cloud,
     LoaderCircle,
 } from "lucide-react";
 
@@ -137,6 +138,12 @@ export default function LiveWeatherMap({
         useState([]);
 
     const [currentFrame, setCurrentFrame] =
+        useState(0);
+
+    const [cloudFrames, setCloudFrames] =
+        useState([]);
+
+    const [currentCloudFrame, setCurrentCloudFrame] =
         useState(0);
 
     const [isPlaying, setIsPlaying] =
@@ -272,13 +279,22 @@ export default function LiveWeatherMap({
                     radar.frames || [];
 
                 setFrames(radarFrames);
-                setCloudAvailable(
-                    radar.cloud_imagery?.available === true
-                );
+
+                const radarCloudFrames =
+                    radar.cloud_imagery?.frames || [];
+
+                setCloudFrames(radarCloudFrames);
+                setCloudAvailable(radarCloudFrames.length > 0);
 
                 if (radarFrames.length > 0) {
                     setCurrentFrame(
                         radarFrames.length - 1
+                    );
+                }
+
+                if (radarCloudFrames.length > 0) {
+                    setCurrentCloudFrame(
+                        radarCloudFrames.length - 1
                     );
                 }
 
@@ -303,7 +319,13 @@ export default function LiveWeatherMap({
                 Math.max(frames.length - 1, 0)
             );
         }
-    }, [currentFrame, frames.length]);
+
+        if (currentCloudFrame >= cloudFrames.length) {
+            setCurrentCloudFrame(
+                Math.max(cloudFrames.length - 1, 0)
+            );
+        }
+    }, [currentCloudFrame, currentFrame, cloudFrames.length, frames.length]);
 
     useEffect(() => {
         if (
@@ -325,6 +347,14 @@ export default function LiveWeatherMap({
                 return previous + 1;
             });
 
+            setCurrentCloudFrame((previous) => {
+                if (previous >= cloudFrames.length - 1) {
+                    return 0;
+                }
+
+                return previous + 1;
+            });
+
         }, 900);
 
         return () => {
@@ -332,6 +362,7 @@ export default function LiveWeatherMap({
         };
     }, [
         isPlaying,
+        cloudFrames.length,
         frames.length,
     ]);
 
@@ -345,6 +376,17 @@ export default function LiveWeatherMap({
 
         return activeFrame.tile_url;
     }, [activeFrame]);
+
+    const activeCloudFrame =
+        cloudFrames[currentCloudFrame];
+
+    const cloudUrl = useMemo(() => {
+        if (!activeCloudFrame) {
+            return null;
+        }
+
+        return activeCloudFrame.tile_url;
+    }, [activeCloudFrame]);
 
     const frameTime = useMemo(() => {
         if (!activeFrame) {
@@ -502,6 +544,16 @@ export default function LiveWeatherMap({
                             />
                         )}
 
+                    {cloudUrl && (
+                        <TileLayer
+                            key={cloudUrl}
+                            url={cloudUrl}
+                            opacity={0.42}
+                            maxZoom={7}
+                            attribution="Cloud imagery by RainViewer"
+                        />
+                    )}
+
                     {hasLocation && (
                         <>
                             <Marker
@@ -575,6 +627,12 @@ export default function LiveWeatherMap({
                             <Layers size={18} />
                         )}
                     </button>
+
+                    {cloudAvailable && (
+                        <span className="map-layer-status cloud-layer-active">
+                            <Cloud size={14} /> CLOUD SATELLITE ACTIVE
+                        </span>
+                    )}
 
                     {!cloudAvailable && (
                         <span className="map-layer-status">

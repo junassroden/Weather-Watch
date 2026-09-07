@@ -42,6 +42,18 @@ class SatelliteService
         $frames =
             $data['radar']['past'] ?? [];
 
+        $cloudFrames = collect(
+            $data['satellite']['infrared'] ?? []
+        )
+            ->filter(
+                fn ($frame) => isset(
+                    $frame['time'],
+                    $frame['path']
+                )
+            )
+            ->sortBy('time')
+            ->values();
+
         if (! $host) {
             throw new RuntimeException(
                 'RainViewer did not return a radar host.'
@@ -81,12 +93,34 @@ class SatelliteService
                 ->values()
                 ->all(),
 
-            'attribution' => 'Radar data by RainViewer',
-
             'cloud_imagery' => [
-                'available' => false,
-                'message' => 'Cloud imagery unavailable.',
+                'available' => $cloudFrames->isNotEmpty(),
+
+                'frames' => $cloudFrames
+                    ->map(
+                        function ($frame) use (
+                            $host
+                        ) {
+                            return [
+                                'time' => $frame['time'],
+
+                                'path' => $frame['path'],
+
+                                'tile_url' => $host.
+                                    $frame['path'].
+                                    '/256/{z}/{x}/{y}/0/0_0.png',
+                            ];
+                        }
+                    )
+                    ->values()
+                    ->all(),
+
+                'message' => $cloudFrames->isNotEmpty()
+                    ? null
+                    : 'Cloud imagery unavailable.',
             ],
+
+            'attribution' => 'Radar data by RainViewer',
         ];
     }
 }
