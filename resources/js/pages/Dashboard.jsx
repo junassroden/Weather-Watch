@@ -371,51 +371,49 @@ export default function Dashboard() {
                             </div>
 
                             <div className="hourly-strip">
-                                {forecast?.hourly?.time?.slice(0, 6).map(
-                                    (time, index) => (
-                                        <article
-                                            className="hour-card"
-                                            key={time}
-                                        >
-                                            <span>
-                                                {index === 0
-                                                    ? "Now"
-                                                    : formatHour(time)}
-                                            </span>
+                                {forecast?.hourly?.time?.length ? (
+                                    forecast.hourly.time.slice(0, 6).map(
+                                        (time, index) => (
+                                            <article
+                                                className="hour-card"
+                                                key={time}
+                                            >
+                                                <span>
+                                                    {index === 0
+                                                        ? "Now"
+                                                        : formatHour(time)}
+                                                </span>
 
-                                            <WeatherVisual
-                                                code={forecast.hourly.weather_code?.[index]}
-                                                isDay={isForecastHourDay(time, forecast)}
-                                                size="small"
-                                            />
+                                                <WeatherVisual
+                                                    code={forecast.hourly.weather_code?.[index]}
+                                                    isDay={isForecastHourDay(time, forecast)}
+                                                    size="small"
+                                                />
 
-                                            <strong>
-                                                {forecast.hourly.temperature_2m?.[index] == null
-                                                    ? "--"
-                                                    : `${Math.round(forecast.hourly.temperature_2m[index])}°`}
-                                            </strong>
+                                                <strong>
+                                                    {forecast.hourly.temperature_2m?.[index] == null
+                                                        ? "--"
+                                                        : `${Math.round(forecast.hourly.temperature_2m[index])}°`}
+                                                </strong>
 
-                                            <small>
-                                                <CloudRain size={12} />
-                                                {forecast.hourly.precipitation_probability?.[index] == null
-                                                    ? "--"
-                                                    : `${Math.round(forecast.hourly.precipitation_probability[index])}%`}
-                                            </small>
-                                        </article>
+                                                <small>
+                                                    <CloudRain size={12} />
+                                                    {forecast.hourly.precipitation_probability?.[index] == null
+                                                        ? "--"
+                                                        : `${Math.round(forecast.hourly.precipitation_probability[index])}%`}
+                                                </small>
+                                            </article>
+                                        )
                                     )
+                                ) : (
+                                    <div className="hourly-empty">
+                                        {loading
+                                            ? "Reading forecast data..."
+                                            : "Hourly forecast unavailable for this location."}
+                                    </div>
                                 )}
                             </div>
                         </section>
-
-                        <LiveWeatherMap
-                            latitude={
-                                location?.latitude
-                            }
-                            longitude={
-                                location?.longitude
-                            }
-                        />
-
                     </div>
 
                 </section>
@@ -449,6 +447,61 @@ export default function Dashboard() {
 
                     </section>
                 )}
+
+                <section className="container dashboard-section">
+
+                    <div className="section-heading">
+
+                        <div>
+                            <h2>
+                                Weather Risk Assessment
+                            </h2>
+                        </div>
+
+                    </div>
+
+                    <RiskCard
+                        risk={risk}
+                    />
+
+                </section>
+
+                <section className="container dashboard-section">
+
+                    <div className="alert-panel">
+
+                        <div className="alert-panel-icon">
+                            <AlertTriangle
+                                size={24}
+                            />
+                        </div>
+
+                        <div className="alert-panel-content">
+
+                            <span>
+                                LOCAL WEATHER ALERTS
+                            </span>
+
+                            <h3>
+                                {alerts == null
+                                    ? "Checking official alerts"
+                                    : alerts.official_alerts?.length
+                                        ? "Official alerts are active"
+                                        : "No official alerts available"}
+                            </h3>
+
+                            <p>
+                                {alerts?.message ||
+                                    (alerts == null
+                                        ? "Waiting for the connected alert source."
+                                        : "There are currently no connected official weather warnings.")}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
 
                 <section className="container dashboard-section">
 
@@ -744,56 +797,14 @@ export default function Dashboard() {
 
                 <section className="container dashboard-section">
 
-                    <div className="section-heading">
-
-                        <div>
-                            <span className="eyebrow">
-                                SAFETY
-                            </span>
-
-                            <h2>
-                                Weather Risk Assessment
-                            </h2>
-                        </div>
-
-                    </div>
-
-                    <RiskCard
-                        risk={risk}
+                    <LiveWeatherMap
+                        latitude={
+                            location?.latitude
+                        }
+                        longitude={
+                            location?.longitude
+                        }
                     />
-
-                </section>
-
-                <section className="container dashboard-section">
-
-                    <div className="alert-panel">
-
-                        <div className="alert-panel-icon">
-                            <AlertTriangle
-                                size={24}
-                            />
-                        </div>
-
-                        <div className="alert-panel-content">
-
-                            <span>
-                                LOCAL WEATHER ALERTS
-                            </span>
-
-                            <h3>
-                                {alerts?.official_alerts?.length
-                                    ? "Official alerts are active"
-                                    : "No official alerts available"}
-                            </h3>
-
-                            <p>
-                                {alerts?.message ||
-                                    "Weather alert information is currently unavailable."}
-                            </p>
-
-                        </div>
-
-                    </div>
 
                 </section>
 

@@ -193,15 +193,19 @@ export default function AlertsSafety() {
                                     <div>
 
                                         <h3>
-                                            {alerts?.official_alerts
-                                                ?.length
-                                                ? "Official warnings detected"
-                                                : "No official warnings available"}
+                                            {alerts == null
+                                                ? "Official warning data unavailable"
+                                                : alerts.official_alerts
+                                                    ?.length
+                                                    ? "Official warnings detected"
+                                                    : "No official warnings available"}
                                         </h3>
 
                                         <p>
                                             {alerts?.message ||
-                                                "There are currently no connected official weather warnings."}
+                                                (alerts == null
+                                                    ? "The connected alert source has not returned data yet."
+                                                    : "There are currently no connected official weather warnings.")}
                                         </p>
 
                                     </div>

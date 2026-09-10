@@ -6,17 +6,24 @@ import {
 export default function RiskCard({
     risk,
 }) {
+    const available = Boolean(risk);
+
     const level =
-        risk?.level ||
-        "LOW";
+        available
+            ? risk.level
+            : "UNAVAILABLE";
 
     const message =
-        risk?.message ||
-        "No significant weather risk detected.";
+        available
+            ? risk.message ||
+              "No significant weather risk detected."
+            : "Risk assessment is not available yet.";
 
     const recommendation =
-        risk?.recommendation ||
-        "Continue monitoring local weather conditions.";
+        available
+            ? risk.recommendation ||
+              "Continue monitoring local weather conditions."
+            : "Try again when local weather data is available.";
 
     const severe =
         level === "HIGH" ||
