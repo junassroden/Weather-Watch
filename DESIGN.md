@@ -107,8 +107,9 @@ The shipped topology makes the decision sequence visible: the persistent Weather
 **Key Characteristics:**
 - Ink-black instrument ground with cool paper readings.
 - Cyan is telemetry and interaction; amber is attention; red is severity; green is clear/live state.
-- Hairline rules, square panels, dense tabular readings, and restrained depth.
+- Hairline rules, square panels, dense tabular readings, and selective glass depth.
 - CSS-rendered, condition-driven weather scenes with explicit neutral loading state.
+- Weekly forecast cards use the daily WMO code to set their atmospheric environment.
 - Persistent desktop observation rail; compact utility navigation on small screens.
 - Loading, unavailable, permission, error, provider, and disclaimer states are written plainly.
 
@@ -179,12 +180,14 @@ The spacing rhythm is based on 4px increments, with recurring 8px gaps, 12-20px 
 
 ## Elevation & Depth
 
-This is a flat-by-default system. Depth comes from dark tonal layering (`deep`, `sidebar`, `panel`, `raised`) and hairline borders, not card shadows. The one functional shadow is the search-results popover (`0 16px 30px rgba(0,0,0,.3)`), which separates a transient result list from the header. Map overlays use opaque dark fills and strong rules so controls remain legible over imagery.
+This is a selectively glass system. The header, current reading, hourly strip, risk and alert surfaces, map shell, and weekly forecast cards use controlled translucency, restrained backdrop blur, translucent borders, and soft depth to establish hierarchy over the dark instrument ground. Other metric and utility modules remain opaque, square, and ruled. The search-results popover keeps the stronger transient shadow (`0 16px 30px rgba(0,0,0,.3)`), while the map shell and forecast cards use softer shadows. Map controls and overlays use opaque dark fills and strong rules so controls remain legible over imagery.
 
 ### Named Rules
-**The Flat Instrument Rule.** Keep modules flush, square, and ruled at rest; use tonal layering only when a surface is interactive or overlays live imagery.
+**The Selective Glass Rule.** Use translucency and blur only for the named hierarchy surfaces: header, current reading, hourly strip, risk/alerts, map shell, and weekly forecast cards. Keep the rest of the desk opaque and ruled.
 
-The weather visual is a bounded depth exception inside this otherwise flat system. Its CSS perspective (`520px`) and `preserve-3d` scene stack create a small instrument-like volume without introducing a general card-shadow or glass language.
+**The Soft Depth Rule.** Glass surfaces use controlled blur, translucent borders, and low-contrast shadows; never turn the operational desk into a uniformly glossy layer.
+
+The weather visual is a bounded atmospheric depth system. Its CSS perspective (`520px`) and `preserve-3d` scene stack create small volumes inside the glass hierarchy without introducing a general card-shadow language. Forecast environments expand that scene behind weekly cards at reduced opacity and scale.
 
 ## Shapes
 
@@ -205,10 +208,10 @@ The shipped surface is square: primary modules, navigation states, cards, alerts
 
 ### Cards / Containers
 - **Corner Style:** Square (`0px`).
-- **Background:** `panel` for data modules; transparent ground for the hourly section's outer wrapper.
-- **Border:** 1px `rule`, with shared grid borders collapsed by edge placement.
+- **Background:** `panel` for ordinary data modules; translucent panel layers for the named glass hierarchy.
+- **Border:** 1px `rule` or translucent white/cyan-tinted rules, with shared grid borders collapsed by edge placement.
 - **Internal Padding:** 13-22px for readings and cards; 17-20px for larger alert and map modules.
-- **Behavior:** Weather metrics, forecast days, satellite intelligence, risk, alerts, history empty state, and loading states share the same restrained ruled container language.
+- **Behavior:** Weather metrics and utility states remain restrained ruled containers. Risk, alerts, the map shell, and weekly forecast cards may use soft glass depth; weekly cards place a WMO-driven atmospheric environment behind readable content.
 
 ### Navigation
 - **Desktop:** A sticky header pairs the WeatherWatch mark, current route links, location search, locate action, and alerts action. The dashboard adds a sticky 220px Weather Desk rail with labeled links, support/settings utilities, and a watcher identity chip.
@@ -226,14 +229,17 @@ The shipped surface is square: primary modules, navigation states, cards, alerts
 
 ### Condition-Driven Weather Scene
 - **Purpose:** `WeatherVisual` is a dependency-free React/CSS scene used for current and forecast conditions. It maps Open-Meteo WMO codes to `clear`, `partly`, `overcast`, `fog`, `drizzle`, `rain`, `showers`, `snow`, and `storm`; null or undefined data maps to neutral `unknown`.
-- **Composition:** The bounded visual uses CSS perspective and layered `cloud-volume-back`, `cloud-volume-mid`, and `cloud-volume-front` masses with a separate cloud shadow. Clear and partly clear states use sun orbs; night adds a moon orb. Fog, drizzle, rain, showers, and snow use dedicated particle fields; storms add a flash, lightning bolt, and heavy rain. Clear and partly states also carry animated wind traces.
+- **Composition:** The bounded visual uses CSS perspective and irregular, volumetric `cloud-volume-back`, `cloud-volume-mid`, and `cloud-volume-front` masses with separate depth and cloud shadow. Clear and partly clear states use atmospheric sun orbs; night adds a moon orb. Fog, drizzle, rain, showers, and snow use dedicated particle fields with varied scale, opacity, delay, blur, and fall speed to imply depth. Storms add a restrained flash, lightning bolt, and heavy rain. Clear and partly states also carry animated wind traces.
+- **Forecast environment:** `ForecastCard` derives a weather type from each daily WMO code and renders that same environment behind the card content, so the weekly sequence is atmospheric without losing the readable temperature and precipitation readings.
 - **Loading / unknown:** Before API weather data arrives, the scene remains neutral: it renders the scan orb and `Waiting for conditions` accessible label, with no sun, cloud, precipitation, or storm implication. Unsupported non-null codes fall back to the overcast visual and `Variable conditions` label as implemented.
-- **Accessibility:** The visual wrapper is a labelled `role="img"` using the condition label; internal scene layers and particles are `aria-hidden`. The global reduced-motion rule collapses animation and transition duration to `.01ms` and disables smooth scrolling when `prefers-reduced-motion: reduce` is enabled.
+- **Accessibility:** The visual wrapper is a labelled `role="img"` using the condition label; internal scene layers and particles are `aria-hidden`. Header search, navigation, and icon actions expose accessible labels. The global reduced-motion rule collapses animation and transition duration to `.01ms`, limits iterations, and disables smooth scrolling when `prefers-reduced-motion: reduce` is enabled.
 
 ### Named Rules
 **The Neutral Loading Scene Rule.** Never imply a weather condition before API data arrives; unknown and loading are a neutral state with explicit text, not a guessed sky.
 
 **The Weather Volume Rule.** Keep dimensionality inside the weather visual's bounded CSS scene; the surrounding instrument desk remains square, ruled, and flat by default.
+
+**The Atmospheric Forecast Rule.** Let the actual daily WMO code choose the weekly card environment; never use a generic decorative sky for an unknown forecast.
 
 ## Do's and Don'ts
 
@@ -244,11 +250,13 @@ The shipped surface is square: primary modules, navigation states, cards, alerts
 - **Do** preserve explicit strings such as `Loading forecast...`, `History API not connected`, `UNAVAILABLE`, and `Not an official emergency warning` when data is incomplete or generated.
 - **Do** maintain keyboard-visible cyan focus treatment and respect `prefers-reduced-motion: reduce`.
 - **Do** use icons as compact functional marks and pair unfamiliar icon-only controls with an accessible label or title.
-- **Do** use the condition-driven CSS weather scene for WMO-backed visual context, including its sun/moon, volumetric cloud, particle, storm, and wind layers.
+- **Do** use the condition-driven CSS weather scene for WMO-backed visual context, including its atmospheric sun/moon, irregular volumetric cloud, varied-depth particle, restrained storm, and wind layers.
+- **Do** apply glass selectively to the header, current reading, hourly strip, risk/alerts, map shell, and weekly forecast cards, with controlled blur, translucent borders, and soft depth.
+- **Do** keep compact mono labels and current-reading scale as intentional density exceptions; preserve readable labels and data state language around them.
 - **Do** keep unknown/loading weather neutral and expose the condition through the visual's accessible label.
 
 ### Don't:
-- **Don't** introduce rounded cards, pill controls, glass surfaces, decorative gradients, or decorative shadows into general surfaces; the weather scene's gradients are a bounded native exception.
+- **Don't** introduce rounded cards, pill controls, or glass treatment into surfaces outside the named hierarchy; the weather scene's gradients and atmospheric effects are bounded native exceptions.
 - **Don't** turn unavailable or estimated values into visually confident readings.
 - **Don't** use amber, red, or green as general decoration; they carry attention and state meaning.
 - **Don't** replace the desktop observation rail and mobile utility bar with generic marketing navigation.
@@ -256,3 +264,4 @@ The shipped surface is square: primary modules, navigation states, cards, alerts
 - **Don't** add a second display typeface or a competing mono treatment without revisiting the instrument hierarchy.
 - **Don't** add Three.js, canvas, or another rendering dependency to the weather scene; the shipped implementation is CSS-based and dependency-free.
 - **Don't** make a loading scene look clear, cloudy, rainy, or severe before weather data is available.
+- **Don't** make weekly forecast environments contradict their daily WMO code or let atmospheric layers reduce the legibility of the card readings.

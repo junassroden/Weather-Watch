@@ -3,6 +3,7 @@ import {
 } from "lucide-react";
 
 import WeatherVisual, {
+    getWeatherType,
     weatherLabel,
 } from "./WeatherVisual";
 
@@ -49,8 +50,18 @@ export default function ForecastCard({
             }
         );
 
+    const weatherType = getWeatherType(weatherCode);
+
     return (
-        <article className="forecast-card">
+        <article className={`forecast-card forecast-card-${weatherType}`}>
+
+            <div className="forecast-environment" aria-hidden="true">
+                <WeatherVisual
+                    code={weatherCode}
+                    isDay={true}
+                    size="forecast"
+                />
+            </div>
 
             <div className="forecast-date">
                 <strong>
