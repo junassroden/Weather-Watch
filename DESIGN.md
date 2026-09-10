@@ -87,6 +87,11 @@ components:
     textColor: "{colors.paper}"
     rounded: "{rounded.none}"
     padding: "9px 11px"
+  weather-scene:
+    backgroundColor: "{colors.deep}"
+    textColor: "{colors.cyan}"
+    rounded: "{rounded.none}"
+    size: "180px x 150px"
 ---
 
 # Design System: WeatherWatch
@@ -103,6 +108,7 @@ The shipped topology makes the decision sequence visible: the persistent Weather
 - Ink-black instrument ground with cool paper readings.
 - Cyan is telemetry and interaction; amber is attention; red is severity; green is clear/live state.
 - Hairline rules, square panels, dense tabular readings, and restrained depth.
+- CSS-rendered, condition-driven weather scenes with explicit neutral loading state.
 - Persistent desktop observation rail; compact utility navigation on small screens.
 - Loading, unavailable, permission, error, provider, and disclaimer states are written plainly.
 
@@ -154,10 +160,14 @@ The palette is cool, low-glare, and functional. Contrast comes from tonal separa
 - **Label** (400, `9-10px`, `0.1em`, uppercase): Eyebrow and source labels in IBM Plex Mono.
 - **Reading** (500, `15-104px`, `1`): Weather measurements and key numeric outputs in IBM Plex Mono; the current temperature is fluid and can reach `104px`.
 
+Compact mono labels and the fluid current reading are intentional density exceptions: labels remain small and instrument-like, while the current temperature is allowed to dominate the current-conditions row without changing the broader type ramp.
+
 ### Named Rules
 **The Readout Rule.** Put confirmed measurements and time-like values in IBM Plex Mono; reserve DM Sans for meaning, explanation, and navigation.
 
 **The Compact Label Rule.** Labels stay short, uppercase, mono, and low-contrast so they orient dense modules without competing with the reading.
+
+**The Density Exception Rule.** Compact IBM Plex Mono labels and the fluid current reading (`clamp(58px, 8vw, 104px)`) are deliberate readout behaviors, not invitations to compress every text role.
 
 ## Layout
 
@@ -173,6 +183,8 @@ This is a flat-by-default system. Depth comes from dark tonal layering (`deep`, 
 
 ### Named Rules
 **The Flat Instrument Rule.** Keep modules flush, square, and ruled at rest; use tonal layering only when a surface is interactive or overlays live imagery.
+
+The weather visual is a bounded depth exception inside this otherwise flat system. Its CSS perspective (`520px`) and `preserve-3d` scene stack create a small instrument-like volume without introducing a general card-shadow or glass language.
 
 ## Shapes
 
@@ -212,6 +224,17 @@ The shipped surface is square: primary modules, navigation states, cards, alerts
 - **Character:** A framed operational map with provider attribution, layer controls, a locate control, radar loading/error overlay, and a time scrubber.
 - **State:** RainViewer radar frames, Open-Meteo context, and missing telemetry are shown as separate readings. Overlay controls use opaque ink fills to preserve legibility over imagery.
 
+### Condition-Driven Weather Scene
+- **Purpose:** `WeatherVisual` is a dependency-free React/CSS scene used for current and forecast conditions. It maps Open-Meteo WMO codes to `clear`, `partly`, `overcast`, `fog`, `drizzle`, `rain`, `showers`, `snow`, and `storm`; null or undefined data maps to neutral `unknown`.
+- **Composition:** The bounded visual uses CSS perspective and layered `cloud-volume-back`, `cloud-volume-mid`, and `cloud-volume-front` masses with a separate cloud shadow. Clear and partly clear states use sun orbs; night adds a moon orb. Fog, drizzle, rain, showers, and snow use dedicated particle fields; storms add a flash, lightning bolt, and heavy rain. Clear and partly states also carry animated wind traces.
+- **Loading / unknown:** Before API weather data arrives, the scene remains neutral: it renders the scan orb and `Waiting for conditions` accessible label, with no sun, cloud, precipitation, or storm implication. Unsupported non-null codes fall back to the overcast visual and `Variable conditions` label as implemented.
+- **Accessibility:** The visual wrapper is a labelled `role="img"` using the condition label; internal scene layers and particles are `aria-hidden`. The global reduced-motion rule collapses animation and transition duration to `.01ms` and disables smooth scrolling when `prefers-reduced-motion: reduce` is enabled.
+
+### Named Rules
+**The Neutral Loading Scene Rule.** Never imply a weather condition before API data arrives; unknown and loading are a neutral state with explicit text, not a guessed sky.
+
+**The Weather Volume Rule.** Keep dimensionality inside the weather visual's bounded CSS scene; the surrounding instrument desk remains square, ruled, and flat by default.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -221,11 +244,15 @@ The shipped surface is square: primary modules, navigation states, cards, alerts
 - **Do** preserve explicit strings such as `Loading forecast...`, `History API not connected`, `UNAVAILABLE`, and `Not an official emergency warning` when data is incomplete or generated.
 - **Do** maintain keyboard-visible cyan focus treatment and respect `prefers-reduced-motion: reduce`.
 - **Do** use icons as compact functional marks and pair unfamiliar icon-only controls with an accessible label or title.
+- **Do** use the condition-driven CSS weather scene for WMO-backed visual context, including its sun/moon, volumetric cloud, particle, storm, and wind layers.
+- **Do** keep unknown/loading weather neutral and expose the condition through the visual's accessible label.
 
 ### Don't:
-- **Don't** introduce rounded cards, pill controls, glass surfaces, gradients, or decorative shadows into this system.
+- **Don't** introduce rounded cards, pill controls, glass surfaces, decorative gradients, or decorative shadows into general surfaces; the weather scene's gradients are a bounded native exception.
 - **Don't** turn unavailable or estimated values into visually confident readings.
 - **Don't** use amber, red, or green as general decoration; they carry attention and state meaning.
 - **Don't** replace the desktop observation rail and mobile utility bar with generic marketing navigation.
 - **Don't** hide provider, loading, permission, error, or alert provenance behind ambiguous empty space.
 - **Don't** add a second display typeface or a competing mono treatment without revisiting the instrument hierarchy.
+- **Don't** add Three.js, canvas, or another rendering dependency to the weather scene; the shipped implementation is CSS-based and dependency-free.
+- **Don't** make a loading scene look clear, cloudy, rainy, or severe before weather data is available.
