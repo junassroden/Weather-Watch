@@ -112,3 +112,31 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:2px solid var
 .weather-particles-heavy-rain i:nth-child(3n) { animation-duration:1.1s; opacity:.36; }
 .weather-particles-snow i:nth-child(3n) { filter:blur(1px); transform:scale(1.35); }
 @keyframes weather-cloud-drift { 0%,100% { transform:translate3d(-1%,0,42px) rotateX(4deg) rotateY(-8deg); } 50% { transform:translate3d(4%, -2%,42px) rotateX(4deg) rotateY(-4deg); } }
+/* ------------------------------------------------------------------ */
+/* Weekly Outlook — full-scene animated weather background cards      */
+/* Each card is a live window into a canvas-rendered weather          */
+/* environment (WeatherEnvironment.jsx), reactive to the actual       */
+/* Open-Meteo weather_code. Info sits in glass panels above it.       */
+/* ------------------------------------------------------------------ */
+.forecast-page-grid,.forecast-grid { row-gap:0; }
+.forecast-card { position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; min-height:272px; padding:0; text-align:left; background:#0d171e; box-shadow:none; backdrop-filter:none; }
+.forecast-card::after { content:none; }
+.forecast-card .weather-environment,.forecast-scene { position:absolute; inset:0; z-index:0; overflow:hidden; }
+.weather-environment canvas { display:block; width:100%; height:100%; }
+.forecast-card-scrim { position:absolute; inset:0; z-index:1; background:linear-gradient(180deg,rgba(7,12,17,.42) 0%,rgba(7,12,17,0) 26%,rgba(7,12,17,.08) 55%,rgba(7,12,17,.72) 100%); pointer-events:none; }
+.forecast-card-top { position:relative; z-index:2; padding:12px; }
+.glass-chip { display:inline-grid; gap:2px; padding:7px 10px; border:1px solid rgba(237,242,239,.22); border-radius:3px; background:rgba(9,15,20,.4); backdrop-filter:blur(9px) saturate(130%); -webkit-backdrop-filter:blur(9px) saturate(130%); }
+.glass-chip strong { color:var(--paper); font-size:12px; font-weight:600; letter-spacing:-.01em; }
+.glass-chip span { color:var(--soft); font-family:var(--mono); font-size:9px; letter-spacing:.02em; }
+.forecast-card-bottom { position:relative; z-index:2; }
+.glass-panel-frost { padding:13px 14px 15px; border-top:1px solid rgba(237,242,239,.16); background:linear-gradient(180deg,rgba(9,15,20,.18) 0%,rgba(9,15,20,.62) 45%,rgba(9,15,20,.86) 100%); backdrop-filter:blur(7px) saturate(125%); -webkit-backdrop-filter:blur(7px) saturate(125%); }
+.forecast-card .forecast-condition { min-height:auto; color:var(--soft); font-size:11px; letter-spacing:.01em; }
+.forecast-card .forecast-temperature { justify-content:flex-start; gap:9px; margin-top:8px; }
+.forecast-card .forecast-temperature strong { font-size:19px; letter-spacing:-.02em; }
+.forecast-card .forecast-rain { margin-top:9px; color:var(--soft); }
+.forecast-card .forecast-rain svg { color:var(--cyan); flex-shrink:0; }
+
+@media (max-width:1100px) { .forecast-card { min-height:250px; } }
+@media (max-width:720px) { .forecast-card { min-height:230px; } .glass-panel-frost { padding:12px; } }
+
+@media (prefers-reduced-motion: reduce) { .weather-environment canvas { animation:none; } }

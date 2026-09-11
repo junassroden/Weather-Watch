@@ -2,10 +2,8 @@ import {
     CloudRain,
 } from "lucide-react";
 
-import WeatherVisual, {
-    getWeatherType,
-    weatherLabel,
-} from "./WeatherVisual";
+import WeatherEnvironment from "./WeatherEnvironment";
+import { getWeatherType, weatherLabel } from "./WeatherVisual";
 
 function parseDate(date) {
     const [
@@ -53,68 +51,71 @@ export default function ForecastCard({
     const weatherType = getWeatherType(weatherCode);
 
     return (
-        <article className={`forecast-card forecast-card-${weatherType}`}>
+        <article
+            className={`forecast-card forecast-card-${weatherType}`}
+            aria-label={`${weekday}, ${weatherLabel(weatherCode)}, high ${
+                max == null ? "unavailable" : `${Math.round(max)} degrees`
+            }, low ${min == null ? "unavailable" : `${Math.round(min)} degrees`}`}
+        >
 
-            <div className="forecast-environment" aria-hidden="true">
-                <WeatherVisual
-                    code={weatherCode}
-                    isDay={true}
-                    size="forecast"
-                />
+            <WeatherEnvironment
+                code={weatherCode}
+                isDay={true}
+                className="forecast-scene"
+            />
+
+            <div className="forecast-card-scrim" aria-hidden="true" />
+
+            <div className="forecast-card-top">
+                <div className="forecast-date glass-chip">
+                    <strong>
+                        {weekday}
+                    </strong>
+
+                    <span>
+                        {shortDate}
+                    </span>
+                </div>
             </div>
 
-            <div className="forecast-date">
-                <strong>
-                    {weekday}
-                </strong>
+            <div className="forecast-card-bottom glass-panel-frost">
 
-                <span>
-                    {shortDate}
-                </span>
-            </div>
+                <div className="forecast-condition">
+                    {weatherLabel(
+                        weatherCode
+                    )}
+                </div>
 
-            <div className="forecast-visual">
-                <WeatherVisual
-                    code={weatherCode}
-                    isDay={true}
-                    size="small"
-                />
-            </div>
+                <div className="forecast-temperature">
 
-            <div className="forecast-condition">
-                {weatherLabel(
-                    weatherCode
-                )}
-            </div>
+                    <strong>
+                        {max == null
+                            ? "—"
+                            : `${Math.round(max)}°`}
+                    </strong>
 
-            <div className="forecast-temperature">
+                    <span>
+                        {min == null
+                            ? "—"
+                            : `${Math.round(min)}°`}
+                    </span>
 
-                <strong>
-                    {max == null
-                        ? "—"
-                        : `${Math.round(max)}°`}
-                </strong>
+                </div>
 
-                <span>
-                    {min == null
-                        ? "—"
-                        : `${Math.round(min)}°`}
-                </span>
+                <div className="forecast-rain">
+                    <CloudRain
+                        size={13}
+                    />
 
-            </div>
+                    <span>
+                        {precipitation == null
+                            ? "—"
+                            : `${Math.round(
+                                  precipitation
+                              )}% rain`}
+                    </span>
+                </div>
 
-            <div className="forecast-rain">
-                <CloudRain
-                    size={14}
-                />
-
-                <span>
-                    {precipitation == null
-                        ? "—"
-                        : `${Math.round(
-                              precipitation
-                          )}% rain`}
-                </span>
             </div>
 
         </article>
