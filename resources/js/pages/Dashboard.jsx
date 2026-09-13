@@ -375,33 +375,43 @@ export default function Dashboard() {
                                     forecast.hourly.time.slice(0, 6).map(
                                         (time, index) => (
                                             <article
-                                                className="hour-card"
+                                                className={`hour-card forecast-card forecast-card-${forecast.hourly.weather_code?.[index] ?? "unknown"}`}
                                                 key={time}
                                             >
-                                                <span>
-                                                    {index === 0
-                                                        ? "Now"
-                                                        : formatHour(time)}
-                                                </span>
-
                                                 <WeatherVisual
                                                     code={forecast.hourly.weather_code?.[index]}
                                                     isDay={isForecastHourDay(time, forecast)}
                                                     size="small"
                                                 />
 
-                                                <strong>
-                                                    {forecast.hourly.temperature_2m?.[index] == null
-                                                        ? "--"
-                                                        : `${Math.round(forecast.hourly.temperature_2m[index])}°`}
-                                                </strong>
+                                                <div className="hour-card-scrim" aria-hidden="true" />
 
-                                                <small>
-                                                    <CloudRain size={12} />
-                                                    {forecast.hourly.precipitation_probability?.[index] == null
-                                                        ? "--"
-                                                        : `${Math.round(forecast.hourly.precipitation_probability[index])}%`}
-                                                </small>
+                                                <div className="hour-card-top">
+                                                    <strong>
+                                                        {index === 0
+                                                            ? "Now"
+                                                            : formatHour(time)}
+                                                    </strong>
+                                                </div>
+
+                                                <div className="hour-card-bottom">
+                                                    <span className="hour-card-condition">
+                                                        {weatherLabel(forecast.hourly.weather_code?.[index])}
+                                                    </span>
+
+                                                    <span className="hour-card-temperature">
+                                                        {forecast.hourly.temperature_2m?.[index] == null
+                                                            ? "--"
+                                                            : `${Math.round(forecast.hourly.temperature_2m[index])}°`}
+                                                    </span>
+
+                                                    <small>
+                                                        <CloudRain size={13} strokeWidth={1.8} />
+                                                        {forecast.hourly.precipitation_probability?.[index] == null
+                                                            ? "--"
+                                                            : `${Math.round(forecast.hourly.precipitation_probability[index])}% rain`}
+                                                    </small>
+                                                </div>
                                             </article>
                                         )
                                     )

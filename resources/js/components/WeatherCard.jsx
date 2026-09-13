@@ -30,7 +30,9 @@ export default function WeatherCard({
             <div className="weather-card-value">
 
                 {available
-                    ? value
+                    ? typeof value === "number"
+                        ? Math.round(value)
+                        : value
                     : "—"}
 
                 {available && unit && (
