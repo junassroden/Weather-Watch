@@ -1,3 +1,24 @@
+import {
+    Sun,
+    Moon,
+    CloudSun,
+    CloudMoon,
+    Cloud,
+    CloudFog,
+    CloudDrizzle,
+    CloudRain,
+    CloudRainWind,
+    CloudSnow,
+    CloudLightning,
+} from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/* Weather-type classification. This is the single source of truth    */
+/* every visual in the app (atmospheric scenes, icons, accent colors) */
+/* derives from, so a given Open-Meteo code always looks the same     */
+/* everywhere it appears.                                             */
+/* ------------------------------------------------------------------ */
+
 export function getWeatherType(code) {
     if (code === null || code === undefined) {
         return "unknown";
@@ -102,101 +123,45 @@ export function weatherLabel(code) {
     return "Variable conditions";
 }
 
-function ParticleField({
-    kind,
-    count,
-}) {
-    return (
-        <div className={`weather-particles weather-particles-${kind}`} aria-hidden="true">
-            {Array.from({ length: count }, (_, index) => (
-                <i
-                    key={index}
-                    style={{
-                        "--particle-x": `${8 + ((index * 17) % 84)}%`,
-                        "--particle-delay": `${(index % 7) * -0.32}s`,
-                        "--particle-scale": `${0.65 + ((index % 3) * 0.2)}`,
-                    }}
-                />
-            ))}
-        </div>
-    );
+/* ------------------------------------------------------------------ */
+/* Weather icon system. One icon family (lucide), one stroke weight    */
+/* (set globally in app.css), one glyph per weather state — used as a  */
+/* small supporting mark alongside the atmospheric scene, never as the */
+/* dominant element on a card.                                         */
+/* ------------------------------------------------------------------ */
+
+const ICONS = {
+    clear: { day: Sun, night: Moon },
+    partly: { day: CloudSun, night: CloudMoon },
+    overcast: { day: Cloud, night: Cloud },
+    fog: { day: CloudFog, night: CloudFog },
+    drizzle: { day: CloudDrizzle, night: CloudDrizzle },
+    rain: { day: CloudRain, night: CloudRain },
+    showers: { day: CloudRainWind, night: CloudRainWind },
+    snow: { day: CloudSnow, night: CloudSnow },
+    storm: { day: CloudLightning, night: CloudLightning },
+    unknown: { day: Cloud, night: Cloud },
+};
+
+export function weatherIconComponent(code, isDay = true) {
+    const type = getWeatherType(code);
+    const pair = ICONS[type] || ICONS.unknown;
+    return isDay ? pair.day : pair.night;
 }
 
-function CloudMass({
-    muted = false,
-}) {
-    return (
-        <div className={`weather-cloud-mass ${muted ? "is-muted" : ""}`} aria-hidden="true">
-            <span className="cloud-volume cloud-volume-back" />
-            <span className="cloud-volume cloud-volume-mid" />
-            <span className="cloud-volume cloud-volume-front" />
-            <span className="cloud-shadow" />
-        </div>
-    );
-}
-
-function WeatherScene({
-    type,
-    night,
-    code,
-}) {
-    const precipitation = type === "drizzle" || type === "rain" || type === "showers" || type === "storm";
-    const heavy = type === "rain" && code >= 65 || type === "storm";
-
-    return (
-        <div className="weather-scene" aria-hidden="true">
-            <div className="scene-horizon" />
-
-            {(type === "clear" || type === "partly") && (
-                <div className="weather-sun-orb">
-                    <span className="sun-orb-core" />
-                    <span className="sun-orb-corona" />
-                </div>
-            )}
-
-            {night && <div className="weather-moon-orb"><span /></div>}
-
-            {(type === "partly" || type === "overcast" || precipitation || type === "snow" || type === "fog") && (
-                <CloudMass muted={type === "partly"} />
-            )}
-
-            {type === "fog" && <ParticleField kind="fog" count={4} />}
-            {type === "drizzle" && <ParticleField kind="drizzle" count={9} />}
-            {type === "rain" && <ParticleField kind={heavy ? "heavy-rain" : "rain"} count={heavy ? 15 : 11} />}
-            {type === "showers" && <ParticleField kind="showers" count={12} />}
-            {type === "snow" && <ParticleField kind="snow" count={11} />}
-
-            {type === "storm" && (
-                <>
-                    <span className="storm-flash" />
-                    <span className="storm-bolt" />
-                    <ParticleField kind="heavy-rain" count={15} />
-                </>
-            )}
-
-            {type === "clear" && <span className="weather-wind-trace trace-one" />}
-            {type === "partly" && <span className="weather-wind-trace trace-two" />}
-
-            {type === "unknown" && <span className="weather-scan-orb" />}
-        </div>
-    );
-}
-
-export default function WeatherVisual({
+export default function WeatherIcon({
     code,
     isDay = true,
-    size = "large",
+    size = 18,
+    className = "",
 }) {
-    const type = getWeatherType(code);
-    const night = !isDay;
+    const Icon = weatherIconComponent(code, isDay);
 
     return (
-        <div
-            className={`weather-visual weather-visual-${size} weather-type-${type} ${night ? "weather-night" : "weather-day"}`}
-            role="img"
-            aria-label={weatherLabel(code)}
-        >
-            <WeatherScene type={type} night={night} code={code} />
-        </div>
+        <Icon
+            size={size}
+            className={`weather-icon ${className}`}
+            aria-hidden="true"
+        />
     );
 }
