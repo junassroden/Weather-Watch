@@ -3,7 +3,7 @@ import {
 } from "lucide-react";
 
 import WeatherEnvironment from "./WeatherEnvironment";
-import { getWeatherType, weatherLabel } from "./WeatherVisual";
+import WeatherIcon, { getWeatherType, weatherLabel } from "./WeatherVisual";
 
 function parseDate(date) {
     const [
@@ -81,6 +81,12 @@ export default function ForecastCard({
             <div className="forecast-card-bottom glass-panel-frost">
 
                 <div className="forecast-condition">
+                    <WeatherIcon
+                        code={weatherCode}
+                        isDay={true}
+                        size={14}
+                    />
+
                     {weatherLabel(
                         weatherCode
                     )}
