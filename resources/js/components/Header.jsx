@@ -1,4 +1,4 @@
-import { Bell, CloudSun, LocateFixed, Menu, Search, X } from "lucide-react";
+import { Bell, CloudSun, History, LocateFixed, Menu, Search, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { searchLocation } from "../services/api";
@@ -36,6 +36,7 @@ export default function Header({ onUseLocation, onLocationSelect }) {
                     <NavLink to="/" end className={navClass} onClick={() => setMenuOpen(false)}>Current Weather</NavLink>
                     <NavLink to="/forecast" className={navClass} onClick={() => setMenuOpen(false)}>Forecast</NavLink>
                     <NavLink to="/satellite-radar" className={navClass} onClick={() => setMenuOpen(false)}>Satellite & Radar</NavLink>
+                    <NavLink to="/weather-history" className={navClass} onClick={() => setMenuOpen(false)}>History</NavLink>
                     <NavLink to="/alerts" className={navClass} onClick={() => setMenuOpen(false)}>Alerts</NavLink>
                 </nav>
                 <div className="header-actions">
