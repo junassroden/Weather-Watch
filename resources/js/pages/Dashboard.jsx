@@ -204,16 +204,22 @@ export default function Dashboard() {
                         longitude
                     );
                 },
-                () => {
+                (geolocationError) => {
+                    const errorMessage = {
+                        1: "Location permission was denied. Please allow location access to view local weather.",
+                        2: "Your location could not be determined. Check your device location settings and try again.",
+                        3: "Location lookup timed out. Check your connection and try again.",
+                    }[geolocationError.code] || "Unable to determine your location. Please try again.";
+
                     setError(
-                        "Location permission was denied. Please allow location access to view local weather."
+                        errorMessage
                     );
 
                     setLoading(false);
                 },
                 {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
+                    enableHighAccuracy: false,
+                    timeout: 20000,
                     maximumAge: 300000,
                 }
             );
@@ -310,6 +316,26 @@ export default function Dashboard() {
                                         <> · High {Math.round(daily.temperature_2m_max[0])}° · Low {Math.round(daily.temperature_2m_min[0])}°</>
                                     )}
                                 </span>
+
+                                <div className="current-weather-stats">
+                                    <div className="current-weather-stat">
+                                        <Droplets size={15} />
+                                        <span>{weather?.humidity == null ? "--" : `${Math.round(weather.humidity)}%`}</span>
+                                        <small>Humidity</small>
+                                    </div>
+
+                                    <div className="current-weather-stat">
+                                        <Wind size={15} />
+                                        <span>{weather?.wind_speed == null ? "--" : `${Math.round(weather.wind_speed)} ${weather?.units?.wind_speed_10m || "km/h"}`}</span>
+                                        <small>Wind</small>
+                                    </div>
+
+                                    <div className="current-weather-stat">
+                                        <CloudRain size={15} />
+                                        <span>{weather?.precipitation == null ? "--" : `${weather.precipitation} ${weather?.units?.precipitation || "mm"}`}</span>
+                                        <small>Precipitation</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -720,6 +746,8 @@ export default function Dashboard() {
                             <LiveWeatherMap
                                 latitude={location?.latitude}
                                 longitude={location?.longitude}
+                                locationName={locationName}
+                                requestLocation={false}
                             />
 
                         </section>

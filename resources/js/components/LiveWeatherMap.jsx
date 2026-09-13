@@ -1,6 +1,8 @@
 import {
+    useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
 
@@ -72,10 +74,63 @@ function MapController({
     return null;
 }
 
+/* Leaflet caches the pixel size of its container the moment it's
+   created. If that container is hidden, mid-transition, or resized by
+   layout shifting around it afterwards (a loading spinner disappearing,
+   a sidebar collapsing, the window resizing, returning to this page
+   from another route), Leaflet has no way to know — the map appears to
+   "freeze": tiles stop lining up, dragging stalls at old edges, panes
+   go gray. This keeps the map's internal size in sync with its actual
+   container size for as long as the map is mounted. */
+function MapResizeHandler() {
+    const map = useMap();
+
+    useEffect(() => {
+        // Correct any size Leaflet captured before layout had settled.
+        const initial = requestAnimationFrame(() => map.invalidateSize());
+
+        const container = map.getContainer();
+        const resizeObserver = new ResizeObserver(() => {
+            map.invalidateSize();
+        });
+        resizeObserver.observe(container);
+
+        const handleVisibility = () => {
+            if (document.visibilityState === "visible") {
+                map.invalidateSize();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibility);
+
+        return () => {
+            cancelAnimationFrame(initial);
+            resizeObserver.disconnect();
+            document.removeEventListener("visibilitychange", handleVisibility);
+        };
+    }, [map]);
+
+    return null;
+}
+
 function LocationController({
     onLocation,
 }) {
     const map = useMap();
+    const buttonRef = useRef(null);
+
+    useEffect(() => {
+        const el = buttonRef.current;
+        if (!el) return undefined;
+
+        // This button renders inside Leaflet's map pane. Without this,
+        // a click/drag on it also registers as a click/drag on the map
+        // underneath — the map pans slightly and the control can
+        // double-fire, which reads as "unusual" or unresponsive UI.
+        L.DomEvent.disableClickPropagation(el);
+        L.DomEvent.disableScrollPropagation(el);
+
+        return undefined;
+    }, []);
 
     const locate = () => {
         if (!navigator.geolocation) {
@@ -108,6 +163,7 @@ function LocationController({
 
     return (
         <button
+            ref={buttonRef}
             className="map-control locate-control"
             onClick={locate}
             title="Use my location"
@@ -254,8 +310,8 @@ export default function LiveWeatherMap({
                 );
             },
             {
-                enableHighAccuracy: true,
-                timeout: 10000,
+                enableHighAccuracy: false,
+                timeout: 20000,
                 maximumAge: 300000,
             }
         );
@@ -266,52 +322,58 @@ export default function LiveWeatherMap({
         requestLocation,
     ]);
 
+    const mountedRef = useRef(true);
+
     useEffect(() => {
-        async function loadRadar() {
-            try {
-                setLoading(true);
-                setError("");
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
 
-                const radar =
-                    await getRadarFrames();
+    const loadRadarFrames = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-                const radarFrames =
-                    radar.frames || [];
+            const radar = await getRadarFrames();
+            // Guards against writing into state after the component has
+            // unmounted (e.g. the user navigated away from SatelliteRadar
+            // before this slow request resolved).
+            if (!mountedRef.current) return;
 
-                setFrames(radarFrames);
+            const radarFrames = radar.frames || [];
+            setFrames(radarFrames);
 
-                const radarCloudFrames =
-                    radar.cloud_imagery?.frames || [];
+            const radarCloudFrames = radar.cloud_imagery?.frames || [];
+            setCloudFrames(radarCloudFrames);
+            setCloudAvailable(radarCloudFrames.length > 0);
 
-                setCloudFrames(radarCloudFrames);
-                setCloudAvailable(radarCloudFrames.length > 0);
-
-                if (radarFrames.length > 0) {
-                    setCurrentFrame(
-                        radarFrames.length - 1
-                    );
-                }
-
-                if (radarCloudFrames.length > 0) {
-                    setCurrentCloudFrame(
-                        radarCloudFrames.length - 1
-                    );
-                }
-
-                onRadarLoaded?.(radar);
-            } catch {
-                setError(
-                    "Radar data unavailable."
-                );
-
-                onRadarError?.();
-            } finally {
-                setLoading(false);
+            if (radarFrames.length > 0) {
+                setCurrentFrame(radarFrames.length - 1);
             }
-        }
 
-        loadRadar();
+            if (radarCloudFrames.length > 0) {
+                setCurrentCloudFrame(radarCloudFrames.length - 1);
+            }
+
+            onRadarLoaded?.(radar);
+        } catch {
+            if (!mountedRef.current) return;
+            setError("Radar data unavailable.");
+            onRadarError?.();
+        } finally {
+            if (mountedRef.current) setLoading(false);
+        }
     }, [onRadarError, onRadarLoaded]);
+
+    useEffect(() => {
+        loadRadarFrames();
+        // Intentionally runs once per mount (or if the load callback
+        // identity itself changes) — not on every render — since the
+        // radar-frames endpoint isn't location-scoped.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loadRadarFrames]);
 
     useEffect(() => {
         if (currentFrame >= frames.length) {
@@ -520,11 +582,12 @@ export default function LiveWeatherMap({
                     }
                     minZoom={2}
                     maxZoom={7}
-                    scrollWheelZoom={true}
+                    scrollWheelZoom={false}
                     zoomControl={true}
                     className="live-weather-map"
                 >
 
+                    <MapResizeHandler />
                     {basemapVisible && (
                         <TileLayer
                             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -651,15 +714,28 @@ export default function LiveWeatherMap({
                         />
 
                         <span>
-                            Loading radar data
+                            Loading satellite imagery...
                         </span>
 
                     </div>
                 )}
 
-                {error && (
+                {!loading && error && (
                     <div className="map-error">
-                        {error}
+                        <span>{error}</span>
+                        <button
+                            type="button"
+                            className="map-error-retry"
+                            onClick={loadRadarFrames}
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
+                {!loading && !error && frames.length === 0 && (
+                    <div className="map-error map-empty">
+                        No radar imagery is currently available for this area.
                     </div>
                 )}
 

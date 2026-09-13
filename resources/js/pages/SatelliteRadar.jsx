@@ -16,6 +16,7 @@ import {
 
 import Header from "../components/Header";
 import LiveWeatherMap from "../components/LiveWeatherMap";
+import WeatherEnvironment from "../components/WeatherEnvironment";
 
 import {
     getCurrentWeather,
@@ -42,6 +43,12 @@ function weatherDescription(code) {
     }
 
     return "Clear conditions";
+}
+
+function stormWatchCode(tone) {
+    if (tone === "severe") return 96;
+    if (tone === "watch") return 63;
+    return 1;
 }
 
 function getStormWatch(forecast) {
@@ -103,17 +110,28 @@ export default function SatelliteRadar() {
 
     const handleRadarLoaded = useCallback((data) => {
         setRadar(data);
-        setLoading(false);
     }, []);
 
     const handleRadarError = useCallback(() => {
-        setError("Unable to load radar information.");
-        setLoading(false);
+        // LiveWeatherMap already renders its own radar-specific error
+        // and retry UI inside the map card. Nothing further is needed
+        // here — and critically, this must NOT touch the page-level
+        // `error`/`loading` state below: those track this page's own
+        // weather/forecast/risk fetch, which is a completely separate
+        // network request from the map's radar-frame fetch. Wiring them
+        // together previously meant a slow-but-successful radar fetch
+        // could leave "Loading radar information..." on screen long
+        // after the page's own data had already arrived (or disappear
+        // before it had), and a radar failure could silently overwrite
+        // a meaningful "location permission denied" message with a
+        // generic one, or vice versa depending on which request
+        // happened to resolve last.
     }, []);
 
     useEffect(() => {
         if (!navigator.geolocation) {
             setError("Location access is unavailable.");
+            setLoading(false);
             return;
         }
 
@@ -126,41 +144,50 @@ export default function SatelliteRadar() {
                     longitude,
                 });
 
-                const results = await Promise.allSettled([
-                    getCurrentWeather(latitude, longitude),
-                    getForecast(latitude, longitude),
-                    getRisk(latitude, longitude),
-                    reverseLocation(latitude, longitude),
-                ]);
+                try {
+                    const results = await Promise.allSettled([
+                        getCurrentWeather(latitude, longitude),
+                        getForecast(latitude, longitude),
+                        getRisk(latitude, longitude),
+                        reverseLocation(latitude, longitude),
+                    ]);
 
-                const [weatherResult, forecastResult, riskResult, locationResult] = results;
+                    const [weatherResult, forecastResult, riskResult, locationResult] = results;
 
-                if (weatherResult.status === "fulfilled") {
-                    setWeather(weatherResult.value);
+                    if (weatherResult.status === "fulfilled") {
+                        setWeather(weatherResult.value);
+                    }
+
+                    if (forecastResult.status === "fulfilled") {
+                        setForecast(forecastResult.value);
+                    }
+
+                    if (riskResult.status === "fulfilled") {
+                        setRisk(riskResult.value);
+                    }
+
+                    if (locationResult.status === "fulfilled") {
+                        const location = locationResult.value;
+
+                        setLocationName(
+                            location.city || location.display_name || "Current location"
+                        );
+                    }
+
+                    if (results.every((result) => result.status === "rejected")) {
+                        setError("Weather telemetry is temporarily unavailable.");
+                    }
+                } finally {
+                    // This always fires — on full success, partial
+                    // success, or total failure — so the loading state
+                    // for this page's own data can never hang forever.
+                    setLoading(false);
                 }
-
-                if (forecastResult.status === "fulfilled") {
-                    setForecast(forecastResult.value);
-                }
-
-                if (riskResult.status === "fulfilled") {
-                    setRisk(riskResult.value);
-                }
-
-                if (locationResult.status === "fulfilled") {
-                    const location = locationResult.value;
-
-                    setLocationName(
-                        location.city || location.display_name || "Current location"
-                    );
-                }
-
-                if (results.every((result) => result.status === "rejected")) {
-                    setError("Weather telemetry is temporarily unavailable.");
-                }
-
             },
-            () => setError("Allow location access to view local satellite telemetry."),
+            () => {
+                setError("Allow location access to view local satellite telemetry.");
+                setLoading(false);
+            },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
         );
     }, []);
@@ -206,13 +233,23 @@ export default function SatelliteRadar() {
                     <section className="satellite-command-grid">
 
                         <article className={`satellite-alert satellite-alert-${stormWatch.tone}`}>
-                            <div className="satellite-panel-heading">
-                                <CloudLightning size={20} />
-                                <span>STORM WATCH</span>
+                            <WeatherEnvironment
+                                code={stormWatchCode(stormWatch.tone)}
+                                isDay={true}
+                                className="satellite-alert-scene"
+                            />
+
+                            <div className="satellite-alert-scrim" aria-hidden="true" />
+
+                            <div className="satellite-alert-content">
+                                <div className="satellite-panel-heading">
+                                    <CloudLightning size={20} />
+                                    <span>STORM WATCH</span>
+                                </div>
+                                <strong>{stormWatch.level}</strong>
+                                <p>{stormWatch.detail}</p>
+                                <small>Based on the seven-day Open-Meteo outlook</small>
                             </div>
-                            <strong>{stormWatch.level}</strong>
-                            <p>{stormWatch.detail}</p>
-                            <small>Based on the seven-day Open-Meteo outlook</small>
                         </article>
 
                         <article className="satellite-panel">
@@ -264,7 +301,7 @@ export default function SatelliteRadar() {
 
                     {loading && (
                         <div className="page-loading">
-                            Loading radar information...
+                            Loading local weather telemetry...
                         </div>
                     )}
 

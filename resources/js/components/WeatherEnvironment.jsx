@@ -185,6 +185,37 @@ function buildFogSprite(width, height) {
     return sprite;
 }
 
+/* Soft god-ray sprite for sunny/partly-sunny scenes, baked once onto an
+   offscreen canvas so animating it at runtime is a single drawImage +
+   rotate instead of rebuilding gradients every frame. */
+function buildLightRaySprite(size, seedValue) {
+    const rng = makeRng(seedValue);
+    const s = Math.max(40, Math.round(size));
+    const sprite = document.createElement("canvas");
+    sprite.width = s;
+    sprite.height = s;
+    const c = sprite.getContext("2d");
+    const rayCount = 6 + Math.floor(rng() * 3);
+
+    c.translate(s / 2, s / 2);
+    for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2 + rng() * 0.3;
+        const length = s * (0.42 + rng() * 0.1);
+        const spread = 0.05 + rng() * 0.03;
+        const grad = c.createLinearGradient(0, 0, Math.cos(angle) * length, Math.sin(angle) * length);
+        grad.addColorStop(0, "rgba(255,238,196,0.16)");
+        grad.addColorStop(1, "rgba(255,238,196,0)");
+        c.fillStyle = grad;
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.lineTo(Math.cos(angle - spread) * length, Math.sin(angle - spread) * length);
+        c.lineTo(Math.cos(angle + spread) * length, Math.sin(angle + spread) * length);
+        c.closePath();
+        c.fill();
+    }
+    return sprite;
+}
+
 export default function WeatherEnvironment({
     code,
     isDay = true,
@@ -216,12 +247,27 @@ export default function WeatherEnvironment({
         let height = 0;
         let cloudLayers = [];
         let fogSprite = null;
+        let lightRaySprite = null;
         let rainDrops = [];
         let snowFlakes = [];
         let lastTime = 0;
         let elapsed = 0;
         let nextFlash = 3 + rng() * 5;
         let flashStrength = 0;
+
+        // Rain/snow/storm bands span a range of Open-Meteo codes; within a
+        // band, the top of the range genuinely means heavier weather (e.g.
+        // code 65 is "heavy rain" vs 61 "slight rain"). Scale density and
+        // darkness by how far into the band the code sits, so a heavy-rain
+        // day actually looks heavier than a light one instead of every
+        // "rain" code rendering identically.
+        const intensity = (() => {
+            if (code === null || code === undefined) return 0;
+            if (type === "rain") return Math.min(1, Math.max(0, (code - 61) / 6));
+            if (type === "showers") return Math.min(1, Math.max(0, (code - 80) / 2));
+            if (type === "drizzle") return Math.min(1, Math.max(0, (code - 51) / 6));
+            return 0;
+        })();
 
         function buildScene() {
             const rect = wrap.getBoundingClientRect();
@@ -249,16 +295,18 @@ export default function WeatherEnvironment({
             });
 
             fogSprite = scene.fogBands ? buildFogSprite(width, height / 3) : null;
+            lightRaySprite = scene.sun ? buildLightRaySprite(Math.max(width, height) * 1.6, seed + 45) : null;
 
             if (scene.precip?.kind === "rain") {
                 const rainRng = makeRng(seed + 21);
-                rainDrops = Array.from({ length: scene.precip.density }, () => ({
+                const density = Math.round(scene.precip.density * (1 + intensity * 0.5));
+                rainDrops = Array.from({ length: density }, () => ({
                     x: rainRng() * width,
                     y: rainRng() * height,
-                    len: scene.precip.length * (0.6 + rainRng() * 0.8),
-                    speed: scene.precip.speed * (0.7 + rainRng() * 0.7) * 260,
+                    len: scene.precip.length * (0.6 + rainRng() * 0.8) * (1 + intensity * 0.3),
+                    speed: scene.precip.speed * (0.7 + rainRng() * 0.7) * 260 * (1 + intensity * 0.25),
                     drift: (rainRng() - 0.5) * 18,
-                    opacity: 0.25 + rainRng() * 0.35,
+                    opacity: (0.25 + rainRng() * 0.35) * (1 + intensity * 0.2),
                 }));
             }
 
@@ -327,6 +375,20 @@ export default function WeatherEnvironment({
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI * 2);
             ctx.fill();
+        }
+
+        function drawLightRays(t) {
+            if (!lightRaySprite) return;
+            const cx = width * 0.72;
+            const cy = height * 0.28;
+            const rotation = t * 0.00003;
+
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.translate(cx, cy);
+            ctx.rotate(rotation);
+            ctx.drawImage(lightRaySprite, -lightRaySprite.width / 2, -lightRaySprite.height / 2);
+            ctx.restore();
         }
 
         function drawClouds(t) {
@@ -438,15 +500,23 @@ export default function WeatherEnvironment({
                 ctx.clearRect(0, 0, width, height);
                 drawSky(now);
                 drawSun(now);
+                drawLightRays(now);
                 drawClouds({ dt, elapsed });
                 drawFog({ dt, elapsed });
                 drawRain({ dt, elapsed });
                 drawSnow({ dt, elapsed });
                 drawLightning({ dt, elapsed });
-            }
 
-            if (!reduceMotion) {
-                rafRef.current = requestAnimationFrame(frame);
+                if (!reduceMotion) {
+                    rafRef.current = requestAnimationFrame(frame);
+                }
+            } else {
+                // Off-screen: stop scheduling frames entirely instead of
+                // burning a requestAnimationFrame callback every tick for
+                // cards the user can't currently see. The intersection
+                // observer below restarts the loop when it scrolls back
+                // into view.
+                rafRef.current = null;
             }
         }
 
@@ -455,21 +525,36 @@ export default function WeatherEnvironment({
         if (reduceMotion) {
             drawSky(0);
             drawSun(0);
+            drawLightRays(0);
             drawClouds({ dt: 0, elapsed: 0 });
             drawFog({ dt: 0, elapsed: 0 });
         } else {
             rafRef.current = requestAnimationFrame(frame);
         }
 
+        let resizeRaf = null;
         const resizeObserver = new ResizeObserver(() => {
-            buildScene();
+            // Coalesce bursts of resize events (e.g. a window being
+            // dragged) into a single rebuild per frame instead of
+            // rebuilding every cloud/rain sprite on each intermediate tick.
+            if (resizeRaf) cancelAnimationFrame(resizeRaf);
+            resizeRaf = requestAnimationFrame(() => {
+                resizeRaf = null;
+                buildScene();
+            });
         });
         resizeObserver.observe(wrap);
 
         const intersectionObserver = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
+                    const wasVisible = visibleRef.current;
                     visibleRef.current = entry.isIntersecting;
+
+                    if (entry.isIntersecting && !wasVisible && !reduceMotion && !rafRef.current) {
+                        lastTime = 0;
+                        rafRef.current = requestAnimationFrame(frame);
+                    }
                 }
             },
             { threshold: 0.05 }
@@ -478,10 +563,11 @@ export default function WeatherEnvironment({
 
         return () => {
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            if (resizeRaf) cancelAnimationFrame(resizeRaf);
             resizeObserver.disconnect();
             intersectionObserver.disconnect();
         };
-    }, [type, isDay, scene]);
+    }, [type, isDay, scene, code]);
 
     return (
         <div

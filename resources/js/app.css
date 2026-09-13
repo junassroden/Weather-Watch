@@ -111,6 +111,15 @@
 
 html {
     color-scheme: dark;
+    /* One of the most common sources of an invisible horizontal scrollbar
+       is a single element (a wide card, an unclamped number, a stray
+       negative margin) pushing past 100vw. Rather than hunting every
+       future offender individually, the page itself never scrolls
+       sideways — only the explicitly-designed horizontal strips
+       (.hourly-strip, .forecast-grid) do, and they own their overflow
+       locally instead of leaking it to the document. */
+    overflow-x: hidden;
+    width: 100%;
 }
 
 body {
@@ -121,6 +130,8 @@ body {
     font-size: var(--fs-body);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 h1, h2, h3, h4, p {
@@ -177,6 +188,7 @@ img {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
     background:
         radial-gradient(1200px 640px at 85% -10%, rgba(87, 162, 221, 0.08), transparent 60%),
         var(--surface-0);
@@ -630,7 +642,7 @@ img {
     position: relative;
     border-radius: var(--r-lg);
     overflow: hidden;
-    min-height: clamp(280px, 42vw, 380px);
+    min-height: clamp(360px, 46vw, 480px);
     display: flex;
     align-items: flex-end;
     box-shadow: var(--shadow-lg);
@@ -648,11 +660,12 @@ img {
 .current-weather-copy {
     position: relative;
     z-index: 1;
-    padding: var(--sp-6) var(--sp-7);
+    padding: var(--sp-7) var(--sp-8);
     color: var(--text-on-scene);
     display: flex;
     flex-direction: column;
     gap: 2px;
+    max-width: 620px;
 }
 
 .current-weather-copy .eyebrow {
@@ -691,6 +704,40 @@ img {
     color: var(--text-on-scene-muted);
 }
 
+.current-weather-stats {
+    margin-top: var(--sp-6);
+    display: flex;
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+}
+
+.current-weather-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.current-weather-stat svg {
+    color: var(--accent-strong);
+}
+
+.current-weather-stat span {
+    font-size: var(--fs-small);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.current-weather-stat small {
+    font-size: var(--fs-micro);
+    color: var(--text-on-scene-muted);
+}
+
 /* -------------------------------------------------------------------- */
 /* Hourly strip                                                          */
 /* -------------------------------------------------------------------- */
@@ -709,9 +756,12 @@ img {
 .hourly-strip {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: 118px;
+    grid-auto-columns: 152px;
     gap: var(--sp-3);
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
     padding-bottom: 4px;
 }
@@ -736,7 +786,7 @@ img {
     scroll-snap-align: start;
     border-radius: var(--r-md);
     overflow: hidden;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 3 / 4.6;
     border: 1px solid var(--hairline);
     display: flex;
     flex-direction: column;
@@ -774,7 +824,7 @@ img {
 }
 
 .hour-card-temperature {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
@@ -793,15 +843,18 @@ img {
 
 .forecast-grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(128px, 1fr));
-    gap: var(--sp-3);
+    grid-template-columns: repeat(7, minmax(150px, 1fr));
+    gap: var(--sp-4);
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
 }
 
 .forecast-page-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: var(--sp-4);
 }
 
@@ -809,7 +862,7 @@ img {
     position: relative;
     border-radius: var(--r-md);
     overflow: hidden;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 3 / 4.4;
     border: 1px solid var(--hairline);
     border-top: 3px solid var(--wx-unknown);
     display: flex;
@@ -884,7 +937,7 @@ img {
 }
 
 .forecast-temperature strong {
-    font-size: 1.4rem;
+    font-size: 1.65rem;
     font-weight: 700;
 }
 
@@ -1376,7 +1429,46 @@ img {
 }
 
 .satellite-alert {
+    position: relative;
+    overflow: hidden;
     border-left: 3px solid var(--status-unknown);
+    grid-column: span 2;
+    min-height: 200px;
+}
+
+.satellite-alert-scene {
+    position: absolute;
+    inset: 0;
+}
+
+.satellite-alert-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(6, 10, 14, 0.88) 0%, rgba(6, 10, 14, 0.62) 55%, rgba(6, 10, 14, 0.4) 100%);
+}
+
+.satellite-alert-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--text-on-scene);
+}
+
+.satellite-alert-content strong {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.satellite-alert-content p {
+    color: var(--text-on-scene-muted);
+    font-size: var(--fs-small);
+}
+
+.satellite-alert-content small {
+    color: var(--text-on-scene-muted);
+    font-size: var(--fs-micro);
 }
 
 .satellite-alert-clear {
@@ -1591,6 +1683,31 @@ img {
 
 .map-error {
     color: #f2c3b3;
+    flex-direction: column;
+    text-align: center;
+    padding: var(--sp-5);
+    gap: var(--sp-3);
+}
+
+.map-error-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--r-sm);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-size: var(--fs-small);
+    font-weight: 600;
+}
+
+.map-error-retry:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.map-empty {
+    color: var(--text-secondary);
+    max-width: 40ch;
 }
 
 .spin {
@@ -1804,12 +1921,16 @@ img {
     }
 
     .forecast-grid {
-        grid-template-columns: repeat(7, minmax(120px, 1fr));
+        grid-template-columns: repeat(7, minmax(148px, 1fr));
         overflow-x: auto;
     }
 
     .hourly-strip {
-        grid-auto-columns: 104px;
+        grid-auto-columns: 130px;
+    }
+
+    .satellite-alert {
+        grid-column: span 1;
     }
 
     .emergency-panel {
@@ -1826,10 +1947,21 @@ img {
 @media (max-width: 600px) {
     .current-weather-copy {
         padding: var(--sp-5);
+        max-width: 100%;
     }
 
     .current-temperature {
         font-size: clamp(2.4rem, 14vw, 3.2rem);
+    }
+
+    .current-weather-stats {
+        gap: var(--sp-2);
+    }
+
+    .current-weather-stat {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 8px 10px;
     }
 
     .footer-inner {
