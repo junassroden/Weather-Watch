@@ -26,7 +26,6 @@ import ForecastCard from "../components/ForecastCard";
 import RiskCard from "../components/RiskCard";
 import WeatherEnvironment from "../components/WeatherEnvironment";
 import WeatherIcon, {
-    getWeatherType,
     weatherLabel,
 } from "../components/WeatherVisual";
 
@@ -204,22 +203,16 @@ export default function Dashboard() {
                         longitude
                     );
                 },
-                (geolocationError) => {
-                    const errorMessage = {
-                        1: "Location permission was denied. Please allow location access to view local weather.",
-                        2: "Your location could not be determined. Check your device location settings and try again.",
-                        3: "Location lookup timed out. Check your connection and try again.",
-                    }[geolocationError.code] || "Unable to determine your location. Please try again.";
-
+                () => {
                     setError(
-                        errorMessage
+                        "Location permission was denied. Please allow location access to view local weather."
                     );
 
                     setLoading(false);
                 },
                 {
-                    enableHighAccuracy: false,
-                    timeout: 20000,
+                    enableHighAccuracy: true,
+                    timeout: 10000,
                     maximumAge: 300000,
                 }
             );
@@ -352,7 +345,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            <div className="hourly-strip">
+                            <div className="forecast-grid hourly-strip">
                                 {forecast?.hourly?.time?.length ? (
                                     forecast.hourly.time.slice(0, 8).map(
                                         (time, index) => {
@@ -361,42 +354,53 @@ export default function Dashboard() {
 
                                             return (
                                                 <article
-                                                    className={`hour-card forecast-card-${getWeatherType(hourCode)}`}
+                                                    className="forecast-card"
                                                     key={time}
                                                 >
                                                     <WeatherEnvironment
                                                         code={hourCode}
                                                         isDay={hourIsDay}
-                                                        className="hour-scene"
+                                                        className="forecast-scene"
                                                     />
 
-                                                    <div className="hour-card-scrim" aria-hidden="true" />
+                                                    <div className="forecast-card-scrim" aria-hidden="true" />
 
-                                                    <div className="hour-card-top">
-                                                        <strong>
-                                                            {index === 0
-                                                                ? "Now"
-                                                                : formatHour(time)}
-                                                        </strong>
+                                                    <div className="forecast-card-top">
+                                                        <div className="forecast-date glass-chip">
+                                                            <strong>
+                                                                {index === 0
+                                                                    ? "Now"
+                                                                    : formatHour(time)}
+                                                            </strong>
+                                                        </div>
                                                     </div>
 
-                                                    <div className="hour-card-bottom">
-                                                        <span className="hour-card-condition">
+                                                    <div className="forecast-card-bottom glass-panel-frost">
+                                                        <div className="forecast-condition">
+                                                            <WeatherIcon
+                                                                code={hourCode}
+                                                                isDay={hourIsDay}
+                                                                size={14}
+                                                            />
                                                             {weatherLabel(hourCode)}
-                                                        </span>
+                                                        </div>
 
-                                                        <span className="hour-card-temperature">
-                                                            {forecast.hourly.temperature_2m?.[index] == null
-                                                                ? "--"
-                                                                : `${Math.round(forecast.hourly.temperature_2m[index])}°`}
-                                                        </span>
+                                                        <div className="forecast-temperature">
+                                                            <strong>
+                                                                {forecast.hourly.temperature_2m?.[index] == null
+                                                                    ? "--"
+                                                                    : `${Math.round(forecast.hourly.temperature_2m[index])}°`}
+                                                            </strong>
+                                                        </div>
 
-                                                        <small>
+                                                        <div className="forecast-rain">
                                                             <CloudRain size={13} />
-                                                            {forecast.hourly.precipitation_probability?.[index] == null
-                                                                ? "--"
-                                                                : `${Math.round(forecast.hourly.precipitation_probability[index])}% rain`}
-                                                        </small>
+                                                            <span>
+                                                                {forecast.hourly.precipitation_probability?.[index] == null
+                                                                    ? "--"
+                                                                    : `${Math.round(forecast.hourly.precipitation_probability[index])}% rain`}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </article>
                                             );
@@ -445,8 +449,32 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        {/* SECONDARY: today's key metrics */}
+                        {/* PRIMARY: satellite & radar feature comes first */}
                         <section>
+
+                            <div className="section-heading">
+                                <div>
+                                    <span className="eyebrow">
+                                        LIVE SATELLITE & RADAR
+                                    </span>
+
+                                    <h2>
+                                        Precipitation & Cloud Movement
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <LiveWeatherMap
+                                latitude={location?.latitude}
+                                longitude={location?.longitude}
+                                locationName={locationName}
+                                requestLocation={false}
+                            />
+
+                        </section>
+
+                        {/* SECONDARY: today's key metrics */}
+                        <section className="dashboard-section">
 
                             <div className="section-heading">
 
@@ -563,176 +591,68 @@ export default function Dashboard() {
 
                         </section>
 
-                        {/* SUPPORTING: risk, alerts, atmosphere, sun times, map, emergency */}
+                        {/* SUPPORTING: risk + alerts side by side */}
                         <section className="dashboard-section">
 
-                            <div className="section-heading">
+                            <div className="supporting-grid">
+
                                 <div>
-                                    <h2>
-                                        Weather Risk Assessment
-                                    </h2>
-                                </div>
-                            </div>
 
-                            <RiskCard
-                                risk={risk}
-                            />
+                                    <div className="section-heading">
+                                        <div>
+                                            <h2>
+                                                Weather Risk Assessment
+                                            </h2>
+                                        </div>
+                                    </div>
 
-                        </section>
-
-                        <section className="dashboard-section">
-
-                            <div className="alert-panel">
-
-                                <div className="alert-panel-icon">
-                                    <AlertTriangle
-                                        size={20}
+                                    <RiskCard
+                                        risk={risk}
                                     />
-                                </div>
-
-                                <div className="alert-panel-content">
-
-                                    <span>
-                                        LOCAL WEATHER ALERTS
-                                    </span>
-
-                                    <h3>
-                                        {alerts == null
-                                            ? "Checking official alerts"
-                                            : alerts.official_alerts?.length
-                                                ? "Official alerts are active"
-                                                : "No official alerts available"}
-                                    </h3>
-
-                                    <p>
-                                        {alerts?.message ||
-                                            (alerts == null
-                                                ? "Waiting for the connected alert source."
-                                                : "There are currently no connected official weather warnings.")}
-                                    </p>
 
                                 </div>
-
-                            </div>
-
-                        </section>
-
-                        <section className="dashboard-section">
-
-                            <div className="section-heading">
 
                                 <div>
-                                    <span className="eyebrow">
-                                        WEATHER OVERVIEW
-                                    </span>
 
-                                    <h2>
-                                        Atmospheric Conditions
-                                    </h2>
-                                </div>
-
-                            </div>
-
-                            <div className="overview-grid">
-
-                                <div className="overview-card">
-                                    <CloudRain size={18} />
-                                    <span>
-                                        Precipitation
-                                    </span>
-                                    <strong>
-                                        {weather?.precipitation == null
-                                            ? "Unavailable"
-                                            : `${weather.precipitation} ${weather.units?.precipitation || "mm"}`}
-                                    </strong>
-                                </div>
-
-                                <div className="overview-card">
-                                    <CloudRain size={18} />
-                                    <span>
-                                        Cloud Cover
-                                    </span>
-                                    <strong>
-                                        {weather?.cloud_cover == null
-                                            ? "Unavailable"
-                                            : `${weather.cloud_cover} ${weather.units?.cloud_cover || "%"}`}
-                                    </strong>
-                                </div>
-
-                                <div className="overview-card">
-                                    <Wind size={18} />
-                                    <span>
-                                        Wind Gust
-                                    </span>
-                                    <strong>
-                                        {weather?.wind_gust == null
-                                            ? "Unavailable"
-                                            : `${weather.wind_gust} ${weather.units?.wind_gusts_10m || "km/h"}`}
-                                    </strong>
-                                </div>
-
-                                <div className="overview-card">
-                                    <Gauge size={18} />
-                                    <span>
-                                        Wind Direction
-                                    </span>
-                                    <strong>
-                                        {weather?.wind_direction == null
-                                            ? "Unavailable"
-                                            : `${weather.wind_direction} ${weather.units?.wind_direction_10m || "°"}`}
-                                    </strong>
-                                </div>
-
-                            </div>
-
-                        </section>
-
-                        <section className="dashboard-section">
-
-                            <div className="sun-grid">
-
-                                <div className="sun-card">
-
-                                    <div className="sun-icon">
-                                        <Sunrise size={22} />
+                                    <div className="section-heading">
+                                        <div>
+                                            <h2>
+                                                Official Alerts
+                                            </h2>
+                                        </div>
                                     </div>
 
-                                    <div>
-                                        <span>
-                                            SUNRISE
-                                        </span>
+                                    <div className="alert-panel">
 
-                                        <strong>
-                                            {daily?.sunrise?.[0]
-                                                ? new Date(daily.sunrise[0]).toLocaleTimeString([], {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })
-                                                : "--"}
-                                        </strong>
-                                    </div>
+                                        <div className="alert-panel-icon">
+                                            <AlertTriangle
+                                                size={20}
+                                            />
+                                        </div>
 
-                                </div>
+                                        <div className="alert-panel-content">
 
-                                <div className="sun-card">
+                                            <span>
+                                                LOCAL WEATHER ALERTS
+                                            </span>
 
-                                    <div className="sun-icon">
-                                        <Sunset size={22} />
-                                    </div>
+                                            <h3>
+                                                {alerts == null
+                                                    ? "Checking official alerts"
+                                                    : alerts.official_alerts?.length
+                                                        ? "Official alerts are active"
+                                                        : "No official alerts available"}
+                                            </h3>
 
-                                    <div>
-                                        <span>
-                                            SUNSET
-                                        </span>
+                                            <p>
+                                                {alerts?.message ||
+                                                    (alerts == null
+                                                        ? "Waiting for the connected alert source."
+                                                        : "There are currently no connected official weather warnings.")}
+                                            </p>
 
-                                        <strong>
-                                            {daily?.sunset?.[0]
-                                                ? new Date(daily.sunset[0]).toLocaleTimeString([], {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })
-                                                : "--"}
-                                        </strong>
+                                        </div>
+
                                     </div>
 
                                 </div>
@@ -741,14 +661,142 @@ export default function Dashboard() {
 
                         </section>
 
+                        {/* SUPPORTING: atmosphere overview + sun times side by side */}
                         <section className="dashboard-section">
 
-                            <LiveWeatherMap
-                                latitude={location?.latitude}
-                                longitude={location?.longitude}
-                                locationName={locationName}
-                                requestLocation={false}
-                            />
+                            <div className="supporting-grid supporting-grid-wide">
+
+                                <div>
+
+                                    <div className="section-heading">
+                                        <div>
+                                            <span className="eyebrow">
+                                                WEATHER OVERVIEW
+                                            </span>
+
+                                            <h2>
+                                                Atmospheric Conditions
+                                            </h2>
+                                        </div>
+                                    </div>
+
+                                    <div className="overview-grid">
+
+                                        <div className="overview-card">
+                                            <CloudRain size={18} />
+                                            <span>
+                                                Precipitation
+                                            </span>
+                                            <strong>
+                                                {weather?.precipitation == null
+                                                    ? "Unavailable"
+                                                    : `${weather.precipitation} ${weather.units?.precipitation || "mm"}`}
+                                            </strong>
+                                        </div>
+
+                                        <div className="overview-card">
+                                            <CloudRain size={18} />
+                                            <span>
+                                                Cloud Cover
+                                            </span>
+                                            <strong>
+                                                {weather?.cloud_cover == null
+                                                    ? "Unavailable"
+                                                    : `${weather.cloud_cover} ${weather.units?.cloud_cover || "%"}`}
+                                            </strong>
+                                        </div>
+
+                                        <div className="overview-card">
+                                            <Wind size={18} />
+                                            <span>
+                                                Wind Gust
+                                            </span>
+                                            <strong>
+                                                {weather?.wind_gust == null
+                                                    ? "Unavailable"
+                                                    : `${weather.wind_gust} ${weather.units?.wind_gusts_10m || "km/h"}`}
+                                            </strong>
+                                        </div>
+
+                                        <div className="overview-card">
+                                            <Gauge size={18} />
+                                            <span>
+                                                Wind Direction
+                                            </span>
+                                            <strong>
+                                                {weather?.wind_direction == null
+                                                    ? "Unavailable"
+                                                    : `${weather.wind_direction} ${weather.units?.wind_direction_10m || "°"}`}
+                                            </strong>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <div>
+
+                                    <div className="section-heading">
+                                        <div>
+                                            <h2>
+                                                Sun
+                                            </h2>
+                                        </div>
+                                    </div>
+
+                                    <div className="sun-grid">
+
+                                        <div className="sun-card">
+
+                                            <div className="sun-icon">
+                                                <Sunrise size={22} />
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    SUNRISE
+                                                </span>
+
+                                                <strong>
+                                                    {daily?.sunrise?.[0]
+                                                        ? new Date(daily.sunrise[0]).toLocaleTimeString([], {
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        })
+                                                        : "--"}
+                                                </strong>
+                                            </div>
+
+                                        </div>
+
+                                        <div className="sun-card">
+
+                                            <div className="sun-icon">
+                                                <Sunset size={22} />
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    SUNSET
+                                                </span>
+
+                                                <strong>
+                                                    {daily?.sunset?.[0]
+                                                        ? new Date(daily.sunset[0]).toLocaleTimeString([], {
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        })
+                                                        : "--"}
+                                                </strong>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
 
                         </section>
 

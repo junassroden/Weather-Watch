@@ -3,7 +3,7 @@ import {
 } from "lucide-react";
 
 import WeatherEnvironment from "./WeatherEnvironment";
-import WeatherIcon, { getWeatherType, weatherLabel } from "./WeatherVisual";
+import WeatherIcon, { weatherLabel } from "./WeatherVisual";
 
 function parseDate(date) {
     const [
@@ -48,11 +48,9 @@ export default function ForecastCard({
             }
         );
 
-    const weatherType = getWeatherType(weatherCode);
-
     return (
         <article
-            className={`forecast-card forecast-card-${weatherType}`}
+            className="forecast-card"
             aria-label={`${weekday}, ${weatherLabel(weatherCode)}, high ${
                 max == null ? "unavailable" : `${Math.round(max)} degrees`
             }, low ${min == null ? "unavailable" : `${Math.round(min)} degrees`}`}

@@ -34,8 +34,8 @@ export default function Header({ onUseLocation, onLocationSelect }) {
                 <button className="mobile-menu-button" onClick={() => setMenuOpen((open) => !open)} aria-label="Toggle navigation">{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
                 <nav className={`desktop-nav ${menuOpen ? "is-open" : ""}`}>
                     <NavLink to="/" end className={navClass} onClick={() => setMenuOpen(false)}>Current Weather</NavLink>
-                    <NavLink to="/forecast" className={navClass} onClick={() => setMenuOpen(false)}>Forecast</NavLink>
                     <NavLink to="/satellite-radar" className={navClass} onClick={() => setMenuOpen(false)}>Satellite & Radar</NavLink>
+                    <NavLink to="/forecast" className={navClass} onClick={() => setMenuOpen(false)}>Forecast</NavLink>
                     <NavLink to="/weather-history" className={navClass} onClick={() => setMenuOpen(false)}>History</NavLink>
                     <NavLink to="/alerts" className={navClass} onClick={() => setMenuOpen(false)}>Alerts</NavLink>
                 </nav>
