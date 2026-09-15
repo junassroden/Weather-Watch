@@ -1,42 +1,39 @@
 import {
     AlertTriangle,
-    CloudRain,
     Droplets,
-    LocateFixed,
-    MapPin,
+    Gauge,
     RefreshCw,
+    Sun,
+    Sunrise,
+    Sunset,
+    Thermometer,
+    ThermometerSnowflake,
     Wind,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Header from "./Header";
 import ForecastCard from "./ForecastCard";
+import LocationSearch from "./LocationSearch";
+import PrecipitationChart from "./PrecipitationChart";
+import StatCard from "./StatCard";
 import WeatherEnvironment from "./WeatherEnvironment";
 import WeatherIcon, { weatherLabel } from "./WeatherVisual";
 import { getCurrentWeather, getForecast, reverseLocation } from "../services/api";
 
-function formatHour(time) {
-    if (!time) return "--";
-
-    return new Date(time).toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit",
-    });
+function formatTime(value) {
+    return value
+        ? new Date(value).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        : "--";
 }
 
-function formatDateTime() {
-    return new Intl.DateTimeFormat([], {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-    }).format(new Date());
+function shortDay(date) {
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString("en-US", { weekday: "short" });
 }
 
 function isForecastHourDay(time, forecast) {
-    const date = time?.slice(0, 10);
-    const dayIndex = forecast?.daily?.time?.indexOf(date) ?? -1;
+    const dayIndex = forecast?.daily?.time?.indexOf(time?.slice(0, 10)) ?? -1;
     const sunrise = forecast?.daily?.sunrise?.[dayIndex];
     const sunset = forecast?.daily?.sunset?.[dayIndex];
 
@@ -47,8 +44,32 @@ function isForecastHourDay(time, forecast) {
         && timestamp <= new Date(sunset).getTime();
 }
 
-function weatherDescription(code) {
-    return code == null ? "Waiting for conditions" : weatherLabel(code);
+/* UV categories follow the WHO global solar UV index scale. These are
+   published thresholds applied to the real uv_index value, not invented
+   ratings. */
+function uvCategory(uv) {
+    if (uv == null) return { label: "", tone: "neutral" };
+    if (uv < 3) return { label: "Low", tone: "good" };
+    if (uv < 6) return { label: "Moderate", tone: "moderate" };
+    if (uv < 8) return { label: "High", tone: "high" };
+    if (uv < 11) return { label: "Very High", tone: "high" };
+    return { label: "Extreme", tone: "severe" };
+}
+
+/* Standard sea-level pressure is ~1013 hPa; these bands are the usual
+   meteorological read of a barometer, applied to the real pressure value. */
+function pressureCategory(pressure) {
+    if (pressure == null) return { label: "", tone: "neutral" };
+    if (pressure < 1000) return { label: "Low", tone: "moderate" };
+    if (pressure > 1022) return { label: "High", tone: "good" };
+    return { label: "Normal", tone: "good" };
+}
+
+function humidityCategory(humidity) {
+    if (humidity == null) return { label: "", tone: "neutral" };
+    if (humidity < 30) return { label: "Dry", tone: "moderate" };
+    if (humidity > 70) return { label: "Humid", tone: "moderate" };
+    return { label: "Comfortable", tone: "good" };
 }
 
 export default function ForecastExperience() {
@@ -57,13 +78,16 @@ export default function ForecastExperience() {
     const [forecast, setForecast] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [updatedAt, setUpdatedAt] = useState(formatDateTime());
+    const [range, setRange] = useState("week");
 
     const loadWeather = async (latitude, longitude, searchedLocation = "") => {
         setLoading(true);
         setError("");
 
         try {
+            // Every panel on this page is driven by these three responses
+            // resolved together, so the temperature, the forecast strip and
+            // the location label can never show a mix of old and new data.
             const [weatherData, forecastData, locationData] = await Promise.all([
                 getCurrentWeather(latitude, longitude),
                 getForecast(latitude, longitude),
@@ -78,7 +102,6 @@ export default function ForecastExperience() {
                 || locationData.display_name
                 || "Current Location"
             );
-            setUpdatedAt(formatDateTime());
         } catch {
             setError("Unable to retrieve weather information.");
         } finally {
@@ -97,14 +120,10 @@ export default function ForecastExperience() {
         navigator.geolocation.getCurrentPosition(
             ({ coords }) => loadWeather(coords.latitude, coords.longitude),
             () => {
-                setError("Location permission was denied. Please allow location access to view local weather.");
+                setError("Location permission was denied. Search for a city to continue.");
                 setLoading(false);
             },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000,
-            }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
         );
     };
 
@@ -112,107 +131,235 @@ export default function ForecastExperience() {
         requestLocation();
     }, []);
 
+    const selectLocation = (result) =>
+        loadWeather(result.latitude, result.longitude, result.name);
+
     const daily = forecast?.daily;
     const hourly = forecast?.hourly;
+    const isDay = weather?.is_day !== 0;
     const todayHigh = daily?.temperature_2m_max?.[0];
     const todayLow = daily?.temperature_2m_min?.[0];
+    const tempUnit = weather?.units?.temperature_2m || "°C";
+    const uv = uvCategory(weather?.uv_index);
+    const pressure = pressureCategory(weather?.pressure);
+    const humidity = humidityCategory(weather?.humidity);
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
     return (
         <div className="weather-app">
             <Header
+                showSearch={false}
                 onUseLocation={requestLocation}
-                onLocationSelect={(result) => loadWeather(result.latitude, result.longitude, result.name)}
+                onLocationSelect={selectLocation}
             />
 
-            <main>
-                <section className="hero-section forecast-landing">
-                    <div className="container">
-                        <div className="hero-heading">
-                            <div>
-                                <span className="eyebrow">FORECAST DESK</span>
-                                <h1>{locationName || "Your local forecast"}</h1>
-                                <p className="hero-kicker">{updatedAt}</p>
-                            </div>
-                            {locationName && (
-                                <div className="current-location-badge">
-                                    <MapPin size={15} />
-                                    <span>{locationName}</span>
-                                </div>
-                            )}
+            <main className="page-content">
+                <div className="container">
+                    {error && (
+                        <div className="error-panel">
+                            <AlertTriangle size={18} />
+                            <span>{error}</span>
+                            <button type="button" onClick={requestLocation}>
+                                <RefreshCw size={15} />
+                                Retry
+                            </button>
                         </div>
+                    )}
 
-                        <div className="current-weather-hero">
-                            <WeatherEnvironment code={weather?.weather_code} isDay={weather?.is_day !== 0} className="hero-scene" />
-                            <div className="current-weather-copy">
-                                <span className="eyebrow">CURRENT WEATHER</span>
-                                <div className="current-temperature">
-                                    {weather?.temperature == null ? "--" : Math.round(weather.temperature)}
-                                    <span>{weather?.units?.temperature_2m || "°C"}</span>
+                    <div className="forecast-workspace">
+
+                        {/* LEFT — current conditions */}
+                        <aside className="current-panel">
+                            <LocationSearch onLocationSelect={selectLocation} />
+
+                            <div className="current-panel-visual">
+                                <WeatherEnvironment
+                                    code={weather?.weather_code}
+                                    isDay={isDay}
+                                    className="current-panel-scene"
+                                />
+                            </div>
+
+                            <div className="current-panel-temp">
+                                {weather?.temperature == null
+                                    ? "--"
+                                    : Math.round(weather.temperature)}
+                                <span>{tempUnit}</span>
+                            </div>
+
+                            <div className="current-panel-place">
+                                <strong>{locationName || (loading ? "Locating..." : "No location")}</strong>
+                                <span>{today}</span>
+                            </div>
+
+                            <ul className="current-panel-facts">
+                                <li>
+                                    <WeatherIcon code={weather?.weather_code} isDay={isDay} size={17} />
+                                    {weather ? weatherLabel(weather.weather_code) : "Waiting for conditions"}
+                                </li>
+                                <li>
+                                    <ThermometerSnowflake size={17} />
+                                    Min Temperature –{" "}
+                                    {todayLow == null ? "--" : `${Math.round(todayLow)}${tempUnit}`}
+                                </li>
+                                <li>
+                                    <Thermometer size={17} />
+                                    Max Temperature –{" "}
+                                    {todayHigh == null ? "--" : `${Math.round(todayHigh)}${tempUnit}`}
+                                </li>
+                            </ul>
+
+                            <div className="current-panel-metrics">
+                                <div>
+                                    <Droplets size={20} />
+                                    <div>
+                                        <strong>
+                                            {weather?.humidity == null
+                                                ? "--"
+                                                : `${Math.round(weather.humidity)}%`}
+                                        </strong>
+                                        <span>Humidity</span>
+                                    </div>
                                 </div>
-                                <div className="current-weather-condition">
-                                    <WeatherIcon code={weather?.weather_code} isDay={weather?.is_day !== 0} size={20} />
-                                    {weatherDescription(weather?.weather_code)}
+
+                                <div>
+                                    <Wind size={20} />
+                                    <div>
+                                        <strong>
+                                            {weather?.wind_speed == null
+                                                ? "--"
+                                                : `${Math.round(weather.wind_speed)}${weather?.units?.wind_speed_10m || "km/h"}`}
+                                        </strong>
+                                        <span>Wind Speed</span>
+                                    </div>
                                 </div>
-                                <span className="current-weather-meta">
-                                    {weather?.feels_like == null ? "Feels like --" : `Feels like ${Math.round(weather.feels_like)}${weather?.units?.apparent_temperature || "°C"}`}
-                                    {todayHigh != null && todayLow != null && ` · High ${Math.round(todayHigh)}° · Low ${Math.round(todayLow)}°`}
-                                </span>
-                                <div className="current-weather-stats">
-                                    <div className="current-weather-stat"><Droplets size={15} /><span>{weather?.humidity == null ? "--" : `${Math.round(weather.humidity)}%`}</span><small>Humidity</small></div>
-                                    <div className="current-weather-stat"><Wind size={15} /><span>{weather?.wind_speed == null ? "--" : `${Math.round(weather.wind_speed)} ${weather?.units?.wind_speed_10m || "km/h"}`}</span><small>Wind</small></div>
-                                    <div className="current-weather-stat"><CloudRain size={15} /><span>{weather?.precipitation == null ? "--" : `${weather.precipitation} ${weather?.units?.precipitation || "mm"}`}</span><small>Precipitation</small></div>
-                                </div>
                             </div>
-                        </div>
+                        </aside>
 
-                        <section className="hourly-panel glass-panel">
-                            <div className="section-heading">
-                                <div><span className="eyebrow">NEXT 24 HOURS</span><h2>Hourly Forecast</h2></div>
+                        {/* RIGHT — forecast + overview */}
+                        <section className="forecast-main">
+                            <div className="range-tabs" role="tablist" aria-label="Forecast range">
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={range === "today"}
+                                    className={`range-tab ${range === "today" ? "is-active" : ""}`}
+                                    onClick={() => setRange("today")}
+                                >
+                                    Today
+                                </button>
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={range === "week"}
+                                    className={`range-tab ${range === "week" ? "is-active" : ""}`}
+                                    onClick={() => setRange("week")}
+                                >
+                                    Week
+                                </button>
                             </div>
-                            <div className="forecast-grid hourly-strip">
-                                {hourly?.time?.length ? hourly.time.slice(0, 8).map((time, index) => {
-                                    const code = hourly.weather_code?.[index];
-                                    const isDay = isForecastHourDay(time, forecast);
 
-                                    return (
-                                        <article className="forecast-card" key={time}>
-                                            <WeatherEnvironment code={code} isDay={isDay} className="forecast-scene" />
-                                            <div className="forecast-card-scrim" aria-hidden="true" />
-                                            <div className="forecast-card-top"><div className="forecast-date glass-chip"><strong>{index === 0 ? "Now" : formatHour(time)}</strong></div></div>
-                                            <div className="forecast-card-bottom glass-panel-frost">
-                                                <div className="forecast-condition"><WeatherIcon code={code} isDay={isDay} size={14} />{weatherLabel(code)}</div>
-                                                <div className="forecast-temperature"><strong>{hourly.temperature_2m?.[index] == null ? "--" : `${Math.round(hourly.temperature_2m[index])}°`}</strong></div>
-                                                <div className="forecast-rain"><CloudRain size={13} /><span>{hourly.precipitation_probability?.[index] == null ? "--" : `${Math.round(hourly.precipitation_probability[index])}% rain`}</span></div>
-                                            </div>
-                                        </article>
-                                    );
-                                }) : <div className="hourly-empty">{loading ? "Reading forecast data..." : "Hourly forecast unavailable for this location."}</div>}
-                            </div>
-                        </section>
-                    </div>
-                </section>
-
-                <div className="page-content">
-                    <div className="container">
-                        {error && (
-                            <div className="error-panel">
-                                <AlertTriangle size={18} /><span>{error}</span>
-                                <button onClick={requestLocation}><RefreshCw size={15} />Retry</button>
-                            </div>
-                        )}
-                        {loading && !weather && <div className="page-loading"><LocateFixed size={18} />Loading local forecast...</div>}
-                        {!loading && !weather && !error && <div className="page-loading">No weather data is available for this location.</div>}
-
-                        <section className="dashboard-section">
-                            <div className="section-heading"><div><span className="eyebrow">7-DAY OUTLOOK</span><h2>Weekly Forecast</h2></div></div>
-                            {daily?.time?.length ? (
-                                <div className="forecast-grid">
-                                    {daily.time.slice(0, 7).map((date, index) => (
-                                        <ForecastCard key={date} date={date} weatherCode={daily.weather_code?.[index]} max={daily.temperature_2m_max?.[index]} min={daily.temperature_2m_min?.[index]} precipitation={daily.precipitation_probability_max?.[index]} />
+                            <div className="forecast-strip">
+                                {range === "week"
+                                    ? daily?.time?.slice(0, 7).map((date, index) => (
+                                        <ForecastCard
+                                            key={date}
+                                            label={shortDay(date)}
+                                            weatherCode={daily.weather_code?.[index]}
+                                            temperature={daily.temperature_2m_max?.[index]}
+                                            min={daily.temperature_2m_min?.[index]}
+                                            precipitation={daily.precipitation_probability_max?.[index]}
+                                            active={index === 0}
+                                        />
+                                    ))
+                                    : hourly?.time?.slice(0, 7).map((time, index) => (
+                                        <ForecastCard
+                                            key={time}
+                                            label={
+                                                index === 0
+                                                    ? "Now"
+                                                    : new Date(time).toLocaleTimeString([], { hour: "numeric" })
+                                            }
+                                            weatherCode={hourly.weather_code?.[index]}
+                                            isDay={isForecastHourDay(time, forecast)}
+                                            temperature={hourly.temperature_2m?.[index]}
+                                            precipitation={hourly.precipitation_probability?.[index]}
+                                            active={index === 0}
+                                        />
                                     ))}
-                                </div>
-                            ) : !loading && <div className="no-data-panel">Weekly forecast data is unavailable.</div>}
+
+                                {!loading && !daily?.time?.length && !hourly?.time?.length && (
+                                    <div className="strip-empty">
+                                        Forecast data is unavailable for this location.
+                                    </div>
+                                )}
+
+                                {loading && !forecast && (
+                                    <div className="strip-empty">Loading forecast...</div>
+                                )}
+                            </div>
+
+                            <h2 className="overview-title">Today&rsquo;s Overview</h2>
+
+                            <div className="overview-grid">
+                                <StatCard
+                                    title="UV Index"
+                                    value={weather?.uv_index == null ? null : Math.round(weather.uv_index)}
+                                    status={uv.label}
+                                    statusTone={uv.tone}
+                                    icon={Sun}
+                                />
+
+                                <StatCard
+                                    title="Pressure"
+                                    value={weather?.pressure == null ? null : Math.round(weather.pressure)}
+                                    unit={weather?.units?.pressure_msl || "hPa"}
+                                    status={pressure.label}
+                                    statusTone={pressure.tone}
+                                    icon={Gauge}
+                                />
+
+                                <StatCard
+                                    title="Humidity"
+                                    value={weather?.humidity == null ? null : Math.round(weather.humidity)}
+                                    unit="%"
+                                    status={humidity.label}
+                                    statusTone={humidity.tone}
+                                    icon={Droplets}
+                                />
+                            </div>
+
+                            <div className="overview-split">
+                                <article className="stat-card chart-card">
+                                    <span className="stat-card-title">Precipitation</span>
+                                    <PrecipitationChart
+                                        times={hourly?.time || []}
+                                        values={hourly?.precipitation_probability || []}
+                                    />
+                                </article>
+
+                                <article className="stat-card sun-card">
+                                    <span className="stat-card-title">Sunrise &amp; Sunset</span>
+
+                                    <div className="sun-row">
+                                        <span className="sun-icon"><Sunrise size={24} /></span>
+                                        <div>
+                                            <span>Sunrise</span>
+                                            <strong>{formatTime(daily?.sunrise?.[0])}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div className="sun-row">
+                                        <span className="sun-icon"><Sunset size={24} /></span>
+                                        <div>
+                                            <span>Sunset</span>
+                                            <strong>{formatTime(daily?.sunset?.[0])}</strong>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
                         </section>
+
                     </div>
                 </div>
             </main>
