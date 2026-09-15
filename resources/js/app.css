@@ -774,18 +774,21 @@ img {
 }
 
 .hourly-strip {
-    /* Hourly items now render with the exact same .forecast-card
-       markup/styling as the weekly outlook (per design direction:
-       "copy the design of the weekly output") and share its grid, so
-       nothing weekly-specific needs overriding here — this class only
-       exists as a hook in case hourly ever needs a narrower minimum
-       column width than the 7-day grid. */
+    min-width: 0;
 }
 
 .hourly-empty {
     color: var(--text-muted);
     font-size: var(--fs-small);
     padding: var(--sp-5) 0;
+}
+
+.no-data-panel {
+    padding: var(--sp-6);
+    color: var(--text-muted);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-md);
+    background: var(--surface-1);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1892,6 +1895,20 @@ img {
 }
 
 @media (max-width: 600px) {
+    .hourly-strip {
+        display: flex;
+        gap: var(--sp-3);
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        padding-bottom: var(--sp-2);
+    }
+
+    .hourly-strip .forecast-card {
+        flex: 0 0 142px;
+        scroll-snap-align: start;
+    }
+
     .current-weather-copy {
         padding: var(--sp-5);
         max-width: 100%;

@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import Dashboard from "./pages/Dashboard";
+import CurrentWeather from "./pages/CurrentWeather";
 import Forecast from "./pages/Forecast";
 import SatelliteRadar from "./pages/SatelliteRadar";
 import WeatherHistory from "./pages/WeatherHistory";
@@ -42,6 +43,16 @@ function App() {
                 <Route
                     path="/"
                     element={<Dashboard />}
+                />
+
+                <Route
+                    path="/dashboard"
+                    element={<Dashboard />}
+                />
+
+                <Route
+                    path="/current-weather"
+                    element={<CurrentWeather />}
                 />
 
                 <Route
