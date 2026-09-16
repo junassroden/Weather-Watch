@@ -1,11 +1,7 @@
 import {
     AlertTriangle,
     Droplets,
-    Gauge,
     RefreshCw,
-    Sun,
-    Sunrise,
-    Sunset,
     Thermometer,
     ThermometerSnowflake,
     Wind,
@@ -18,7 +14,13 @@ import LocationSearch from "./LocationSearch";
 import PrecipitationChart from "./PrecipitationChart";
 import StatCard from "./StatCard";
 import WeatherEnvironment from "./WeatherEnvironment";
+import WeatherIllustration from "./WeatherIllustration";
 import WeatherIcon, { weatherLabel } from "./WeatherVisual";
+import sunriseIcon from "../assets/weather-icons/sunrise.svg";
+import sunsetIcon from "../assets/weather-icons/sunset.svg";
+import humidityIcon from "../assets/weather-icons/humidity.svg";
+import barometerIcon from "../assets/weather-icons/barometer.svg";
+import uvIcon from "../assets/weather-icons/uv-index.svg";
 import { getCurrentWeather, getForecast, reverseLocation } from "../services/api";
 
 function formatTime(value) {
@@ -178,6 +180,12 @@ export default function ForecastExperience() {
                                     isDay={isDay}
                                     className="current-panel-scene"
                                 />
+                                <WeatherIllustration
+                                    code={weather?.weather_code}
+                                    isDay={isDay}
+                                    size={104}
+                                    className="current-panel-illustration"
+                                />
                             </div>
 
                             <div className="current-panel-temp">
@@ -307,7 +315,7 @@ export default function ForecastExperience() {
                                     value={weather?.uv_index == null ? null : Math.round(weather.uv_index)}
                                     status={uv.label}
                                     statusTone={uv.tone}
-                                    icon={Sun}
+                                    iconSrc={uvIcon}
                                 />
 
                                 <StatCard
@@ -316,7 +324,7 @@ export default function ForecastExperience() {
                                     unit={weather?.units?.pressure_msl || "hPa"}
                                     status={pressure.label}
                                     statusTone={pressure.tone}
-                                    icon={Gauge}
+                                    iconSrc={barometerIcon}
                                 />
 
                                 <StatCard
@@ -325,7 +333,7 @@ export default function ForecastExperience() {
                                     unit="%"
                                     status={humidity.label}
                                     statusTone={humidity.tone}
-                                    icon={Droplets}
+                                    iconSrc={humidityIcon}
                                 />
                             </div>
 
@@ -342,7 +350,7 @@ export default function ForecastExperience() {
                                     <span className="stat-card-title">Sunrise &amp; Sunset</span>
 
                                     <div className="sun-row">
-                                        <span className="sun-icon"><Sunrise size={24} /></span>
+                                        <span className="sun-icon"><img src={sunriseIcon} alt="" width={26} height={26} /></span>
                                         <div>
                                             <span>Sunrise</span>
                                             <strong>{formatTime(daily?.sunrise?.[0])}</strong>
@@ -350,7 +358,7 @@ export default function ForecastExperience() {
                                     </div>
 
                                     <div className="sun-row">
-                                        <span className="sun-icon"><Sunset size={24} /></span>
+                                        <span className="sun-icon"><img src={sunsetIcon} alt="" width={26} height={26} /></span>
                                         <div>
                                             <span>Sunset</span>
                                             <strong>{formatTime(daily?.sunset?.[0])}</strong>
