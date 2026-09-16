@@ -1,127 +1,52 @@
-import {
-    CloudRain,
-} from "lucide-react";
+import WeatherIllustration from "./WeatherIllustration";
+import { weatherLabel } from "./WeatherVisual";
 
-import WeatherEnvironment from "./WeatherEnvironment";
-import WeatherIcon, { weatherLabel } from "./WeatherVisual";
-
-function parseDate(date) {
-    const [
-        year,
-        month,
-        day,
-    ] = date
-        .split("-")
-        .map(Number);
-
-    return new Date(
-        year,
-        month - 1,
-        day
-    );
-}
-
+/* The one forecast tile in the app. The week strip and the hourly strip
+   both render this, so a day and an hour never look like two different
+   components. `label` is whatever the caller wants on top ("Mon", "Now",
+   "3 PM"); everything else is optional and simply omitted when the API
+   has no value for it. */
 export default function ForecastCard({
-    date,
+    label,
+    sublabel,
     weatherCode,
-    max,
+    isDay = true,
+    temperature,
     min,
     precipitation,
+    active = false,
 }) {
-    const parsedDate =
-        parseDate(date);
-
-    const weekday =
-        parsedDate.toLocaleDateString(
-            "en-US",
-            {
-                weekday: "long",
-            }
-        );
-
-    const shortDate =
-        parsedDate.toLocaleDateString(
-            "en-US",
-            {
-                month: "short",
-                day: "numeric",
-            }
-        );
+    const condition = weatherLabel(weatherCode);
 
     return (
         <article
-            className="forecast-card"
-            aria-label={`${weekday}, ${weatherLabel(weatherCode)}, high ${
-                max == null ? "unavailable" : `${Math.round(max)} degrees`
-            }, low ${min == null ? "unavailable" : `${Math.round(min)} degrees`}`}
+            className={`forecast-card ${active ? "is-active" : ""}`}
+            aria-label={`${label}, ${condition}${
+                temperature == null ? "" : `, ${Math.round(temperature)} degrees`
+            }`}
         >
-
-            <WeatherEnvironment
-                code={weatherCode}
-                isDay={true}
-                className="forecast-scene"
-            />
-
-            <div className="forecast-card-scrim" aria-hidden="true" />
-
-            <div className="forecast-card-top">
-                <div className="forecast-date glass-chip">
-                    <strong>
-                        {weekday}
-                    </strong>
-
-                    <span>
-                        {shortDate}
-                    </span>
-                </div>
+            <div className="forecast-card-label">
+                <strong>{label}</strong>
+                {sublabel && <span>{sublabel}</span>}
             </div>
 
-            <div className="forecast-card-bottom glass-panel-frost">
+            <span className="forecast-card-icon">
+                <WeatherIllustration code={weatherCode} isDay={isDay} size={40} />
+            </span>
 
-                <div className="forecast-condition">
-                    <WeatherIcon
-                        code={weatherCode}
-                        isDay={true}
-                        size={14}
-                    />
+            <div className="forecast-card-temp">
+                <strong>
+                    {temperature == null ? "--" : `${Math.round(temperature)}°`}
+                </strong>
 
-                    {weatherLabel(
-                        weatherCode
-                    )}
-                </div>
-
-                <div className="forecast-temperature">
-
-                    <strong>
-                        {max == null
-                            ? "—"
-                            : `${Math.round(max)}°`}
-                    </strong>
-
-                    <span>
-                        {min == null
-                            ? "—"
-                            : `${Math.round(min)}°`}
-                    </span>
-
-                </div>
-
-                <div className="forecast-rain">
-                    <CloudRain
-                        size={13}
-                    />
-
-                    <span>
-                        {precipitation == null
-                            ? "—"
-                            : `${Math.round(
-                                  precipitation
-                              )}% rain`}
-                    </span>
-                </div>
-
+                {min != null && <span>{Math.round(min)}°</span>}
             </div>
 
+            {precipitation != null && (
+                <span className="forecast-card-rain">
+                    {Math.round(precipitation)}%
+                </span>
+            )}
         </article>
     );
 }
