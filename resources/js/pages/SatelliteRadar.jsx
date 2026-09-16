@@ -268,153 +268,130 @@ export default function SatelliteRadar() {
                         </div>
                     </div>
 
-                    <LiveWeatherMap
-                        latitude={coordinates?.latitude}
-                        longitude={coordinates?.longitude}
-                        locationName={locationName}
-                        requestLocation={false}
-                        onRadarLoaded={handleRadarLoaded}
-                        onRadarError={handleRadarError}
-                    />
-
-                    <section className="satellite-command-grid">
-
-                        <article className={`satellite-alert satellite-alert-${stormWatch.tone}`}>
-                            <WeatherEnvironment
-                                code={stormWatchCode(stormWatch.tone)}
-                                isDay={true}
-                                className="satellite-alert-scene"
+                    <div className="satellite-workspace">
+                        <section className="satellite-main-column">
+                            <LiveWeatherMap
+                                latitude={coordinates?.latitude}
+                                longitude={coordinates?.longitude}
+                                locationName={locationName}
+                                requestLocation={false}
+                                onRadarLoaded={handleRadarLoaded}
+                                onRadarError={handleRadarError}
                             />
 
-                            <div className="satellite-alert-scrim" aria-hidden="true" />
+                            {radar && (
+                                <div className="radar-information">
+                                    <div className="radar-info-line">
+                                        <Radar size={19} />
+                                        <span>PROVIDER</span>
+                                        <strong>{radar.provider}</strong>
+                                    </div>
 
-                            <div className="satellite-alert-content">
-                                <div className="satellite-panel-heading">
-                                    <CloudLightning size={20} />
-                                    <span>STORM WATCH</span>
+                                    <div className="radar-info-line">
+                                        <Database size={19} />
+                                        <span>AVAILABLE FRAMES</span>
+                                        <strong>{radar.frames?.length || 0}</strong>
+                                    </div>
+
+                                    <div className="radar-info-line">
+                                        <Satellite size={19} />
+                                        <span>DATA TYPE</span>
+                                        <strong>Past Radar</strong>
+                                    </div>
                                 </div>
-                                <strong>{stormWatch.level}</strong>
-                                <p>{stormWatch.detail}</p>
-                                <small>Based on the seven-day Open-Meteo outlook</small>
+                            )}
+
+                            <div className="data-source-note">
+                                Radar data is provided by RainViewer. The satellite-style map background is provided separately by Esri World Imagery.
                             </div>
-                        </article>
+                        </section>
 
-                        <article className="satellite-panel">
-                            <div className="satellite-panel-heading">
-                                <Gauge size={20} />
-                                <span>PRESSURE FIELD</span>
+                        <aside className="satellite-side-column">
+                            <section className="satellite-intelligence">
+                                <div className="satellite-section-heading">
+                                    <span className="eyebrow">FIELD INTELLIGENCE</span>
+                                    <h2>Conditions around {locationName}</h2>
+                                </div>
+
+                                <article className={`satellite-alert satellite-alert-${stormWatch.tone}`}>
+                                    <WeatherEnvironment
+                                        code={stormWatchCode(stormWatch.tone)}
+                                        isDay={true}
+                                        className="satellite-alert-scene"
+                                    />
+
+                                    <div className="satellite-alert-scrim" aria-hidden="true" />
+
+                                    <div className="satellite-alert-content">
+                                        <div className="satellite-panel-heading">
+                                            <CloudLightning size={20} />
+                                            <span>STORM WATCH</span>
+                                        </div>
+                                        <strong>{stormWatch.level}</strong>
+                                        <p>{stormWatch.detail}</p>
+                                        <small>Based on the seven-day Open-Meteo outlook</small>
+                                    </div>
+                                </article>
+
+                                <div className="satellite-reading-list">
+                                    <div className="satellite-reading-row">
+                                        <div className="satellite-reading-label">
+                                            <Gauge size={18} />
+                                            <span>PRESSURE FIELD</span>
+                                        </div>
+                                        <div className="satellite-reading-value">
+                                            <strong>{pressure ?? "--"}</strong>
+                                            <span>hPa</span>
+                                        </div>
+                                        <p>
+                                            {pressure >= 1020
+                                                ? "Higher pressure, generally more stable air."
+                                                : pressure <= 1000
+                                                    ? "Lower pressure, monitor for unsettled weather."
+                                                    : "Mid-range pressure with changing conditions possible."}
+                                        </p>
+                                    </div>
+
+                                    <div className="satellite-reading-row">
+                                        <div className="satellite-reading-label">
+                                            <Droplets size={18} />
+                                            <span>PRECIPITATION OUTLOOK</span>
+                                        </div>
+                                        <div className="satellite-reading-value">
+                                            <strong>{Math.max(...(forecast?.daily?.precipitation_probability_max || []), 0)}</strong>
+                                            <span>% peak chance</span>
+                                        </div>
+                                        <p>{weatherDescription(nextDayCode ?? weather?.weather_code)} · {nextDay || "Next available forecast"}</p>
+                                    </div>
+
+                                    <div className="satellite-reading-row">
+                                        <div className="satellite-reading-label">
+                                            <Wind size={18} />
+                                            <span>HAZARD INDEX</span>
+                                        </div>
+                                        <div className="satellite-reading-value">
+                                            <strong>{risk?.level || "--"}</strong>
+                                            <span>{risk ? `score ${risk.score}` : "pending"}</span>
+                                        </div>
+                                        <p>{risk?.reasons?.[0] || "Calculating local weather risk."}</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="satellite-status-region" aria-live="polite">
+                                {loading && (
+                                    <div className="page-loading">
+                                        Loading local weather telemetry...
+                                    </div>
+                                )}
+
+                                {error && (
+                                    <div className="error-panel">
+                                        {error}
+                                    </div>
+                                )}
                             </div>
-                            <div className="satellite-reading">
-                                <strong>{pressure ?? "--"}</strong>
-                                <span>hPa</span>
-                            </div>
-                            <p>
-                                {pressure >= 1020
-                                    ? "Higher pressure, generally more stable air."
-                                    : pressure <= 1000
-                                        ? "Lower pressure, monitor for unsettled weather."
-                                        : "Mid-range pressure with changing conditions possible."}
-                            </p>
-                            <small>{locationName} atmospheric reading</small>
-                        </article>
-
-                        <article className="satellite-panel">
-                            <div className="satellite-panel-heading">
-                                <Droplets size={20} />
-                                <span>PRECIPITATION OUTLOOK</span>
-                            </div>
-                            <div className="satellite-reading">
-                                <strong>{Math.max(...(forecast?.daily?.precipitation_probability_max || []), 0)}</strong>
-                                <span>% peak chance</span>
-                            </div>
-                            <p>{weatherDescription(nextDayCode ?? weather?.weather_code)}</p>
-                            <small>{nextDay || "Next available forecast"}</small>
-                        </article>
-
-                        <article className="satellite-panel">
-                            <div className="satellite-panel-heading">
-                                <Wind size={20} />
-                                <span>HAZARD INDEX</span>
-                            </div>
-                            <div className="satellite-reading">
-                                <strong>{risk?.level || "--"}</strong>
-                                <span>{risk ? `score ${risk.score}` : "pending"}</span>
-                            </div>
-                            <p>{risk?.reasons?.[0] || "Calculating local weather risk."}</p>
-                            <small>WeatherWatch assessment</small>
-                        </article>
-
-                    </section>
-
-                    <div className="satellite-status-region" aria-live="polite">
-                        {loading && (
-                            <div className="page-loading">
-                                Loading local weather telemetry...
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="error-panel">
-                                {error}
-                            </div>
-                        )}
-                    </div>
-
-                    {radar && (
-                        <div className="radar-information">
-
-                            <div className="radar-info-card">
-
-                                <Radar size={22} />
-
-                                <span>
-                                    PROVIDER
-                                </span>
-
-                                <strong>
-                                    {radar.provider}
-                                </strong>
-
-                            </div>
-
-                            <div className="radar-info-card">
-
-                                <Database size={22} />
-
-                                <span>
-                                    AVAILABLE FRAMES
-                                </span>
-
-                                <strong>
-                                    {radar.frames?.length || 0}
-                                </strong>
-
-                            </div>
-
-                            <div className="radar-info-card">
-
-                                <Satellite size={22} />
-
-                                <span>
-                                    DATA TYPE
-                                </span>
-
-                                <strong>
-                                    Past Radar
-                                </strong>
-
-                            </div>
-
-                        </div>
-                    )}
-
-                    <div className="data-source-note">
-
-                        Radar data is provided by RainViewer.
-                        The satellite-style map background
-                        is provided separately by Esri World
-                        Imagery.
-
+                        </aside>
                     </div>
 
                 </div>
