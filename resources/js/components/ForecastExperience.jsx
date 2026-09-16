@@ -15,7 +15,7 @@ import PrecipitationChart from "./PrecipitationChart";
 import StatCard from "./StatCard";
 import WeatherEnvironment from "./WeatherEnvironment";
 import WeatherIllustration from "./WeatherIllustration";
-import WeatherIcon, { weatherLabel } from "./WeatherVisual";
+import WeatherIcon, { getWeatherType, weatherLabel } from "./WeatherVisual";
 import sunriseIcon from "../assets/weather-icons/sunrise.svg";
 import sunsetIcon from "../assets/weather-icons/sunset.svg";
 import humidityIcon from "../assets/weather-icons/humidity.svg";
@@ -146,9 +146,10 @@ export default function ForecastExperience() {
     const pressure = pressureCategory(weather?.pressure);
     const humidity = humidityCategory(weather?.humidity);
     const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    const weatherType = getWeatherType(weather?.weather_code);
 
     return (
-        <div className="weather-app">
+        <div className={`weather-app weather-atmosphere-${weatherType}`}>
             <Header
                 showSearch={false}
                 onUseLocation={requestLocation}

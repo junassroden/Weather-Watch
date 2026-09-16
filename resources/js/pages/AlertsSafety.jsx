@@ -134,7 +134,7 @@ export default function AlertsSafety() {
                     )}
 
                     {!loading && (
-                        <>
+                        <div className="safety-layout">
                             <section className="safety-section">
 
                                 <div className="section-heading">
@@ -249,7 +249,7 @@ export default function AlertsSafety() {
                                 </div>
 
                             </section>
-                        </>
+                        </div>
                     )}
 
                 </div>

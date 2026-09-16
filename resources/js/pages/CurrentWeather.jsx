@@ -1,18 +1,10 @@
-import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Header from "../components/Header";
-import WeatherCard from "../components/WeatherCard";
 import WeatherEnvironment from "../components/WeatherEnvironment";
 import WeatherIllustration from "../components/WeatherIllustration";
-import { weatherLabel } from "../components/WeatherVisual";
+import { getWeatherType, weatherLabel } from "../components/WeatherVisual";
 import { getCurrentWeather, reverseLocation } from "../services/api";
-import thermometerIcon from "../assets/weather-icons/thermometer.svg";
-import humidityIcon from "../assets/weather-icons/humidity.svg";
-import windIcon from "../assets/weather-icons/wind.svg";
-import barometerIcon from "../assets/weather-icons/barometer.svg";
-import uvIcon from "../assets/weather-icons/uv-index.svg";
-import raindropsIcon from "../assets/weather-icons/raindrops.svg";
 
 export default function CurrentWeather() {
     const [weather, setWeather] = useState(null);
@@ -69,9 +61,10 @@ export default function CurrentWeather() {
     }, []);
 
     const isDay = weather?.is_day !== 0;
+    const weatherType = getWeatherType(weather?.weather_code);
 
     return (
-        <div className="weather-app">
+        <div className={`weather-app weather-atmosphere-${weatherType}`}>
             <Header
                 onUseLocation={requestLocation}
                 onLocationSelect={(result) => loadWeather(result.latitude, result.longitude, result.name)}
@@ -90,7 +83,8 @@ export default function CurrentWeather() {
 
                     {weather && (
                         <>
-                            <section className="current-weather-hero">
+                            <section className="current-weather-composition">
+                                <div className="current-weather-hero">
                                 <WeatherEnvironment code={weather.weather_code} isDay={isDay} className="hero-scene" />
                                 <div className="current-weather-copy">
                                     <span className="eyebrow">LIVE CONDITIONS</span>
@@ -103,18 +97,43 @@ export default function CurrentWeather() {
                                         {weatherLabel(weather.weather_code)}
                                     </div>
                                 </div>
-                            </section>
+                                </div>
 
-                            <div className="weather-card-grid current-weather-detail-grid">
-                                <WeatherCard iconSrc={thermometerIcon} label="Feels Like" value={weather.feels_like} unit={weather.units?.apparent_temperature || "°C"} />
-                                <WeatherCard iconSrc={humidityIcon} label="Humidity" value={weather.humidity} unit={weather.units?.relative_humidity_2m || "%"} />
-                                <WeatherCard iconSrc={windIcon} label="Wind" value={weather.wind_speed} unit={weather.units?.wind_speed_10m || "km/h"} />
-                                <WeatherCard iconSrc={barometerIcon} label="Pressure" value={weather.pressure} unit={weather.units?.pressure_msl || "hPa"} />
-                                <WeatherCard icon={Eye} label="Visibility" value={weather.visibility == null ? null : Math.round(weather.visibility / 1000)} unit="km" />
-                                <WeatherCard iconSrc={uvIcon} label="UV Index" value={weather.uv_index} />
-                                <WeatherCard iconSrc={raindropsIcon} label="Precipitation" value={weather.precipitation} unit={weather.units?.precipitation || "mm"} />
-                                <WeatherCard iconSrc={windIcon} label="Wind Gust" value={weather.wind_gust} unit={weather.units?.wind_gusts_10m || "km/h"} />
-                            </div>
+                                <div className="current-weather-metrics">
+                                    <div className="current-weather-metric metric-primary">
+                                        <span>Feels like</span>
+                                        <strong>{weather.feels_like == null ? "--" : Math.round(weather.feels_like)}<small>{weather.units?.apparent_temperature || "°C"}</small></strong>
+                                    </div>
+                                    <div className="current-weather-metric">
+                                        <span>Humidity</span>
+                                        <strong>{weather.humidity == null ? "--" : Math.round(weather.humidity)}<small>{weather.units?.relative_humidity_2m || "%"}</small></strong>
+                                    </div>
+                                    <div className="current-weather-metric">
+                                        <span>Wind</span>
+                                        <strong>{weather.wind_speed == null ? "--" : Math.round(weather.wind_speed)}<small>{weather.units?.wind_speed_10m || "km/h"}</small></strong>
+                                    </div>
+                                    <div className="current-weather-metric">
+                                        <span>Pressure</span>
+                                        <strong>{weather.pressure == null ? "--" : Math.round(weather.pressure)}<small>{weather.units?.pressure_msl || "hPa"}</small></strong>
+                                    </div>
+                                    <div className="current-weather-metric">
+                                        <span>Visibility</span>
+                                        <strong>{weather.visibility == null ? "--" : Math.round(weather.visibility / 1000)}<small>km</small></strong>
+                                    </div>
+                                    <div className="current-weather-metric">
+                                        <span>UV index</span>
+                                        <strong>{weather.uv_index == null ? "--" : Math.round(weather.uv_index)}</strong>
+                                    </div>
+                                    <div className="current-weather-metric">
+                                        <span>Precipitation</span>
+                                        <strong>{weather.precipitation == null ? "--" : weather.precipitation}<small>{weather.units?.precipitation || "mm"}</small></strong>
+                                    </div>
+                                    <div className="current-weather-metric">
+                                        <span>Wind gust</span>
+                                        <strong>{weather.wind_gust == null ? "--" : Math.round(weather.wind_gust)}<small>{weather.units?.wind_gusts_10m || "km/h"}</small></strong>
+                                    </div>
+                                </div>
+                            </section>
                         </>
                     )}
                 </div>

@@ -33,7 +33,7 @@ export default function WeatherHistory() {
 
                     </div>
 
-                    <div className="history-empty">
+                    <section className="history-flow">
 
                         <div className="history-empty-icon">
                             <History size={32} />
@@ -60,7 +60,7 @@ export default function WeatherHistory() {
 
                         </div>
 
-                    </div>
+                    </section>
 
                 </div>
 
