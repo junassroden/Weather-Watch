@@ -235,19 +235,37 @@ export default function SatelliteRadar() {
 
                 <div className="container">
 
-                    <div className="page-header">
+                    <div className="satellite-hero">
+                        <WeatherEnvironment
+                            code={weather?.weather_code}
+                            isDay={weather?.is_day !== 0}
+                            className="satellite-hero-scene"
+                        />
 
-                        <span className="eyebrow">
-                            SATELLITE & RADAR
-                        </span>
+                        <div className="satellite-hero-scrim" aria-hidden="true" />
 
-                        <h1>Satellite Weather Intelligence</h1>
+                        <div className="page-header satellite-hero-content">
+                            <span className="eyebrow">
+                                SATELLITE & RADAR
+                            </span>
 
-                        <p>
-                            Read precipitation movement, pressure conditions, and
-                            approaching storm signals around your location.
-                        </p>
+                            <h1>Satellite Weather Intelligence</h1>
 
+                            <p>
+                                Read precipitation movement, pressure conditions, and
+                                approaching storm signals around your location.
+                            </p>
+                        </div>
+
+                        <div className="satellite-hero-readout">
+                            <span>LOCAL OBSERVATION</span>
+                            <strong>{locationName}</strong>
+                            <small>
+                                {coordinates
+                                    ? `${coordinates.latitude.toFixed(4)}, ${coordinates.longitude.toFixed(4)}`
+                                    : "Waiting for device location"}
+                            </small>
+                        </div>
                     </div>
 
                     <LiveWeatherMap

@@ -59,6 +59,17 @@ function getLocationLabel(location, fallback = "Current Location") {
     );
 }
 
+function isValidCoordinate(value, minimum, maximum) {
+    return Number.isFinite(value) && value >= minimum && value <= maximum;
+}
+
+function hasValidCoordinates(latitude, longitude) {
+    return (
+        isValidCoordinate(latitude, -90, 90) &&
+        isValidCoordinate(longitude, -180, 180)
+    );
+}
+
 function MapController({
     latitude,
     longitude,
@@ -66,10 +77,7 @@ function MapController({
     const map = useMap();
 
     useEffect(() => {
-        if (
-            typeof latitude === "number" &&
-            typeof longitude === "number"
-        ) {
+        if (hasValidCoordinates(latitude, longitude)) {
             map.flyTo(
                 [latitude, longitude],
                 7,
@@ -238,10 +246,7 @@ export default function LiveWeatherMap({
         const requestId = ++locationRequestRef.current;
         const controller = new AbortController();
 
-        if (
-            typeof propLatitude === "number" &&
-            typeof propLongitude === "number"
-        ) {
+        if (hasValidCoordinates(propLatitude, propLongitude)) {
             setLatitude(propLatitude);
             setLongitude(propLongitude);
 
@@ -527,6 +532,10 @@ export default function LiveWeatherMap({
         newLatitude,
         newLongitude
     ) => {
+        if (!hasValidCoordinates(newLatitude, newLongitude)) {
+            return;
+        }
+
         setLatitude(newLatitude);
         setLongitude(newLongitude);
 
@@ -549,9 +558,7 @@ export default function LiveWeatherMap({
         }
     };
 
-    const hasLocation =
-        typeof latitude === "number" &&
-        typeof longitude === "number";
+    const hasLocation = hasValidCoordinates(latitude, longitude);
 
     return (
         <section className="live-map-section">
