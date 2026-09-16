@@ -431,6 +431,29 @@ input { font: inherit; color: inherit; }
     opacity: 0.7;
 }
 
+.stat-card-icon-img {
+    width: 40px;
+    height: 40px;
+    opacity: 1;
+}
+
+/* Real weather artwork (Meteocons, MIT) used as the focal illustration
+   in the hero panels and forecast cards. A slow, tiny float — not a
+   spin or bounce — is enough to read as "alive" without being noisy in
+   a strip of seven of these at once. */
+.weather-illustration {
+    display: block;
+}
+
+.weather-illustration.is-animated {
+    animation: weather-illustration-float 6s ease-in-out infinite;
+}
+
+@keyframes weather-illustration-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
 /* ------------------------------------------------------------------ */
 /* Forecast workspace — reference two-panel composition                */
 /* ------------------------------------------------------------------ */
@@ -458,9 +481,18 @@ input { font: inherit; color: inherit; }
     height: 190px;
     border-radius: var(--r-md);
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .current-panel-scene { position: absolute; inset: 0; }
+
+.current-panel-illustration {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.45));
+}
 
 .current-panel-temp {
     display: flex;
@@ -643,6 +675,13 @@ input { font: inherit; color: inherit; }
     font-size: var(--fs-micro);
     color: var(--text-muted);
 }
+
+.forecast-strip .forecast-card:nth-child(2) .weather-illustration { animation-delay: -1s; }
+.forecast-strip .forecast-card:nth-child(3) .weather-illustration { animation-delay: -2s; }
+.forecast-strip .forecast-card:nth-child(4) .weather-illustration { animation-delay: -3s; }
+.forecast-strip .forecast-card:nth-child(5) .weather-illustration { animation-delay: -4s; }
+.forecast-strip .forecast-card:nth-child(6) .weather-illustration { animation-delay: -5s; }
+.forecast-strip .forecast-card:nth-child(7) .weather-illustration { animation-delay: -0.5s; }
 
 .strip-empty {
     grid-column: 1 / -1;
