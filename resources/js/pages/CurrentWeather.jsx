@@ -1,11 +1,18 @@
-import { CloudRain, Droplets, Eye, Gauge, Sun, Thermometer, Wind } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Header from "../components/Header";
 import WeatherCard from "../components/WeatherCard";
 import WeatherEnvironment from "../components/WeatherEnvironment";
-import WeatherIcon, { weatherLabel } from "../components/WeatherVisual";
+import WeatherIllustration from "../components/WeatherIllustration";
+import { weatherLabel } from "../components/WeatherVisual";
 import { getCurrentWeather, reverseLocation } from "../services/api";
+import thermometerIcon from "../assets/weather-icons/thermometer.svg";
+import humidityIcon from "../assets/weather-icons/humidity.svg";
+import windIcon from "../assets/weather-icons/wind.svg";
+import barometerIcon from "../assets/weather-icons/barometer.svg";
+import uvIcon from "../assets/weather-icons/uv-index.svg";
+import raindropsIcon from "../assets/weather-icons/raindrops.svg";
 
 export default function CurrentWeather() {
     const [weather, setWeather] = useState(null);
@@ -92,21 +99,21 @@ export default function CurrentWeather() {
                                         <span>{weather.units?.temperature_2m || "°C"}</span>
                                     </div>
                                     <div className="current-weather-condition">
-                                        <WeatherIcon code={weather.weather_code} isDay={isDay} size={20} />
+                                        <WeatherIllustration code={weather.weather_code} isDay={isDay} size={44} />
                                         {weatherLabel(weather.weather_code)}
                                     </div>
                                 </div>
                             </section>
 
                             <div className="weather-card-grid current-weather-detail-grid">
-                                <WeatherCard icon={Thermometer} label="Feels Like" value={weather.feels_like} unit={weather.units?.apparent_temperature || "°C"} />
-                                <WeatherCard icon={Droplets} label="Humidity" value={weather.humidity} unit={weather.units?.relative_humidity_2m || "%"} />
-                                <WeatherCard icon={Wind} label="Wind" value={weather.wind_speed} unit={weather.units?.wind_speed_10m || "km/h"} />
-                                <WeatherCard icon={Gauge} label="Pressure" value={weather.pressure} unit={weather.units?.pressure_msl || "hPa"} />
+                                <WeatherCard iconSrc={thermometerIcon} label="Feels Like" value={weather.feels_like} unit={weather.units?.apparent_temperature || "°C"} />
+                                <WeatherCard iconSrc={humidityIcon} label="Humidity" value={weather.humidity} unit={weather.units?.relative_humidity_2m || "%"} />
+                                <WeatherCard iconSrc={windIcon} label="Wind" value={weather.wind_speed} unit={weather.units?.wind_speed_10m || "km/h"} />
+                                <WeatherCard iconSrc={barometerIcon} label="Pressure" value={weather.pressure} unit={weather.units?.pressure_msl || "hPa"} />
                                 <WeatherCard icon={Eye} label="Visibility" value={weather.visibility == null ? null : Math.round(weather.visibility / 1000)} unit="km" />
-                                <WeatherCard icon={Sun} label="UV Index" value={weather.uv_index} />
-                                <WeatherCard icon={CloudRain} label="Precipitation" value={weather.precipitation} unit={weather.units?.precipitation || "mm"} />
-                                <WeatherCard icon={Wind} label="Wind Gust" value={weather.wind_gust} unit={weather.units?.wind_gusts_10m || "km/h"} />
+                                <WeatherCard iconSrc={uvIcon} label="UV Index" value={weather.uv_index} />
+                                <WeatherCard iconSrc={raindropsIcon} label="Precipitation" value={weather.precipitation} unit={weather.units?.precipitation || "mm"} />
+                                <WeatherCard iconSrc={windIcon} label="Wind Gust" value={weather.wind_gust} unit={weather.units?.wind_gusts_10m || "km/h"} />
                             </div>
                         </>
                     )}
