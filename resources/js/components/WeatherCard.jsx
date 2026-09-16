@@ -1,5 +1,6 @@
 export default function WeatherCard({
     icon: Icon,
+    iconSrc,
     label,
     value,
     unit = "",
@@ -15,10 +16,14 @@ export default function WeatherCard({
             <div className="weather-card-header">
 
                 <span className="weather-card-icon">
-                    <Icon
-                        size={18}
-                        strokeWidth={1.8}
-                    />
+                    {iconSrc ? (
+                        <img src={iconSrc} alt="" width={18} height={18} />
+                    ) : (
+                        <Icon
+                            size={18}
+                            strokeWidth={1.8}
+                        />
+                    )}
                 </span>
 
                 <span className="weather-card-label">
