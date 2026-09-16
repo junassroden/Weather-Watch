@@ -12,33 +12,9 @@ class WeatherService
         float $latitude,
         float $longitude
     ): array {
-        $data = $this->openMeteo->forecast(
+        $data = $this->openMeteo->bundle(
             $latitude,
-            $longitude,
-            [
-                'current' => implode(',', [
-                    'temperature_2m',
-                    'relative_humidity_2m',
-                    'apparent_temperature',
-                    'precipitation',
-                    'rain',
-                    'showers',
-                    'precipitation_probability',
-                    'weather_code',
-                    'cloud_cover',
-                    'pressure_msl',
-                    'wind_speed_10m',
-                    'wind_direction_10m',
-                    'wind_gusts_10m',
-                    'visibility',
-                    'uv_index',
-                    'dew_point_2m',
-                    'is_day',
-                ]),
-                'temperature_unit' => 'celsius',
-                'wind_speed_unit' => 'kmh',
-                'precipitation_unit' => 'mm',
-            ]
+            $longitude
         );
 
         $current =
