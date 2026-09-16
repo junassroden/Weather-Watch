@@ -51,6 +51,15 @@ function stormWatchCode(tone) {
     return 1;
 }
 
+function getLocationLabel(location) {
+    return (
+        location?.locality ||
+        location?.city ||
+        location?.display_name ||
+        "Current location"
+    );
+}
+
 function getStormWatch(forecast) {
     const daily = forecast?.daily || {};
     const codes = daily.weather_code || [];
@@ -129,14 +138,19 @@ export default function SatelliteRadar() {
     }, []);
 
     useEffect(() => {
+        const controller = new AbortController();
+        let cancelled = false;
+
         if (!navigator.geolocation) {
             setError("Location access is unavailable.");
             setLoading(false);
-            return;
+            return () => controller.abort();
         }
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
+                if (cancelled) return;
+
                 const { latitude, longitude } = position.coords;
 
                 setCoordinates({
@@ -146,11 +160,21 @@ export default function SatelliteRadar() {
 
                 try {
                     const results = await Promise.allSettled([
-                        getCurrentWeather(latitude, longitude),
-                        getForecast(latitude, longitude),
-                        getRisk(latitude, longitude),
-                        reverseLocation(latitude, longitude),
+                        getCurrentWeather(latitude, longitude, {
+                            signal: controller.signal,
+                        }),
+                        getForecast(latitude, longitude, {
+                            signal: controller.signal,
+                        }),
+                        getRisk(latitude, longitude, {
+                            signal: controller.signal,
+                        }),
+                        reverseLocation(latitude, longitude, {
+                            signal: controller.signal,
+                        }),
                     ]);
+
+                    if (cancelled) return;
 
                     const [weatherResult, forecastResult, riskResult, locationResult] = results;
 
@@ -170,7 +194,7 @@ export default function SatelliteRadar() {
                         const location = locationResult.value;
 
                         setLocationName(
-                            location.city || location.display_name || "Current location"
+                            getLocationLabel(location)
                         );
                     }
 
@@ -190,6 +214,11 @@ export default function SatelliteRadar() {
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
         );
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
     }, []);
 
     const stormWatch = getStormWatch(forecast);
@@ -299,17 +328,19 @@ export default function SatelliteRadar() {
 
                     </section>
 
-                    {loading && (
-                        <div className="page-loading">
-                            Loading local weather telemetry...
-                        </div>
-                    )}
+                    <div className="satellite-status-region" aria-live="polite">
+                        {loading && (
+                            <div className="page-loading">
+                                Loading local weather telemetry...
+                            </div>
+                        )}
 
-                    {error && (
-                        <div className="error-panel">
-                            {error}
-                        </div>
-                    )}
+                        {error && (
+                            <div className="error-panel">
+                                {error}
+                            </div>
+                        )}
+                    </div>
 
                     {radar && (
                         <div className="radar-information">

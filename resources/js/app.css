@@ -77,6 +77,8 @@
 html {
     color-scheme: dark;
     overflow-x: hidden;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
 }
 
 body {
@@ -136,6 +138,7 @@ input { font: inherit; color: inherit; }
 
 .page-content {
     flex: 1;
+    min-height: calc(100vh - var(--header-h));
     padding-block: var(--sp-7) var(--sp-9);
 }
 
@@ -1109,6 +1112,16 @@ input { font: inherit; color: inherit; }
 }
 
 .error-panel button:hover { background: rgba(255, 255, 255, 0.14); }
+
+.satellite-status-region {
+    min-height: 56px;
+    margin-top: var(--sp-5);
+}
+
+.satellite-status-region .page-loading,
+.satellite-status-region .error-panel {
+    margin-top: 0;
+}
 
 /* ------------------------------------------------------------------ */
 /* Satellite & Radar                                                   */

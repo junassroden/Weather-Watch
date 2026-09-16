@@ -50,6 +50,15 @@ const userIcon = L.divIcon({
     iconAnchor: [12, 12],
 });
 
+function getLocationLabel(location, fallback = "Current Location") {
+    return (
+        location?.locality ||
+        location?.city ||
+        location?.display_name ||
+        fallback
+    );
+}
+
 function MapController({
     latitude,
     longitude,
@@ -223,7 +232,12 @@ export default function LiveWeatherMap({
     const [error, setError] =
         useState("");
 
+    const locationRequestRef = useRef(0);
+
     useEffect(() => {
+        const requestId = ++locationRequestRef.current;
+        const controller = new AbortController();
+
         if (
             typeof propLatitude === "number" &&
             typeof propLongitude === "number"
@@ -236,33 +250,37 @@ export default function LiveWeatherMap({
             if (propLocationName) {
                 setLocationName(propLocationName);
 
-                return;
+                return () => controller.abort();
             }
 
             reverseLocation(
                 propLatitude,
-                propLongitude
+                propLongitude,
+                { signal: controller.signal }
             )
                 .then((location) => {
+                    if (requestId !== locationRequestRef.current) return;
+
                     setLocationName(
-                        location.city ||
-                        location.display_name ||
-                        "Current Location"
+                        getLocationLabel(location)
                     );
                 })
-                .catch(() => {
+                .catch((requestError) => {
+                    if (requestError.name === "CanceledError") return;
+                    if (requestId !== locationRequestRef.current) return;
+
                     setLocationName(
                         "Current Location"
                     );
                 });
 
-            return;
+            return () => controller.abort();
         }
 
         if (!requestLocation) {
             setLocationLoading(false);
             setLocationName("Location unavailable");
-            return;
+            return () => controller.abort();
         }
 
         if (!navigator.geolocation) {
@@ -270,11 +288,13 @@ export default function LiveWeatherMap({
             setLocationName(
                 "Location unavailable"
             );
-            return;
+            return () => controller.abort();
         }
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
+                if (requestId !== locationRequestRef.current) return;
+
                 const currentLatitude =
                     position.coords.latitude;
 
@@ -289,15 +309,19 @@ export default function LiveWeatherMap({
                     const location =
                         await reverseLocation(
                             currentLatitude,
-                            currentLongitude
+                            currentLongitude,
+                            { signal: controller.signal }
                         );
 
+                    if (requestId !== locationRequestRef.current) return;
+
                     setLocationName(
-                        location.city ||
-                        location.display_name ||
-                        "Current Location"
+                        getLocationLabel(location)
                     );
-                } catch {
+                } catch (requestError) {
+                    if (requestError.name === "CanceledError") return;
+                    if (requestId !== locationRequestRef.current) return;
+
                     setLocationName(
                         "Current Location"
                     );
@@ -315,6 +339,8 @@ export default function LiveWeatherMap({
                 maximumAge: 300000,
             }
         );
+
+        return () => controller.abort();
     }, [
         propLatitude,
         propLongitude,
