@@ -8,6 +8,7 @@ export default function StatCard({
     status = "",
     statusTone = "neutral",
     icon: Icon,
+    iconSrc,
     children,
 }) {
     const available = value !== null && value !== undefined && value !== "";
@@ -30,11 +31,13 @@ export default function StatCard({
                     )}
                 </div>
 
-                {Icon && (
+                {iconSrc ? (
+                    <img src={iconSrc} alt="" aria-hidden="true" className="stat-card-icon stat-card-icon-img" />
+                ) : Icon ? (
                     <span className="stat-card-icon" aria-hidden="true">
                         <Icon size={30} />
                     </span>
-                )}
+                ) : null}
             </div>
 
             {children}
