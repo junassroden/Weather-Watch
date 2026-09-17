@@ -184,7 +184,7 @@ export default function ForecastExperience() {
                                 <WeatherIllustration
                                     code={weather?.weather_code}
                                     isDay={isDay}
-                                    size={104}
+                                    size={132}
                                     className="current-panel-illustration"
                                 />
                             </div>
