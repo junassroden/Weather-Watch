@@ -93,7 +93,7 @@ export default function CurrentWeather() {
                                         <span>{weather.units?.temperature_2m || "°C"}</span>
                                     </div>
                                     <div className="current-weather-condition">
-                                        <WeatherIllustration code={weather.weather_code} isDay={isDay} size={44} />
+                                        <WeatherIllustration code={weather.weather_code} isDay={isDay} size={64} />
                                         {weatherLabel(weather.weather_code)}
                                     </div>
                                 </div>
