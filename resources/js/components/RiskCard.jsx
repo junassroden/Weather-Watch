@@ -1,5 +1,5 @@
 import {
-    AlertTriangle,
+    TriangleAlert,
     ShieldCheck,
 } from "lucide-react";
 
@@ -48,12 +48,14 @@ export default function RiskCard({
 
                 <div className="risk-icon">
                     {severe ? (
-                        <AlertTriangle
+                        <TriangleAlert
                             size={20}
+                            strokeWidth={1}
                         />
                     ) : (
                         <ShieldCheck
                             size={20}
+                            strokeWidth={1}
                         />
                     )}
                 </div>

@@ -37,7 +37,7 @@ export default function LocationSearch({
             onSubmit={submitSearch}
             role="search"
         >
-            <Search size={16} aria-hidden="true" />
+            <Search size={16} strokeWidth={1} aria-hidden="true" />
 
             <input
                 value={query}

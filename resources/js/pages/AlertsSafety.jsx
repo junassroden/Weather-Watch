@@ -4,8 +4,8 @@ import {
 } from "react";
 
 import {
-    AlertTriangle,
-    CheckCircle,
+    TriangleAlert,
+    CircleCheck,
     Phone,
     ShieldAlert,
 } from "lucide-react";
@@ -125,8 +125,9 @@ export default function AlertsSafety() {
 
                     {error && (
                         <div className="error-panel">
-                            <AlertTriangle
+                            <TriangleAlert
                                 size={19}
+                                weight="thin"
                             />
 
                             {error}
@@ -161,10 +162,12 @@ export default function AlertsSafety() {
                                                 ?.length ? (
                                                 <ShieldAlert
                                                     size={28}
+                                                    weight="thin"
                                                 />
                                             ) : (
-                                                <CheckCircle
+                                                <CircleCheck
                                                     size={28}
+                                                    weight="thin"
                                                 />
                                             )}
 
@@ -221,7 +224,7 @@ export default function AlertsSafety() {
                                         href="tel:911"
                                         className="emergency-button"
                                     >
-                                        <Phone size={20} />
+                                        <Phone size={20} weight="thin" />
 
                                         CALL 911
                                     </a>

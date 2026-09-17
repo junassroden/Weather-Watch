@@ -1,4 +1,4 @@
-import { Bell, CloudSun, LocateFixed, Menu, X } from "lucide-react";
+import { Bell, CloudSun, Crosshair, List, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
@@ -16,7 +16,7 @@ export default function Header({ onUseLocation, onLocationSelect, showSearch = t
         <header className="site-header">
             <div className="container header-inner">
                 <NavLink to="/" className="brand">
-                    <span className="brand-mark"><CloudSun size={20} /></span>
+                    <span className="brand-mark"><CloudSun size={19} weight="thin" /></span>
                     <span className="brand-name">WeatherWatch</span>
                 </NavLink>
 
@@ -26,7 +26,7 @@ export default function Header({ onUseLocation, onLocationSelect, showSearch = t
                     aria-label="Toggle navigation"
                     aria-expanded={menuOpen}
                 >
-                    {menuOpen ? <X size={20} /> : <Menu size={20} />}
+                    {menuOpen ? <X size={19} weight="thin" /> : <List size={19} weight="thin" />}
                 </button>
 
                 <nav className={`desktop-nav ${menuOpen ? "is-open" : ""}`}>
@@ -52,11 +52,11 @@ export default function Header({ onUseLocation, onLocationSelect, showSearch = t
                         title="Use my location"
                         type="button"
                     >
-                        <LocateFixed size={17} />
+                        <Crosshair size={17} weight="thin" />
                     </button>
 
                     <NavLink to="/alerts" className="header-icon-button" title="Alerts">
-                        <Bell size={17} />
+                        <Bell size={17} weight="thin" />
                     </NavLink>
                 </div>
             </div>

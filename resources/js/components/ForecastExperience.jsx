@@ -1,6 +1,6 @@
 import {
-    AlertTriangle,
-    Droplets,
+    TriangleAlert,
+    Droplet,
     RefreshCw,
     Thermometer,
     ThermometerSnowflake,
@@ -160,10 +160,10 @@ export default function ForecastExperience() {
                 <div className="container">
                     {error && (
                         <div className="error-panel">
-                            <AlertTriangle size={18} />
+                            <TriangleAlert size={18} strokeWidth={1} />
                             <span>{error}</span>
                             <button type="button" onClick={requestLocation}>
-                                <RefreshCw size={15} />
+                                <RefreshCw size={15} strokeWidth={1} />
                                 Retry
                             </button>
                         </div>
@@ -207,12 +207,12 @@ export default function ForecastExperience() {
                                     {weather ? weatherLabel(weather.weather_code) : "Waiting for conditions"}
                                 </li>
                                 <li>
-                                    <ThermometerSnowflake size={17} />
+                                    <ThermometerSnowflake size={17} strokeWidth={1} />
                                     Min Temperature –{" "}
                                     {todayLow == null ? "--" : `${Math.round(todayLow)}${tempUnit}`}
                                 </li>
                                 <li>
-                                    <Thermometer size={17} />
+                                    <Thermometer size={17} weight="thin" />
                                     Max Temperature –{" "}
                                     {todayHigh == null ? "--" : `${Math.round(todayHigh)}${tempUnit}`}
                                 </li>
@@ -220,7 +220,7 @@ export default function ForecastExperience() {
 
                             <div className="current-panel-metrics">
                                 <div>
-                                    <Droplets size={20} />
+                                    <Droplet size={20} strokeWidth={1} />
                                     <div>
                                         <strong>
                                             {weather?.humidity == null
@@ -232,7 +232,7 @@ export default function ForecastExperience() {
                                 </div>
 
                                 <div>
-                                    <Wind size={20} />
+                                    <Wind size={20} weight="thin" />
                                     <div>
                                         <strong>
                                             {weather?.wind_speed == null

@@ -185,6 +185,69 @@ function buildFogSprite(width, height) {
     return sprite;
 }
 
+/* A soft, cratered moon disc baked once — cheap to redraw every frame
+   as a single drawImage instead of rebuilding radial gradients. */
+function buildMoonSprite(size, seedValue) {
+    const rng = makeRng(seedValue);
+    const s = Math.max(40, Math.round(size));
+    const sprite = document.createElement("canvas");
+    sprite.width = s;
+    sprite.height = s;
+    const c = sprite.getContext("2d");
+    const cx = s / 2;
+    const cy = s / 2;
+    const r = s * 0.32;
+
+    const glow = c.createRadialGradient(cx, cy, 0, cx, cy, r * 2.4);
+    glow.addColorStop(0, "rgba(226,232,238,.22)");
+    glow.addColorStop(1, "rgba(226,232,238,0)");
+    c.fillStyle = glow;
+    c.beginPath();
+    c.arc(cx, cy, r * 2.4, 0, Math.PI * 2);
+    c.fill();
+
+    const body = c.createRadialGradient(cx - r * 0.3, cy - r * 0.3, 0, cx, cy, r);
+    body.addColorStop(0, "#f4f7f9");
+    body.addColorStop(0.6, "#d7dee3");
+    body.addColorStop(1, "#a9b4bc");
+    c.fillStyle = body;
+    c.beginPath();
+    c.arc(cx, cy, r, 0, Math.PI * 2);
+    c.fill();
+
+    // A few soft craters, clipped to the disc via source-atop so they
+    // never spill past the moon's silhouette.
+    c.globalCompositeOperation = "source-atop";
+    c.globalAlpha = 0.35;
+    for (let i = 0; i < 5; i++) {
+        const angle = rng() * Math.PI * 2;
+        const dist = rng() * r * 0.7;
+        const cratR = r * (0.08 + rng() * 0.14);
+        c.fillStyle = "#98a3ab";
+        c.beginPath();
+        c.arc(cx + Math.cos(angle) * dist, cy + Math.sin(angle) * dist, cratR, 0, Math.PI * 2);
+        c.fill();
+    }
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = "source-over";
+
+    return sprite;
+}
+
+/* Star positions/phases are generated once per scene build; only their
+   twinkle opacity is animated per frame, so a whole field of stars
+   costs one small loop of arc() fills rather than any gradient work. */
+function buildStarField(width, height, count, seedValue) {
+    const rng = makeRng(seedValue);
+    return Array.from({ length: count }, () => ({
+        x: rng() * width,
+        y: rng() * height * 0.72,
+        r: 0.5 + rng() * 1.1,
+        phase: rng() * Math.PI * 2,
+        speed: 0.6 + rng() * 0.8,
+    }));
+}
+
 /* Soft god-ray sprite for sunny/partly-sunny scenes, baked once onto an
    offscreen canvas so animating it at runtime is a single drawImage +
    rotate instead of rebuilding gradients every frame. */
@@ -248,12 +311,15 @@ export default function WeatherEnvironment({
         let cloudLayers = [];
         let fogSprite = null;
         let lightRaySprite = null;
+        let moonSprite = null;
+        let stars = [];
         let rainDrops = [];
         let snowFlakes = [];
         let lastTime = 0;
         let elapsed = 0;
         let nextFlash = 3 + rng() * 5;
         let flashStrength = 0;
+        let flashBranchSeed = rng();
 
         // Rain/snow/storm bands span a range of Open-Meteo codes; within a
         // band, the top of the range genuinely means heavier weather (e.g.
@@ -295,7 +361,11 @@ export default function WeatherEnvironment({
             });
 
             fogSprite = scene.fogBands ? buildFogSprite(width, height / 3) : null;
-            lightRaySprite = scene.sun ? buildLightRaySprite(Math.max(width, height) * 1.6, seed + 45) : null;
+            lightRaySprite = scene.sun && isDay ? buildLightRaySprite(Math.max(width, height) * 1.6, seed + 45) : null;
+            moonSprite = scene.sun && !isDay ? buildMoonSprite(Math.min(width, height) * 0.7, seed + 51) : null;
+            stars = !isDay && scene.sun
+                ? buildStarField(width, height, 46, seed + 63)
+                : [];
 
             if (scene.precip?.kind === "rain") {
                 const rainRng = makeRng(seed + 21);
@@ -350,10 +420,54 @@ export default function WeatherEnvironment({
                 ctx.fillStyle = `rgba(255,255,255,${Math.max(0, pulse)})`;
                 ctx.fillRect(0, 0, width, height);
             }
+
+            if (!isDay) {
+                ctx.fillStyle = "rgba(4,8,14,0.42)";
+                ctx.fillRect(0, 0, width, height);
+            }
+        }
+
+        function drawStars(t) {
+            if (!stars.length) return;
+            for (const star of stars) {
+                const twinkle = 0.4 + Math.abs(Math.sin(t * 0.0006 * star.speed + star.phase)) * 0.6;
+                ctx.globalAlpha = twinkle;
+                ctx.fillStyle = "#f2f6f8";
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function drawMoon(t) {
+            if (!moonSprite) return;
+            const cx = width * 0.72;
+            const cy = height * 0.26;
+            const pulse = 1 + Math.sin(t * 0.0005) * 0.03;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(pulse, pulse);
+            ctx.drawImage(moonSprite, -moonSprite.width / 2, -moonSprite.height / 2);
+            ctx.restore();
+        }
+
+        // A soft radial darkening toward the card's edges. Cheap (one
+        // gradient fill) and gives the scene a touch of cinematic depth
+        // instead of reading as a flat, evenly-lit rectangle.
+        function drawVignette() {
+            const vignette = ctx.createRadialGradient(
+                width * 0.5, height * 0.46, Math.min(width, height) * 0.2,
+                width * 0.5, height * 0.5, Math.max(width, height) * 0.75
+            );
+            vignette.addColorStop(0, "rgba(0,0,0,0)");
+            vignette.addColorStop(1, "rgba(0,0,0,0.22)");
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0, 0, width, height);
         }
 
         function drawSun(t) {
-            if (!scene.sun) return;
+            if (!scene.sun || !isDay) return;
             const cx = width * 0.72;
             const cy = height * 0.28;
             const pulse = 1 + Math.sin(t * 0.0006) * 0.06;
@@ -426,8 +540,7 @@ export default function WeatherEnvironment({
 
         function drawRain(t) {
             if (!rainDrops.length) return;
-            ctx.strokeStyle = "rgba(200,232,230,0.8)";
-            ctx.lineWidth = 1;
+            ctx.lineCap = "round";
             for (const drop of rainDrops) {
                 drop.y += drop.speed * (t.dt / 1000);
                 drop.x += drop.drift * (t.dt / 1000);
@@ -435,13 +548,29 @@ export default function WeatherEnvironment({
                     drop.y = -drop.len;
                     drop.x = Math.random() * width;
                 }
+                const tailX = drop.x - drop.len * 0.18;
+                const tailY = drop.y + drop.len;
+
+                // Dim wide pass for body, then a thin bright core so the
+                // drop reads as a wet, lit streak rather than a flat line.
+                ctx.strokeStyle = "rgba(180,210,214,0.55)";
+                ctx.lineWidth = 1.6;
                 ctx.globalAlpha = drop.opacity;
                 ctx.beginPath();
                 ctx.moveTo(drop.x, drop.y);
-                ctx.lineTo(drop.x - drop.len * 0.18, drop.y + drop.len);
+                ctx.lineTo(tailX, tailY);
+                ctx.stroke();
+
+                ctx.strokeStyle = "rgba(235,248,248,0.9)";
+                ctx.lineWidth = 0.6;
+                ctx.globalAlpha = drop.opacity * 0.85;
+                ctx.beginPath();
+                ctx.moveTo(drop.x, drop.y);
+                ctx.lineTo(tailX, tailY);
                 ctx.stroke();
             }
             ctx.globalAlpha = 1;
+            ctx.lineCap = "butt";
         }
 
         function drawSnow(t) {
@@ -468,6 +597,7 @@ export default function WeatherEnvironment({
             elapsed += t.dt / 1000;
             if (elapsed >= nextFlash && flashStrength <= 0) {
                 flashStrength = 1;
+                flashBranchSeed = rng();
                 nextFlash = elapsed + 4 + rng() * 6;
             }
             if (flashStrength > 0) {
@@ -475,15 +605,44 @@ export default function WeatherEnvironment({
                 ctx.fillRect(0, 0, width, height);
 
                 if (flashStrength > 0.6) {
-                    const bx = width * (0.35 + rng() * 0.2);
+                    const boltRng = makeRng(Math.floor(flashBranchSeed * 1e6) || 1);
+                    const bx = width * (0.3 + boltRng() * 0.3);
+                    const mainSegments = 4;
+                    let x = bx;
+                    let y = 0;
+                    const path = [[x, y]];
+                    for (let i = 0; i < mainSegments; i++) {
+                        x += (boltRng() - 0.5) * width * 0.09;
+                        y += (height * 0.75) / mainSegments;
+                        path.push([x, y]);
+                    }
+
                     ctx.strokeStyle = `rgba(255,255,255,${flashStrength})`;
                     ctx.lineWidth = 2;
+                    ctx.lineJoin = "round";
                     ctx.beginPath();
-                    ctx.moveTo(bx, 0);
-                    ctx.lineTo(bx - 8, height * 0.35);
-                    ctx.lineTo(bx + 6, height * 0.4);
-                    ctx.lineTo(bx - 4, height * 0.7);
+                    ctx.moveTo(path[0][0], path[0][1]);
+                    for (let i = 1; i < path.length; i++) ctx.lineTo(path[i][0], path[i][1]);
                     ctx.stroke();
+
+                    // One or two thinner forks branching off the main
+                    // channel, each fading out after a short run.
+                    const branchCount = 1 + Math.floor(boltRng() * 2);
+                    for (let b = 0; b < branchCount; b++) {
+                        const startIdx = 1 + Math.floor(boltRng() * (path.length - 2));
+                        let [fx, fy] = path[startIdx];
+                        const dir = boltRng() < 0.5 ? -1 : 1;
+                        ctx.strokeStyle = `rgba(255,255,255,${flashStrength * 0.55})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(fx, fy);
+                        for (let s = 0; s < 3; s++) {
+                            fx += dir * boltRng() * width * 0.05;
+                            fy += height * 0.08;
+                            ctx.lineTo(fx, fy);
+                        }
+                        ctx.stroke();
+                    }
                 }
                 flashStrength -= t.dt / 260;
                 if (flashStrength < 0) flashStrength = 0;
@@ -499,6 +658,8 @@ export default function WeatherEnvironment({
             if (visibleRef.current) {
                 ctx.clearRect(0, 0, width, height);
                 drawSky(now);
+                drawStars(now);
+                drawMoon(now);
                 drawSun(now);
                 drawLightRays(now);
                 drawClouds({ dt, elapsed });
@@ -506,6 +667,7 @@ export default function WeatherEnvironment({
                 drawRain({ dt, elapsed });
                 drawSnow({ dt, elapsed });
                 drawLightning({ dt, elapsed });
+                drawVignette();
 
                 if (!reduceMotion) {
                     rafRef.current = requestAnimationFrame(frame);
@@ -524,10 +686,13 @@ export default function WeatherEnvironment({
 
         if (reduceMotion) {
             drawSky(0);
+            drawStars(0);
+            drawMoon(0);
             drawSun(0);
             drawLightRays(0);
             drawClouds({ dt: 0, elapsed: 0 });
             drawFog({ dt: 0, elapsed: 0 });
+            drawVignette();
         } else {
             rafRef.current = requestAnimationFrame(frame);
         }

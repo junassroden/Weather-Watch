@@ -36,7 +36,7 @@ export default function WeatherHistory() {
                     <section className="history-flow">
 
                         <div className="history-empty-icon">
-                            <History size={32} />
+                            <History size={32} strokeWidth={1} />
                         </div>
 
                         <h2>
@@ -52,7 +52,7 @@ export default function WeatherHistory() {
 
                         <div className="history-status">
 
-                            <Database size={18} />
+                            <Database size={18} strokeWidth={1} />
 
                             <span>
                                 History API not connected

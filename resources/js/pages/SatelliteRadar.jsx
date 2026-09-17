@@ -8,7 +8,7 @@ import {
     Database,
     Gauge,
     CloudLightning,
-    Droplets,
+    Droplet,
     Wind,
     Radar,
     Satellite,
@@ -16,7 +16,6 @@ import {
 
 import Header from "../components/Header";
 import LiveWeatherMap from "../components/LiveWeatherMap";
-import WeatherEnvironment from "../components/WeatherEnvironment";
 
 import {
     getCurrentWeather,
@@ -43,12 +42,6 @@ function weatherDescription(code) {
     }
 
     return "Clear conditions";
-}
-
-function stormWatchCode(tone) {
-    if (tone === "severe") return 96;
-    if (tone === "watch") return 63;
-    return 1;
 }
 
 function getLocationLabel(location) {
@@ -127,14 +120,7 @@ export default function SatelliteRadar() {
         // here — and critically, this must NOT touch the page-level
         // `error`/`loading` state below: those track this page's own
         // weather/forecast/risk fetch, which is a completely separate
-        // network request from the map's radar-frame fetch. Wiring them
-        // together previously meant a slow-but-successful radar fetch
-        // could leave "Loading radar information..." on screen long
-        // after the page's own data had already arrived (or disappear
-        // before it had), and a radar failure could silently overwrite
-        // a meaningful "location permission denied" message with a
-        // generic one, or vice versa depending on which request
-        // happened to resolve last.
+        // network request from the map's radar-frame fetch.
     }, []);
 
     useEffect(() => {
@@ -197,15 +183,10 @@ export default function SatelliteRadar() {
                             getLocationLabel(location)
                         );
                     }
-
-                    if (results.every((result) => result.status === "rejected")) {
-                        setError("Weather telemetry is temporarily unavailable.");
-                    }
                 } finally {
-                    // This always fires — on full success, partial
-                    // success, or total failure — so the loading state
-                    // for this page's own data can never hang forever.
-                    setLoading(false);
+                    if (!cancelled) {
+                        setLoading(false);
+                    }
                 }
             },
             () => {
@@ -235,36 +216,33 @@ export default function SatelliteRadar() {
 
                 <div className="container">
 
-                    <div className="satellite-hero">
-                        <WeatherEnvironment
-                            code={weather?.weather_code}
-                            isDay={weather?.is_day !== 0}
-                            className="satellite-hero-scene"
-                        />
+                    <div className="page-header">
+                        <span className="eyebrow">SATELLITE & RADAR</span>
+                        <h1>Satellite Weather Intelligence</h1>
+                        <p>
+                            Read precipitation movement, pressure conditions, and
+                            approaching storm signals around your location.
+                        </p>
+                    </div>
 
-                        <div className="satellite-hero-scrim" aria-hidden="true" />
-
-                        <div className="page-header satellite-hero-content">
-                            <span className="eyebrow">
-                                SATELLITE & RADAR
-                            </span>
-
-                            <h1>Satellite Weather Intelligence</h1>
-
-                            <p>
-                                Read precipitation movement, pressure conditions, and
-                                approaching storm signals around your location.
-                            </p>
-                        </div>
-
-                        <div className="satellite-hero-readout">
-                            <span>LOCAL OBSERVATION</span>
+                    <div className="satellite-status-strip">
+                        <div className="satellite-status-item">
+                            <span>Observing</span>
                             <strong>{locationName}</strong>
-                            <small>
+                        </div>
+                        <div className="satellite-status-divider" aria-hidden="true" />
+                        <div className="satellite-status-item">
+                            <span>Coordinates</span>
+                            <strong>
                                 {coordinates
                                     ? `${coordinates.latitude.toFixed(4)}, ${coordinates.longitude.toFixed(4)}`
                                     : "Waiting for device location"}
-                            </small>
+                            </strong>
+                        </div>
+                        <div className="satellite-status-divider" aria-hidden="true" />
+                        <div className={`satellite-status-item satellite-status-${stormWatch.tone}`}>
+                            <span>Storm watch</span>
+                            <strong>{stormWatch.level}</strong>
                         </div>
                     </div>
 
@@ -282,19 +260,19 @@ export default function SatelliteRadar() {
                             {radar && (
                                 <div className="radar-information">
                                     <div className="radar-info-line">
-                                        <Radar size={19} />
+                                        <Radar size={19} weight="thin" />
                                         <span>PROVIDER</span>
                                         <strong>{radar.provider}</strong>
                                     </div>
 
                                     <div className="radar-info-line">
-                                        <Database size={19} />
+                                        <Database size={19} weight="thin" />
                                         <span>AVAILABLE FRAMES</span>
                                         <strong>{radar.frames?.length || 0}</strong>
                                     </div>
 
                                     <div className="radar-info-line">
-                                        <Satellite size={19} />
+                                        <Satellite size={19} weight="thin" />
                                         <span>DATA TYPE</span>
                                         <strong>Past Radar</strong>
                                     </div>
@@ -307,36 +285,26 @@ export default function SatelliteRadar() {
                         </section>
 
                         <aside className="satellite-side-column">
-                            <section className="satellite-intelligence">
+                            <section className="satellite-intelligence glass-panel">
                                 <div className="satellite-section-heading">
                                     <span className="eyebrow">FIELD INTELLIGENCE</span>
                                     <h2>Conditions around {locationName}</h2>
                                 </div>
 
-                                <article className={`satellite-alert satellite-alert-${stormWatch.tone}`}>
-                                    <WeatherEnvironment
-                                        code={stormWatchCode(stormWatch.tone)}
-                                        isDay={true}
-                                        className="satellite-alert-scene"
-                                    />
-
-                                    <div className="satellite-alert-scrim" aria-hidden="true" />
-
-                                    <div className="satellite-alert-content">
-                                        <div className="satellite-panel-heading">
-                                            <CloudLightning size={20} />
-                                            <span>STORM WATCH</span>
-                                        </div>
-                                        <strong>{stormWatch.level}</strong>
-                                        <p>{stormWatch.detail}</p>
-                                        <small>Based on the seven-day Open-Meteo outlook</small>
+                                <div className={`storm-watch storm-watch-${stormWatch.tone}`}>
+                                    <div className="satellite-panel-heading">
+                                        <CloudLightning size={19} weight="thin" />
+                                        <span>STORM WATCH</span>
                                     </div>
-                                </article>
+                                    <strong>{stormWatch.level}</strong>
+                                    <p>{stormWatch.detail}</p>
+                                    <small>Based on the seven-day Open-Meteo outlook</small>
+                                </div>
 
                                 <div className="satellite-reading-list">
                                     <div className="satellite-reading-row">
                                         <div className="satellite-reading-label">
-                                            <Gauge size={18} />
+                                            <Gauge size={17} weight="thin" />
                                             <span>PRESSURE FIELD</span>
                                         </div>
                                         <div className="satellite-reading-value">
@@ -354,7 +322,7 @@ export default function SatelliteRadar() {
 
                                     <div className="satellite-reading-row">
                                         <div className="satellite-reading-label">
-                                            <Droplets size={18} />
+                                            <Droplet size={17} strokeWidth={1} />
                                             <span>PRECIPITATION OUTLOOK</span>
                                         </div>
                                         <div className="satellite-reading-value">
@@ -366,7 +334,7 @@ export default function SatelliteRadar() {
 
                                     <div className="satellite-reading-row">
                                         <div className="satellite-reading-label">
-                                            <Wind size={18} />
+                                            <Wind size={17} weight="thin" />
                                             <span>HAZARD INDEX</span>
                                         </div>
                                         <div className="satellite-reading-value">

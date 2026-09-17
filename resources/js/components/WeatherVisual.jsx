@@ -5,9 +5,7 @@ import {
     CloudMoon,
     Cloud,
     CloudFog,
-    CloudDrizzle,
     CloudRain,
-    CloudRainWind,
     CloudSnow,
     CloudLightning,
 } from "lucide-react";
@@ -135,9 +133,9 @@ const ICONS = {
     partly: { day: CloudSun, night: CloudMoon },
     overcast: { day: Cloud, night: Cloud },
     fog: { day: CloudFog, night: CloudFog },
-    drizzle: { day: CloudDrizzle, night: CloudDrizzle },
+    drizzle: { day: CloudRain, night: CloudRain },
     rain: { day: CloudRain, night: CloudRain },
-    showers: { day: CloudRainWind, night: CloudRainWind },
+    showers: { day: CloudRain, night: CloudRain },
     snow: { day: CloudSnow, night: CloudSnow },
     storm: { day: CloudLightning, night: CloudLightning },
     unknown: { day: Cloud, night: Cloud },
@@ -160,6 +158,7 @@ export default function WeatherIcon({
     return (
         <Icon
             size={size}
+            weight="thin"
             className={`weather-icon ${className}`}
             aria-hidden="true"
         />
