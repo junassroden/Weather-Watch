@@ -135,87 +135,67 @@ export default function AlertsSafety() {
 
                     {!loading && (
                         <div className="safety-layout">
-                            <section className="safety-section">
 
-                                <div className="section-heading">
+                            <section className="safety-section safety-primary">
 
-                                    <div>
-                                        <span className="eyebrow">
-                                            RISK ASSESSMENT
-                                        </span>
+                                <div className="safety-block">
+                                    <span className="eyebrow">
+                                        RISK ASSESSMENT
+                                    </span>
 
-                                        <h2>
-                                            Current Weather Risk
-                                        </h2>
-                                    </div>
-
+                                    <RiskCard
+                                        risk={risk}
+                                    />
                                 </div>
 
-                                <RiskCard
-                                    risk={risk}
-                                />
+                                <div className="safety-block">
+                                    <span className="eyebrow">
+                                        OFFICIAL ALERTS
+                                    </span>
 
-                            </section>
+                                    <div className="official-alert-panel">
 
-                            <section className="safety-section">
+                                        <div className="official-alert-icon">
 
-                                <div className="section-heading">
+                                            {alerts?.official_alerts
+                                                ?.length ? (
+                                                <ShieldAlert
+                                                    size={28}
+                                                />
+                                            ) : (
+                                                <CheckCircle
+                                                    size={28}
+                                                />
+                                            )}
 
-                                    <div>
-                                        <span className="eyebrow">
-                                            OFFICIAL ALERTS
-                                        </span>
+                                        </div>
 
-                                        <h2>
-                                            Local Warnings
-                                        </h2>
-                                    </div>
+                                        <div>
 
-                                </div>
+                                            <h3>
+                                                {alerts == null
+                                                    ? "Official warning data unavailable"
+                                                    : alerts.official_alerts
+                                                        ?.length
+                                                        ? "Official warnings detected"
+                                                        : "No official warnings available"}
+                                            </h3>
 
-                                <div className="official-alert-panel">
+                                            <p>
+                                                {alerts?.message ||
+                                                    (alerts == null
+                                                        ? "The connected alert source has not returned data yet."
+                                                        : "There are currently no connected official weather warnings.")}
+                                            </p>
 
-                                    <div className="official-alert-icon">
-
-                                        {alerts?.official_alerts
-                                            ?.length ? (
-                                            <ShieldAlert
-                                                size={28}
-                                            />
-                                        ) : (
-                                            <CheckCircle
-                                                size={28}
-                                            />
-                                        )}
-
-                                    </div>
-
-                                    <div>
-
-                                        <h3>
-                                            {alerts == null
-                                                ? "Official warning data unavailable"
-                                                : alerts.official_alerts
-                                                    ?.length
-                                                    ? "Official warnings detected"
-                                                    : "No official warnings available"}
-                                        </h3>
-
-                                        <p>
-                                            {alerts?.message ||
-                                                (alerts == null
-                                                    ? "The connected alert source has not returned data yet."
-                                                    : "There are currently no connected official weather warnings.")}
-                                        </p>
+                                        </div>
 
                                     </div>
-
                                 </div>
 
                             </section>
 
                             <section className="safety-section">
-
                                 <div className="emergency-panel">
 
                                     <div>
@@ -247,8 +227,8 @@ export default function AlertsSafety() {
                                     </a>
 
                                 </div>
-
                             </section>
+
                         </div>
                     )}
 
