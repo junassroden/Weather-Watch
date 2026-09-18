@@ -279,6 +279,32 @@ function buildLightRaySprite(size, seedValue) {
     return sprite;
 }
 
+function buildHorizonSprite(width, height, path, color) {
+    const sprite = document.createElement("canvas");
+    sprite.width = Math.max(1, Math.round(width));
+    sprite.height = Math.max(1, Math.round(height));
+    const ctx = sprite.getContext("2d");
+
+    ctx.beginPath();
+    ctx.moveTo(0, height);
+    ctx.lineTo(path[0][0], path[0][1]);
+    for (let i = 1; i < path.length - 1; i++) {
+        const [cx, cy] = path[i];
+        const [nx, ny] = path[i + 1];
+        ctx.quadraticCurveTo(cx, cy, (cx + nx) / 2, (cy + ny) / 2);
+    }
+    const last = path[path.length - 1];
+    ctx.lineTo(last[0], last[1]);
+    ctx.lineTo(width, height);
+    ctx.closePath();
+    ctx.filter = "brightness(0.55) saturate(1.1)";
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    return sprite;
+}
+
 export default function WeatherEnvironment({
     code,
     isDay = true,
@@ -315,6 +341,8 @@ export default function WeatherEnvironment({
         let stars = [];
         let rainDrops = [];
         let snowFlakes = [];
+        let hazeMotes = [];
+        let horizonSprite = null;
         let lastTime = 0;
         let elapsed = 0;
         let nextFlash = 3 + rng() * 5;
@@ -392,6 +420,43 @@ export default function WeatherEnvironment({
                     opacity: 0.5 + snowRng() * 0.4,
                 }));
             }
+
+            // A soft, low silhouette along the bottom edge — without it
+            // every scene ends in a flat, shadeless cutoff and reads as
+            // a sky sample rather than a place. Three gentle rises,
+            // seeded per scene so cards don't all share one skyline.
+            const horizonRng = makeRng(seed + 71);
+            const baseY = height * (0.9 + horizonRng() * 0.04);
+            const p0y = baseY - horizonRng() * height * 0.05;
+            const p1y = baseY - horizonRng() * height * 0.09;
+            const p2y = baseY - horizonRng() * height * 0.04;
+            const horizonPath = [
+                [0, baseY],
+                [width * 0.28, p0y],
+                [width * 0.58, p1y],
+                [width * 0.85, p2y],
+                [width, baseY - horizonRng() * height * 0.03],
+            ];
+            horizonSprite = buildHorizonSprite(width, height, horizonPath, scene.sky[2]);
+
+            // Slow-drifting motes for clear/overcast air with no rain or
+            // snow of its own — otherwise those scenes have literally
+            // nothing moving except clouds, which reads as static.
+            if (!scene.precip) {
+                const hazeRng = makeRng(seed + 83);
+                const count = type === "fog" ? 0 : 14;
+                hazeMotes = Array.from({ length: count }, () => ({
+                    x: hazeRng() * width,
+                    y: hazeRng() * height * 0.85,
+                    r: 0.8 + hazeRng() * 1.6,
+                    driftX: (hazeRng() - 0.4) * 6,
+                    driftY: -(2 + hazeRng() * 4),
+                    phase: hazeRng() * Math.PI * 2,
+                    opacity: 0.12 + hazeRng() * 0.16,
+                }));
+            } else {
+                hazeMotes = [];
+            }
         }
 
         function drawSky(t) {
@@ -464,6 +529,32 @@ export default function WeatherEnvironment({
             vignette.addColorStop(1, "rgba(0,0,0,0.22)");
             ctx.fillStyle = vignette;
             ctx.fillRect(0, 0, width, height);
+        }
+
+        // A single soft shape derived from the sky's own horizon tone —
+        // never a separate "scenery" color — so it reads as depth/haze
+        // rather than a random hill someone drew on top of the weather.
+        function drawHorizon() {
+            if (!horizonSprite) return;
+            ctx.drawImage(horizonSprite, 0, 0, width, height);
+        }
+
+        function drawHaze(t) {
+            if (!hazeMotes.length) return;
+            ctx.fillStyle = "#ffffff";
+            for (const mote of hazeMotes) {
+                mote.x += mote.driftX * (t.dt / 1000);
+                mote.y += mote.driftY * (t.dt / 1000);
+                if (mote.y < -6) mote.y = height + 6;
+                if (mote.x < -6) mote.x = width + 6;
+                if (mote.x > width + 6) mote.x = -6;
+                const flicker = 0.6 + Math.sin(t.elapsed * 0.8 + mote.phase) * 0.4;
+                ctx.globalAlpha = mote.opacity * flicker;
+                ctx.beginPath();
+                ctx.arc(mote.x, mote.y, mote.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
         }
 
         function drawSun(t) {
@@ -663,6 +754,8 @@ export default function WeatherEnvironment({
                 drawSun(now);
                 drawLightRays(now);
                 drawClouds({ dt, elapsed });
+                drawHorizon();
+                drawHaze({ dt, elapsed });
                 drawFog({ dt, elapsed });
                 drawRain({ dt, elapsed });
                 drawSnow({ dt, elapsed });
@@ -691,6 +784,8 @@ export default function WeatherEnvironment({
             drawSun(0);
             drawLightRays(0);
             drawClouds({ dt: 0, elapsed: 0 });
+            drawHorizon();
+            drawHaze({ dt: 0, elapsed: 0 });
             drawFog({ dt: 0, elapsed: 0 });
             drawVignette();
         } else {
@@ -698,7 +793,20 @@ export default function WeatherEnvironment({
         }
 
         let resizeRaf = null;
+        let isInitialResizeCallback = true;
         const resizeObserver = new ResizeObserver(() => {
+            // ResizeObserver always fires once immediately on observe(),
+            // even when nothing has actually changed size yet. Without
+            // this guard that "free" first callback re-ran buildScene()
+            // a second time one frame after mount, which reseeds and
+            // resets every rain drop / snowflake / cloud position back
+            // to its start state — visible as a small jump/pop in the
+            // precipitation right after the card first painted.
+            if (isInitialResizeCallback) {
+                isInitialResizeCallback = false;
+                return;
+            }
+
             // Coalesce bursts of resize events (e.g. a window being
             // dragged) into a single rebuild per frame instead of
             // rebuilding every cloud/rain sprite on each intermediate tick.
