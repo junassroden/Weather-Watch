@@ -1,18 +1,17 @@
 import {
-    TriangleAlert,
-    Droplet,
-    RefreshCw,
+    Warning,
+    Drop,
+    ArrowClockwise,
     Thermometer,
-    ThermometerSnowflake,
+    ThermometerCold,
     Wind,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
 import Header from "./Header";
 import ForecastCard from "./ForecastCard";
 import LocationSearch from "./LocationSearch";
 import PrecipitationChart from "./PrecipitationChart";
-import StatCard from "./StatCard";
 import WeatherEnvironment from "./WeatherEnvironment";
 import WeatherIllustration from "./WeatherIllustration";
 import WeatherIcon, { getWeatherType, weatherLabel } from "./WeatherVisual";
@@ -160,10 +159,10 @@ export default function ForecastExperience() {
                 <div className="container">
                     {error && (
                         <div className="error-panel">
-                            <TriangleAlert size={18} strokeWidth={1} />
+                            <Warning size={18} weight="thin" />
                             <span>{error}</span>
                             <button type="button" onClick={requestLocation}>
-                                <RefreshCw size={15} strokeWidth={1} />
+                                <ArrowClockwise size={15} weight="thin" />
                                 Retry
                             </button>
                         </div>
@@ -184,7 +183,7 @@ export default function ForecastExperience() {
                                 <WeatherIllustration
                                     code={weather?.weather_code}
                                     isDay={isDay}
-                                    size={132}
+                                    size={104}
                                     className="current-panel-illustration"
                                 />
                             </div>
@@ -207,7 +206,7 @@ export default function ForecastExperience() {
                                     {weather ? weatherLabel(weather.weather_code) : "Waiting for conditions"}
                                 </li>
                                 <li>
-                                    <ThermometerSnowflake size={17} strokeWidth={1} />
+                                    <ThermometerCold size={17} weight="thin" />
                                     Min Temperature –{" "}
                                     {todayLow == null ? "--" : `${Math.round(todayLow)}${tempUnit}`}
                                 </li>
@@ -220,7 +219,7 @@ export default function ForecastExperience() {
 
                             <div className="current-panel-metrics">
                                 <div>
-                                    <Droplet size={20} strokeWidth={1} />
+                                    <Drop size={20} weight="thin" />
                                     <div>
                                         <strong>
                                             {weather?.humidity == null
@@ -310,62 +309,68 @@ export default function ForecastExperience() {
 
                             <h2 className="overview-title">Today&rsquo;s Overview</h2>
 
-                            <div className="overview-grid">
-                                <StatCard
-                                    title="UV Index"
-                                    value={weather?.uv_index == null ? null : Math.round(weather.uv_index)}
-                                    status={uv.label}
-                                    statusTone={uv.tone}
-                                    iconSrc={uvIcon}
-                                />
-
-                                <StatCard
-                                    title="Pressure"
-                                    value={weather?.pressure == null ? null : Math.round(weather.pressure)}
-                                    unit={weather?.units?.pressure_msl || "hPa"}
-                                    status={pressure.label}
-                                    statusTone={pressure.tone}
-                                    iconSrc={barometerIcon}
-                                />
-
-                                <StatCard
-                                    title="Humidity"
-                                    value={weather?.humidity == null ? null : Math.round(weather.humidity)}
-                                    unit="%"
-                                    status={humidity.label}
-                                    statusTone={humidity.tone}
-                                    iconSrc={humidityIcon}
-                                />
-                            </div>
-
-                            <div className="overview-split">
-                                <article className="stat-card chart-card">
-                                    <span className="stat-card-title">Precipitation</span>
+                            <div className="overview-layout">
+                                <article className="overview-chart">
+                                    <span className="stat-card-title">Precipitation, next 12 hours</span>
                                     <PrecipitationChart
                                         times={hourly?.time || []}
                                         values={hourly?.precipitation_probability || []}
                                     />
                                 </article>
 
-                                <article className="stat-card sun-card">
-                                    <span className="stat-card-title">Sunrise &amp; Sunset</span>
-
-                                    <div className="sun-row">
-                                        <span className="sun-icon"><img src={sunriseIcon} alt="" width={26} height={26} /></span>
-                                        <div>
-                                            <span>Sunrise</span>
-                                            <strong>{formatTime(daily?.sunrise?.[0])}</strong>
+                                <div className="overview-metrics">
+                                    <div className="overview-metric-row">
+                                        <img src={uvIcon} alt="" width={22} height={22} />
+                                        <div className="overview-metric-text">
+                                            <span>UV Index</span>
+                                            <strong>
+                                                {weather?.uv_index == null ? "--" : Math.round(weather.uv_index)}
+                                            </strong>
                                         </div>
+                                        <span className={`overview-metric-status stat-status-${uv.tone}`}>{uv.label}</span>
                                     </div>
 
-                                    <div className="sun-row">
-                                        <span className="sun-icon"><img src={sunsetIcon} alt="" width={26} height={26} /></span>
-                                        <div>
-                                            <span>Sunset</span>
-                                            <strong>{formatTime(daily?.sunset?.[0])}</strong>
+                                    <div className="overview-metric-row">
+                                        <img src={barometerIcon} alt="" width={22} height={22} />
+                                        <div className="overview-metric-text">
+                                            <span>Pressure</span>
+                                            <strong>
+                                                {weather?.pressure == null ? "--" : Math.round(weather.pressure)}
+                                                <small>{weather?.units?.pressure_msl || "hPa"}</small>
+                                            </strong>
+                                        </div>
+                                        <span className={`overview-metric-status stat-status-${pressure.tone}`}>{pressure.label}</span>
+                                    </div>
+
+                                    <div className="overview-metric-row">
+                                        <img src={humidityIcon} alt="" width={22} height={22} />
+                                        <div className="overview-metric-text">
+                                            <span>Humidity</span>
+                                            <strong>
+                                                {weather?.humidity == null ? "--" : Math.round(weather.humidity)}
+                                                <small>%</small>
+                                            </strong>
+                                        </div>
+                                        <span className={`overview-metric-status stat-status-${humidity.tone}`}>{humidity.label}</span>
+                                    </div>
+
+                                    <div className="overview-metric-row overview-metric-row-split">
+                                        <div className="overview-metric-half">
+                                            <img src={sunriseIcon} alt="" width={22} height={22} />
+                                            <div className="overview-metric-text">
+                                                <span>Sunrise</span>
+                                                <strong>{formatTime(daily?.sunrise?.[0])}</strong>
+                                            </div>
+                                        </div>
+                                        <div className="overview-metric-half">
+                                            <img src={sunsetIcon} alt="" width={22} height={22} />
+                                            <div className="overview-metric-text">
+                                                <span>Sunset</span>
+                                                <strong>{formatTime(daily?.sunset?.[0])}</strong>
+                                            </div>
                                         </div>
                                     </div>
-                                </article>
+                                </div>
                             </div>
                         </section>
 
