@@ -1,11 +1,11 @@
 import {
-    Warning,
-    Drop,
-    ArrowClockwise,
+    TriangleAlert,
+    Droplet,
+    RotateCcw,
     Thermometer,
-    ThermometerCold,
+    ThermometerSnowflake,
     Wind,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Header from "./Header";
@@ -159,10 +159,10 @@ export default function ForecastExperience() {
                 <div className="container">
                     {error && (
                         <div className="error-panel">
-                            <Warning size={18} weight="thin" />
+                            <TriangleAlert size={18} weight="thin" />
                             <span>{error}</span>
                             <button type="button" onClick={requestLocation}>
-                                <ArrowClockwise size={15} weight="thin" />
+                                <RotateCcw size={15} weight="thin" />
                                 Retry
                             </button>
                         </div>
@@ -206,7 +206,7 @@ export default function ForecastExperience() {
                                     {weather ? weatherLabel(weather.weather_code) : "Waiting for conditions"}
                                 </li>
                                 <li>
-                                    <ThermometerCold size={17} weight="thin" />
+                                    <ThermometerSnowflake size={17} weight="thin" />
                                     Min Temperature –{" "}
                                     {todayLow == null ? "--" : `${Math.round(todayLow)}${tempUnit}`}
                                 </li>
@@ -219,7 +219,7 @@ export default function ForecastExperience() {
 
                             <div className="current-panel-metrics">
                                 <div>
-                                    <Drop size={20} weight="thin" />
+                                    <Droplet size={20} weight="thin" />
                                     <div>
                                         <strong>
                                             {weather?.humidity == null

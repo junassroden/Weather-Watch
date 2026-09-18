@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { searchLocation } from "../services/api";
 
@@ -13,16 +13,51 @@ export default function LocationSearch({
 }) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const abortControllerRef = useRef(null);
+    const debounceTimeoutRef = useRef(null);
+
+    const performSearch = async (value) => {
+        const trimmedQuery = value.trim();
+        clearTimeout(debounceTimeoutRef.current);
+
+        if (trimmedQuery.length < 2) {
+            abortControllerRef.current?.abort();
+            setResults([]);
+            setIsSearching(false);
+            return;
+        }
+
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        setIsSearching(true);
+
+        try {
+            setResults(await searchLocation(trimmedQuery, { signal: controller.signal }));
+        } catch (error) {
+            if (!controller.signal.aborted) {
+                setResults([]);
+            }
+        } finally {
+            if (abortControllerRef.current === controller) {
+                setIsSearching(false);
+            }
+        }
+    };
+
+    useEffect(() => {
+        debounceTimeoutRef.current = setTimeout(() => performSearch(query), 250);
+
+        return () => {
+            clearTimeout(debounceTimeoutRef.current);
+            abortControllerRef.current?.abort();
+        };
+    }, [query]);
 
     const submitSearch = async (event) => {
         event.preventDefault();
-        if (!query.trim()) return;
-
-        try {
-            setResults(await searchLocation(query.trim()));
-        } catch {
-            setResults([]);
-        }
+        await performSearch(query);
     };
 
     const selectLocation = (result) => {
@@ -36,12 +71,16 @@ export default function LocationSearch({
             className={`location-search location-search-${variant}`}
             onSubmit={submitSearch}
             role="search"
+            aria-busy={isSearching}
         >
             <Search size={16} strokeWidth={1} aria-hidden="true" />
 
             <input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                    setQuery(event.target.value);
+                    setResults([]);
+                }}
                 placeholder={placeholder}
                 aria-label="Search location"
             />
