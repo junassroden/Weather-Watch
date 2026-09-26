@@ -16,7 +16,7 @@ export default function Header({ onUseLocation, onLocationSelect, showSearch = t
         <header className="site-header">
             <div className="container header-inner">
                 <NavLink to="/" className="brand">
-                    <span className="brand-mark"><CloudSun size={19} weight="thin" /></span>
+                    <span className="brand-mark"><CloudSun size={19} strokeWidth={1} /></span>
                     <span className="brand-name">WeatherWatch</span>
                 </NavLink>
 
@@ -26,12 +26,12 @@ export default function Header({ onUseLocation, onLocationSelect, showSearch = t
                     aria-label="Toggle navigation"
                     aria-expanded={menuOpen}
                 >
-                    {menuOpen ? <X size={19} weight="thin" /> : <List size={19} weight="thin" />}
+                    {menuOpen ? <X size={19} strokeWidth={1} /> : <List size={19} strokeWidth={1} />}
                 </button>
 
                 <nav className={`desktop-nav ${menuOpen ? "is-open" : ""}`}>
-                    <NavLink to="/current-weather" className={navClass} onClick={close}>Current Weather</NavLink>
-                    <NavLink to="/satellite-radar" className={navClass} onClick={close}>Satellite &amp; Radar</NavLink>
+                    <NavLink to="/current-weather" className={navClass} onClick={close}>Current</NavLink>
+                    <NavLink to="/satellite-radar" className={navClass} onClick={close}>Satellite</NavLink>
                     <NavLink to="/forecast" className={navClass} onClick={close}>Forecast</NavLink>
                     <NavLink to="/weather-history" className={navClass} onClick={close}>History</NavLink>
                     <NavLink to="/alerts" className={navClass} onClick={close}>Alerts</NavLink>
@@ -52,11 +52,11 @@ export default function Header({ onUseLocation, onLocationSelect, showSearch = t
                         title="Use my location"
                         type="button"
                     >
-                        <Crosshair size={17} weight="thin" />
+                        <Crosshair size={17} strokeWidth={1} />
                     </button>
 
                     <NavLink to="/alerts" className="header-icon-button" title="Alerts">
-                        <Bell size={17} weight="thin" />
+                        <Bell size={17} strokeWidth={1} />
                     </NavLink>
                 </div>
             </div>

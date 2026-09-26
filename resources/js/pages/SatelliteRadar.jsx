@@ -260,19 +260,19 @@ export default function SatelliteRadar() {
                             {radar && (
                                 <div className="radar-information">
                                     <div className="radar-info-line">
-                                        <Radar size={19} weight="thin" />
+                                        <Radar size={19} strokeWidth={1} />
                                         <span>PROVIDER</span>
                                         <strong>{radar.provider}</strong>
                                     </div>
 
                                     <div className="radar-info-line">
-                                        <Database size={19} weight="thin" />
+                                        <Database size={19} strokeWidth={1} />
                                         <span>AVAILABLE FRAMES</span>
                                         <strong>{radar.frames?.length || 0}</strong>
                                     </div>
 
                                     <div className="radar-info-line">
-                                        <Satellite size={19} weight="thin" />
+                                        <Satellite size={19} strokeWidth={1} />
                                         <span>DATA TYPE</span>
                                         <strong>Past Radar</strong>
                                     </div>
@@ -293,7 +293,7 @@ export default function SatelliteRadar() {
 
                                 <div className={`storm-watch storm-watch-${stormWatch.tone}`}>
                                     <div className="satellite-panel-heading">
-                                        <CloudLightning size={19} weight="thin" />
+                                        <CloudLightning size={19} strokeWidth={1} />
                                         <span>STORM WATCH</span>
                                     </div>
                                     <strong>{stormWatch.level}</strong>
@@ -304,7 +304,7 @@ export default function SatelliteRadar() {
                                 <div className="satellite-reading-list">
                                     <div className="satellite-reading-row">
                                         <div className="satellite-reading-label">
-                                            <Gauge size={17} weight="thin" />
+                                            <Gauge size={17} strokeWidth={1} />
                                             <span>PRESSURE FIELD</span>
                                         </div>
                                         <div className="satellite-reading-value">
@@ -334,7 +334,7 @@ export default function SatelliteRadar() {
 
                                     <div className="satellite-reading-row">
                                         <div className="satellite-reading-label">
-                                            <Wind size={17} weight="thin" />
+                                            <Wind size={17} strokeWidth={1} />
                                             <span>HAZARD INDEX</span>
                                         </div>
                                         <div className="satellite-reading-value">

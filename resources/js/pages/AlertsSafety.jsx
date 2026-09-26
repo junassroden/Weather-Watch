@@ -127,7 +127,7 @@ export default function AlertsSafety() {
                         <div className="error-panel">
                             <TriangleAlert
                                 size={19}
-                                weight="thin"
+                                strokeWidth={1}
                             />
 
                             {error}
@@ -162,12 +162,12 @@ export default function AlertsSafety() {
                                                 ?.length ? (
                                                 <ShieldAlert
                                                     size={28}
-                                                    weight="thin"
+                                                    strokeWidth={1}
                                                 />
                                             ) : (
                                                 <CircleCheck
                                                     size={28}
-                                                    weight="thin"
+                                                    strokeWidth={1}
                                                 />
                                             )}
 
@@ -224,7 +224,7 @@ export default function AlertsSafety() {
                                         href="tel:911"
                                         className="emergency-button"
                                     >
-                                        <Phone size={20} weight="thin" />
+                                        <Phone size={20} strokeWidth={1} />
 
                                         CALL 911
                                     </a>

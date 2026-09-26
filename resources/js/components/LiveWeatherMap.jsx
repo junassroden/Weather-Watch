@@ -185,7 +185,7 @@ function LocationController({
             onClick={locate}
             title="Use my location"
         >
-            <Crosshair size={18} weight="thin" />
+            <Crosshair size={18} strokeWidth={1} />
         </button>
     );
 }
@@ -701,7 +701,7 @@ export default function LiveWeatherMap({
                         }
                         title="Toggle radar"
                     >
-                        <Radar size={18} weight="thin" />
+                        <Radar size={18} strokeWidth={1} />
                     </button>
 
                     <button
@@ -718,7 +718,7 @@ export default function LiveWeatherMap({
                         title="Toggle satellite basemap"
                     >
                         {basemapVisible ? (
-                            <Satellite size={18} weight="thin" />
+                            <Satellite size={18} strokeWidth={1} />
                         ) : (
                             <Layers size={18} strokeWidth={1} />
                         )}
@@ -726,7 +726,7 @@ export default function LiveWeatherMap({
 
                     {cloudAvailable && (
                         <span className="map-layer-status cloud-layer-active">
-                            <Cloud size={14} weight="thin" /> CLOUD SATELLITE ACTIVE
+                            <Cloud size={14} strokeWidth={1} /> CLOUD SATELLITE ACTIVE
                         </span>
                     )}
 
@@ -743,7 +743,7 @@ export default function LiveWeatherMap({
 
                         <LoaderCircle
                             size={22}
-                            weight="thin"
+                            strokeWidth={1}
                             className="spin"
                         />
 
@@ -799,7 +799,7 @@ export default function LiveWeatherMap({
                         >
                             <ChevronLeft
                                 size={18}
-                                weight="thin"
+                                strokeWidth={1}
                             />
                         </button>
 
@@ -816,12 +816,12 @@ export default function LiveWeatherMap({
                         >
                             {isPlaying ? (
                                 <>
-                                    <Pause size={17} weight="light" />
+                                    <Pause size={17} strokeWidth={1.4} />
                                     <span>Stop</span>
                                 </>
                             ) : (
                                 <>
-                                    <Play size={17} weight="light" />
+                                    <Play size={17} strokeWidth={1.4} />
                                     <span>Play live</span>
                                 </>
                             )}
@@ -883,7 +883,7 @@ export default function LiveWeatherMap({
                         >
                             <ChevronRight
                                 size={18}
-                                weight="thin"
+                                strokeWidth={1}
                             />
                         </button>
 

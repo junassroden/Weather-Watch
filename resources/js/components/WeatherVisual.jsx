@@ -158,7 +158,7 @@ export default function WeatherIcon({
     return (
         <Icon
             size={size}
-            weight="thin"
+            strokeWidth={1}
             className={`weather-icon ${className}`}
             aria-hidden="true"
         />
