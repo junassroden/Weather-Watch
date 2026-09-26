@@ -77,7 +77,16 @@ function MapController({
     const map = useMap();
 
     useEffect(() => {
-        if (hasValidCoordinates(latitude, longitude)) {
+        if (!hasValidCoordinates(latitude, longitude)) {
+            return undefined;
+        }
+
+        const frame = requestAnimationFrame(() => {
+            const size = map.getSize();
+            if (!Number.isFinite(size.x) || !Number.isFinite(size.y) || size.x <= 0 || size.y <= 0) {
+                return;
+            }
+
             map.flyTo(
                 [latitude, longitude],
                 7,
@@ -85,7 +94,9 @@ function MapController({
                     duration: 1.2,
                 }
             );
-        }
+        });
+
+        return () => cancelAnimationFrame(frame);
     }, [latitude, longitude, map]);
 
     return null;

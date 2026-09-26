@@ -1,5 +1,6 @@
 import {
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -16,6 +17,7 @@ import RiskCard from "../components/RiskCard";
 import {
     getAlerts,
     getRisk,
+    reverseLocation,
 } from "../services/api";
 
 export default function AlertsSafety() {
@@ -31,7 +33,41 @@ export default function AlertsSafety() {
     const [error, setError] =
         useState("");
 
+    const [locationName, setLocationName] =
+        useState("Current location");
+
+    const locationRequestRef = useRef(0);
+
+    const handleLocationSelect = async (result) => {
+        const requestId = ++locationRequestRef.current;
+        const latitude = Number(result.latitude);
+        const longitude = Number(result.longitude);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+            || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+            setError("That search result does not include a valid location.");
+            return;
+        }
+        setLocationName(result.name);
+        setLoading(true);
+        setError("");
+
+        const results = await Promise.allSettled([
+            getAlerts(latitude, longitude),
+            getRisk(latitude, longitude),
+        ]);
+        if (requestId !== locationRequestRef.current) return;
+
+        const [alertResult, riskResult] = results;
+        setAlerts(alertResult.status === "fulfilled" ? alertResult.value : null);
+        setRisk(riskResult.status === "fulfilled" ? riskResult.value : null);
+        if (alertResult.status === "rejected" && riskResult.status === "rejected") {
+            setError("Unable to retrieve safety information for this location.");
+        }
+        setLoading(false);
+    };
+
     useEffect(() => {
+        const requestId = ++locationRequestRef.current;
         if (!navigator.geolocation) {
             setError(
                 "Geolocation is not supported."
@@ -44,6 +80,7 @@ export default function AlertsSafety() {
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
+                if (requestId !== locationRequestRef.current) return;
                 const latitude =
                     position.coords.latitude;
 
@@ -51,10 +88,7 @@ export default function AlertsSafety() {
                     position.coords.longitude;
 
                 try {
-                    const [
-                        alertData,
-                        riskData,
-                    ] = await Promise.all([
+                    const [alertData, riskData, locationData] = await Promise.all([
                         getAlerts(
                             latitude,
                             longitude
@@ -63,24 +97,29 @@ export default function AlertsSafety() {
                             latitude,
                             longitude
                         ),
+                        reverseLocation(latitude, longitude),
                     ]);
 
+                    if (requestId !== locationRequestRef.current) return;
                     setAlerts(
                         alertData
                     );
-
                     setRisk(
                         riskData
                     );
+                    setLocationName(locationData.city || locationData.locality || "Current location");
                 } catch {
                     setError(
                         "Unable to retrieve safety information."
                     );
                 } finally {
-                    setLoading(false);
+                    if (requestId === locationRequestRef.current) {
+                        setLoading(false);
+                    }
                 }
             },
             () => {
+                if (requestId !== locationRequestRef.current) return;
                 setError(
                     "Location permission was denied."
                 );
@@ -93,7 +132,7 @@ export default function AlertsSafety() {
     return (
         <div className="weather-app">
 
-            <Header />
+            <Header onLocationSelect={handleLocationSelect} />
 
             <main className="page-content">
 
@@ -111,8 +150,7 @@ export default function AlertsSafety() {
 
                         <p>
                             Monitor weather risks and
-                            available official alerts
-                            for your location.
+                            available official alerts for {locationName}.
                         </p>
 
                     </div>

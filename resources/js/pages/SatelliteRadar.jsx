@@ -1,6 +1,7 @@
 import {
     useCallback,
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -110,6 +111,8 @@ export default function SatelliteRadar() {
     const [locationName, setLocationName] =
         useState("Current location");
 
+    const locationRequestRef = useRef(0);
+
     const handleRadarLoaded = useCallback((data) => {
         setRadar(data);
     }, []);
@@ -123,7 +126,36 @@ export default function SatelliteRadar() {
         // network request from the map's radar-frame fetch.
     }, []);
 
+    const handleLocationSelect = async (result) => {
+        const requestId = ++locationRequestRef.current;
+        const latitude = Number(result.latitude);
+        const longitude = Number(result.longitude);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+            || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+            setError("That search result does not include a valid map location.");
+            return;
+        }
+        setCoordinates({ latitude, longitude });
+        setLocationName(result.name);
+        setLoading(true);
+        setError("");
+
+        const results = await Promise.allSettled([
+            getCurrentWeather(latitude, longitude),
+            getForecast(latitude, longitude),
+            getRisk(latitude, longitude),
+        ]);
+        if (requestId !== locationRequestRef.current) return;
+
+        const [weatherResult, forecastResult, riskResult] = results;
+        setWeather(weatherResult.status === "fulfilled" ? weatherResult.value : null);
+        setForecast(forecastResult.status === "fulfilled" ? forecastResult.value : null);
+        setRisk(riskResult.status === "fulfilled" ? riskResult.value : null);
+        setLoading(false);
+    };
+
     useEffect(() => {
+        const requestId = ++locationRequestRef.current;
         const controller = new AbortController();
         let cancelled = false;
 
@@ -135,7 +167,7 @@ export default function SatelliteRadar() {
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
-                if (cancelled) return;
+                if (cancelled || requestId !== locationRequestRef.current) return;
 
                 const { latitude, longitude } = position.coords;
 
@@ -160,7 +192,7 @@ export default function SatelliteRadar() {
                         }),
                     ]);
 
-                    if (cancelled) return;
+                    if (cancelled || requestId !== locationRequestRef.current) return;
 
                     const [weatherResult, forecastResult, riskResult, locationResult] = results;
 
@@ -184,12 +216,13 @@ export default function SatelliteRadar() {
                         );
                     }
                 } finally {
-                    if (!cancelled) {
+                    if (!cancelled && requestId === locationRequestRef.current) {
                         setLoading(false);
                     }
                 }
             },
             () => {
+                if (cancelled || requestId !== locationRequestRef.current) return;
                 setError("Allow location access to view local satellite telemetry.");
                 setLoading(false);
             },
@@ -210,7 +243,7 @@ export default function SatelliteRadar() {
     return (
         <div className="weather-app">
 
-            <Header />
+            <Header onLocationSelect={handleLocationSelect} />
 
             <main className="page-content">
 

@@ -12,13 +12,13 @@ import {
 } from "react";
 
 import Dashboard from "./pages/Dashboard";
-import CurrentWeather from "./pages/CurrentWeather";
 import Forecast from "./pages/Forecast";
 import SatelliteRadar from "./pages/SatelliteRadar";
 import WeatherHistory from "./pages/WeatherHistory";
 import AlertsSafety from "./pages/AlertsSafety";
 
 import "./app.css";
+import "./weather-log.css";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
@@ -52,7 +52,7 @@ function App() {
 
                 <Route
                     path="/current-weather"
-                    element={<CurrentWeather />}
+                    element={<Dashboard />}
                 />
 
                 <Route

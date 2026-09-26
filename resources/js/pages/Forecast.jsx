@@ -1,5 +1,5 @@
 import ForecastExperience from "../components/ForecastExperience";
 
 export default function Forecast() {
-    return <ForecastExperience />;
+    return <ForecastExperience view="forecast" />;
 }
