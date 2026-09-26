@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import { getWeatherType } from "./WeatherVisual";
 
 /* ------------------------------------------------------------------ */
@@ -55,14 +57,51 @@ export default function WeatherIllustration({
     animated = true,
     className = "",
 }) {
+    const src = weatherIllustrationSrc(code, isDay);
+
+    // Two layers: the incoming illustration fades/scales in while the
+    // outgoing one fades/scales out, instead of the condition icon
+    // hard-cutting the instant new data arrives.
+    const [layers, setLayers] = useState(() => ({ current: src, previous: null }));
+    const clearTimerRef = useRef(null);
+
+    useEffect(() => {
+        setLayers((prev) => (prev.current === src ? prev : { current: src, previous: prev.current }));
+    }, [src]);
+
+    useEffect(() => {
+        if (!layers.previous) return undefined;
+        clearTimeout(clearTimerRef.current);
+        clearTimerRef.current = setTimeout(() => {
+            setLayers((prev) => ({ ...prev, previous: null }));
+        }, 700);
+        return () => clearTimeout(clearTimerRef.current);
+    }, [layers.previous]);
+
     return (
-        <img
-            src={weatherIllustrationSrc(code, isDay)}
-            width={size}
-            height={size}
-            alt=""
+        <span
+            className={`weather-illustration-frame ${animated ? "is-animated" : ""} ${className}`}
+            style={{ width: size, height: size }}
+            role="img"
+            aria-label=""
             aria-hidden="true"
-            className={`weather-illustration ${animated ? "is-animated" : ""} ${className}`}
-        />
+        >
+            {layers.previous && (
+                <img
+                    key={layers.previous}
+                    src={layers.previous}
+                    alt=""
+                    aria-hidden="true"
+                    className="weather-illustration is-leaving"
+                />
+            )}
+            <img
+                key={layers.current}
+                src={layers.current}
+                alt=""
+                aria-hidden="true"
+                className="weather-illustration is-entering"
+            />
+        </span>
     );
 }

@@ -159,10 +159,10 @@ export default function ForecastExperience() {
                 <div className="container">
                     {error && (
                         <div className="error-panel">
-                            <TriangleAlert size={18} weight="thin" />
+                            <TriangleAlert size={18} strokeWidth={1} />
                             <span>{error}</span>
                             <button type="button" onClick={requestLocation}>
-                                <RotateCcw size={15} weight="thin" />
+                                <RotateCcw size={15} strokeWidth={1} />
                                 Retry
                             </button>
                         </div>
@@ -200,18 +200,22 @@ export default function ForecastExperience() {
                                 <span>{today}</span>
                             </div>
 
+                            <div className="current-panel-feelslike">
+                                Feels like {weather?.feels_like == null ? "--" : Math.round(weather.feels_like)}{tempUnit}
+                            </div>
+
                             <ul className="current-panel-facts">
                                 <li>
                                     <WeatherIcon code={weather?.weather_code} isDay={isDay} size={17} />
                                     {weather ? weatherLabel(weather.weather_code) : "Waiting for conditions"}
                                 </li>
                                 <li>
-                                    <ThermometerSnowflake size={17} weight="thin" />
+                                    <ThermometerSnowflake size={17} strokeWidth={1} />
                                     Min Temperature –{" "}
                                     {todayLow == null ? "--" : `${Math.round(todayLow)}${tempUnit}`}
                                 </li>
                                 <li>
-                                    <Thermometer size={17} weight="thin" />
+                                    <Thermometer size={17} strokeWidth={1} />
                                     Max Temperature –{" "}
                                     {todayHigh == null ? "--" : `${Math.round(todayHigh)}${tempUnit}`}
                                 </li>
@@ -231,7 +235,7 @@ export default function ForecastExperience() {
                                 </div>
 
                                 <div>
-                                    <Wind size={20} weight="thin" />
+                                    <Wind size={20} strokeWidth={1} />
                                     <div>
                                         <strong>
                                             {weather?.wind_speed == null
@@ -319,55 +323,63 @@ export default function ForecastExperience() {
                                 </article>
 
                                 <div className="overview-metrics">
-                                    <div className="overview-metric-row">
-                                        <img src={uvIcon} alt="" width={22} height={22} />
-                                        <div className="overview-metric-text">
-                                            <span>UV Index</span>
-                                            <strong>
-                                                {weather?.uv_index == null ? "--" : Math.round(weather.uv_index)}
-                                            </strong>
-                                        </div>
-                                        <span className={`overview-metric-status stat-status-${uv.tone}`}>{uv.label}</span>
-                                    </div>
+                                    <div className="overview-metric-group">
+                                        <span className="overview-group-label">Atmosphere</span>
 
-                                    <div className="overview-metric-row">
-                                        <img src={barometerIcon} alt="" width={22} height={22} />
-                                        <div className="overview-metric-text">
-                                            <span>Pressure</span>
-                                            <strong>
-                                                {weather?.pressure == null ? "--" : Math.round(weather.pressure)}
-                                                <small>{weather?.units?.pressure_msl || "hPa"}</small>
-                                            </strong>
-                                        </div>
-                                        <span className={`overview-metric-status stat-status-${pressure.tone}`}>{pressure.label}</span>
-                                    </div>
-
-                                    <div className="overview-metric-row">
-                                        <img src={humidityIcon} alt="" width={22} height={22} />
-                                        <div className="overview-metric-text">
-                                            <span>Humidity</span>
-                                            <strong>
-                                                {weather?.humidity == null ? "--" : Math.round(weather.humidity)}
-                                                <small>%</small>
-                                            </strong>
-                                        </div>
-                                        <span className={`overview-metric-status stat-status-${humidity.tone}`}>{humidity.label}</span>
-                                    </div>
-
-                                    <div className="overview-metric-row overview-metric-row-split">
-                                        <div className="overview-metric-half">
-                                            <img src={sunriseIcon} alt="" width={22} height={22} />
+                                        <div className="overview-metric-row">
+                                            <img src={humidityIcon} alt="" width={22} height={22} />
                                             <div className="overview-metric-text">
-                                                <span>Sunrise</span>
-                                                <strong>{formatTime(daily?.sunrise?.[0])}</strong>
+                                                <span>Humidity</span>
+                                                <strong>
+                                                    {weather?.humidity == null ? "--" : Math.round(weather.humidity)}
+                                                    <small>%</small>
+                                                </strong>
+                                            </div>
+                                            <span className={`overview-metric-status stat-status-${humidity.tone}`}>{humidity.label}</span>
+                                        </div>
+
+                                        <div className="overview-metric-row">
+                                            <img src={barometerIcon} alt="" width={22} height={22} />
+                                            <div className="overview-metric-text">
+                                                <span>Pressure</span>
+                                                <strong>
+                                                    {weather?.pressure == null ? "--" : Math.round(weather.pressure)}
+                                                    <small>{weather?.units?.pressure_msl || "hPa"}</small>
+                                                </strong>
+                                            </div>
+                                            <span className={`overview-metric-status stat-status-${pressure.tone}`}>{pressure.label}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="overview-metric-group">
+                                        <span className="overview-group-label">Sun</span>
+
+                                        <div className="overview-metric-row overview-metric-row-split">
+                                            <div className="overview-metric-half">
+                                                <img src={sunriseIcon} alt="" width={22} height={22} />
+                                                <div className="overview-metric-text">
+                                                    <span>Sunrise</span>
+                                                    <strong>{formatTime(daily?.sunrise?.[0])}</strong>
+                                                </div>
+                                            </div>
+                                            <div className="overview-metric-half">
+                                                <img src={sunsetIcon} alt="" width={22} height={22} />
+                                                <div className="overview-metric-text">
+                                                    <span>Sunset</span>
+                                                    <strong>{formatTime(daily?.sunset?.[0])}</strong>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="overview-metric-half">
-                                            <img src={sunsetIcon} alt="" width={22} height={22} />
+
+                                        <div className="overview-metric-row">
+                                            <img src={uvIcon} alt="" width={22} height={22} />
                                             <div className="overview-metric-text">
-                                                <span>Sunset</span>
-                                                <strong>{formatTime(daily?.sunset?.[0])}</strong>
+                                                <span>UV Index</span>
+                                                <strong>
+                                                    {weather?.uv_index == null ? "--" : Math.round(weather.uv_index)}
+                                                </strong>
                                             </div>
+                                            <span className={`overview-metric-status stat-status-${uv.tone}`}>{uv.label}</span>
                                         </div>
                                     </div>
                                 </div>

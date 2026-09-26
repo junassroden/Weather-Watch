@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T00:00:00.000Z",
+  "title": "Design System: WeatherWatch",
+  "extensions": {
+    "colorMeta": {
+      "deep": {
+        "role": "neutral",
+        "displayName": "Deep Instrument Ground",
+        "canonical": "#0a1016",
+        "description": "Primary page ground and dark header foundation.",
+        "tonalRamp": ["#05080b", "#0a1016", "#101820", "#17242d", "#1d2d37", "#31434b", "#60747b", "#edf2ef"]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel Blue-Black",
+        "canonical": "#17242d",
+        "description": "Shared surface for modules, controls, cards, and navigation.",
+        "tonalRamp": ["#0a1016", "#101820", "#17242d", "#1d2d37", "#31434b", "#60747b", "#8da0a5", "#edf2ef"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "#edf2ef",
+        "description": "Primary headings and confirmed readings.",
+        "tonalRamp": ["#101820", "#31434b", "#60747b", "#8da0a5", "#aab9ba", "#c3d0cf", "#dbe4e1", "#edf2ef"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Slate",
+        "canonical": "#8da0a5",
+        "description": "Supporting copy and inactive navigation.",
+        "tonalRamp": ["#17242d", "#31434b", "#60747b", "#8da0a5", "#aab9ba", "#c3d0cf", "#dbe4e1", "#edf2ef"]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint Slate",
+        "canonical": "#60747b",
+        "description": "Metadata, disclaimers, and low-priority labels.",
+        "tonalRamp": ["#0a1016", "#17242d", "#31434b", "#60747b", "#8da0a5", "#aab9ba", "#c3d0cf", "#edf2ef"]
+      },
+      "cyan": {
+        "role": "primary",
+        "displayName": "Telemetry Cyan",
+        "canonical": "#75d4d2",
+        "description": "Active telemetry, icons, focus, live controls, and current navigation.",
+        "tonalRamp": ["#0c3338", "#14545a", "#1f6b73", "#287d85", "#4aa7aa", "#75d4d2", "#a6e4e1", "#e3f7f4"]
+      },
+      "cyan-deep": {
+        "role": "secondary",
+        "displayName": "Deep Cyan",
+        "canonical": "#287d85",
+        "description": "Quiet active borders and secondary telemetry emphasis.",
+        "tonalRamp": ["#0c3338", "#14545a", "#1f6b73", "#287d85", "#4aa7aa", "#75d4d2", "#a6e4e1", "#e3f7f4"]
+      },
+      "amber": {
+        "role": "state",
+        "displayName": "Signal Amber",
+        "canonical": "#f2b35f",
+        "description": "Attention, watch conditions, sun readings, and emergency action.",
+        "tonalRamp": ["#4c2b0b", "#7a4814", "#a8661e", "#cf8b39", "#f2b35f", "#f7ca8b", "#fbe0b8", "#fff4df"]
+      },
+      "red": {
+        "role": "state",
+        "displayName": "Severity Red",
+        "canonical": "#ee7c73",
+        "description": "High or severe risk and error emphasis.",
+        "tonalRamp": ["#521b1b", "#852b2a", "#b8453f", "#d96058", "#ee7c73", "#f5a09a", "#fac7c3", "#fff0ee"]
+      },
+      "green": {
+        "role": "state",
+        "displayName": "Clear Green",
+        "canonical": "#83cf9b",
+        "description": "Low-risk, clear, and live status.",
+        "tonalRamp": ["#133d25", "#1e6739", "#398854", "#5eb777", "#83cf9b", "#a9dfb5", "#ccefd2", "#effbf1"]
+      },
+      "rule": {
+        "role": "utility",
+        "displayName": "Hairline Rule",
+        "canonical": "rgba(183,211,213,.18)",
+        "description": "Low-contrast module borders and separators.",
+        "tonalRamp": ["rgba(183,211,213,.08)", "rgba(183,211,213,.12)", "rgba(183,211,213,.18)", "rgba(183,211,213,.24)", "rgba(183,211,213,.34)", "#60747b", "#c3d0cf", "#edf2ef"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Dashboard and page titles; tight and readable at large scale." },
+      "body": { "displayName": "Body", "purpose": "Explanatory copy, service messages, and navigation in DM Sans." },
+      "label": { "displayName": "Telemetry Label", "purpose": "Uppercase mono labels for data provenance, sections, and states." },
+      "reading": { "displayName": "Instrument Reading", "purpose": "Measurements, timestamps, scores, and controls in IBM Plex Mono." }
+    },
+    "shadows": [
+      { "name": "search-results", "value": "0 16px 30px rgba(0,0,0,.3)", "purpose": "Separates the transient location-result popover from the sticky header." },
+      { "name": "current-reading", "value": "0 24px 60px rgba(0,0,0,.18)", "purpose": "Softly lifts the translucent current-reading surface from the instrument ground." },
+      { "name": "glass-module", "value": "0 18px 42px rgba(0,0,0,.14)", "purpose": "Provides restrained depth for risk and alert glass modules." },
+      { "name": "forecast-card", "value": "0 16px 34px rgba(0,0,0,.12)", "purpose": "Separates weekly forecast cards while their WMO-driven atmosphere sits behind the readings." }
+    ],
+    "motion": [
+      { "name": "desk-reveal", "value": "0.55s cubic-bezier(.16,1,.3,1)", "purpose": "Subtle dashboard content entrance from 10px below." },
+      { "name": "radar-pulse", "value": "2s infinite", "purpose": "Repeating location marker pulse on the live map." },
+      { "name": "weather-scene", "value": "CSS keyframes for cloud drift, corona, varied-depth rain, snow, fog, restrained flash, lightning, wind, and neutral scan", "purpose": "Condition-specific atmospheric motion inside the bounded weather visual; no rendering dependency." },
+      { "name": "glass-surfaces", "value": "backdrop-filter blur(10px-18px) with translucent panel borders", "purpose": "Controlled translucency for the header, current reading, hourly strip, risk/alerts, and weekly forecast cards; the map shell uses soft depth with opaque controls." },
+      { "name": "reduced-motion", "value": "animation-duration:.01ms; transition-duration:.01ms", "purpose": "Disables meaningful motion when prefers-reduced-motion is enabled." }
+    ],
+    "breakpoints": [
+      { "name": "rail-narrow", "value": "1100px" },
+      { "name": "mobile", "value": "720px" },
+      { "name": "compact", "value": "430px" }
+    ],
+    "roundedMeta": {
+      "none": { "value": "0px", "purpose": "All primary modules, controls, cards, alerts, and frames." },
+      "dot": { "value": "50%", "purpose": "Status dots, location marker, and marker pulse only." }
+    }
+  },
+  "components": [
+    {
+      "name": "Utility Button",
+      "kind": "button",
+      "refersTo": "button-utility",
+      "description": "Square panel control for location, alerts, menu, and map actions.",
+      "html": "<button type=\"button\" class=\"ds-utility-button\" aria-label=\"Use my location\"><span aria-hidden=\"true\">+</span></button>",
+      "css": ".ds-utility-button { width: 38px; height: 38px; display: grid; place-items: center; color: #c3d0cf; background: #17242d; border: 1px solid rgba(183,211,213,.18); border-radius: 0; cursor: pointer; } .ds-utility-button:hover { color: #edf2ef; background: #1d2d37; } .ds-utility-button:focus-visible { outline: 2px solid #75d4d2; outline-offset: 3px; }"
+    },
+    {
+      "name": "Location Search",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Compact location search with a ruled result popover.",
+      "html": "<form class=\"ds-search\"><span aria-hidden=\"true\">⌕</span><input type=\"search\" aria-label=\"Search location\" placeholder=\"Search location\"></form>",
+      "css": ".ds-search { width: 210px; height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 11px; color: #8da0a5; background: #17242d; border: 1px solid rgba(183,211,213,.18); border-radius: 0; } .ds-search input { width: 100%; color: #edf2ef; background: transparent; border: 0; outline: 0; font: 12px \"DM Sans\", sans-serif; } .ds-search input::placeholder { color: #60747b; } .ds-search input:focus-visible { outline: 2px solid #75d4d2; outline-offset: 3px; }"
+    },
+    {
+      "name": "Observation Navigation",
+      "kind": "nav",
+      "refersTo": "active-nav",
+      "description": "Header or rail link with a quiet panel active state.",
+      "html": "<nav class=\"ds-observation-nav\"><a class=\"ds-nav-link ds-nav-link-active\" href=\"/\">Current Weather</a><a class=\"ds-nav-link\" href=\"/forecast\">Forecast</a></nav>",
+      "css": ".ds-observation-nav { display: flex; gap: 4px; font: 600 12px \"DM Sans\", sans-serif; } .ds-nav-link { padding: 9px 11px; color: #8da0a5; border: 1px solid transparent; text-decoration: none; } .ds-nav-link:hover, .ds-nav-link-active { color: #edf2ef; background: #17242d; border-color: rgba(183,211,213,.18); } .ds-nav-link:focus-visible { outline: 2px solid #75d4d2; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ruled Data Module",
+      "kind": "card",
+      "refersTo": "ruled-module",
+      "description": "Flush square tile for a weather metric or forecast reading.",
+      "html": "<article class=\"ds-data-module\"><span class=\"ds-data-label\">Temperature</span><strong class=\"ds-data-value\">--</strong></article>",
+      "css": ".ds-data-module { min-height: 132px; padding: 16px; color: #edf2ef; background: #17242d; border: 1px solid rgba(183,211,213,.18); border-radius: 0; } .ds-data-label { color: #8da0a5; font: 400 11px \"DM Sans\", sans-serif; } .ds-data-value { display: block; margin-top: 20px; color: #edf2ef; font: 500 24px/1 \"IBM Plex Mono\", monospace; }"
+    },
+    {
+      "name": "Risk Assessment",
+      "kind": "custom",
+      "refersTo": "risk-card",
+      "description": "Application-generated weather risk with distinct status and disclaimer.",
+      "html": "<article class=\"ds-risk-card\"><h3>Current Assessment</h3><strong class=\"ds-risk-status\">● LOW</strong><p>No significant weather risk detected.</p><small>Not an official emergency warning.</small></article>",
+      "css": ".ds-risk-card { padding: 22px; color: #edf2ef; background: #17242d; border: 1px solid rgba(183,211,213,.18); border-radius: 0; } .ds-risk-card h3 { margin: 0; font: 700 18px/1.2 \"DM Sans\", sans-serif; } .ds-risk-status { display: block; margin: 24px 0 12px; color: #83cf9b; font: 500 14px \"IBM Plex Mono\", monospace; } .ds-risk-card p { color: #c3d0cf; line-height: 1.6; } .ds-risk-card small { color: #60747b; }"
+    },
+    {
+      "name": "Map Overlay",
+      "kind": "custom",
+      "refersTo": "live-weather-map",
+      "description": "Opaque instrument overlay that keeps radar controls legible over imagery.",
+      "html": "<div class=\"ds-map-overlay\"><strong>RADAR CAPTURE TIME</strong><span>No radar frame</span><button type=\"button\">Play live</button></div>",
+      "css": ".ds-map-overlay { display: grid; gap: 9px; padding: 15px; color: #edf2ef; background: rgba(13,23,30,.96); border: 1px solid rgba(183,211,213,.34); } .ds-map-overlay strong { color: #60747b; font: 400 10px \"IBM Plex Mono\", monospace; letter-spacing: .1em; } .ds-map-overlay span { font: 600 10px \"IBM Plex Mono\", monospace; } .ds-map-overlay button { width: max-content; padding: 9px 11px; color: #75d4d2; background: #17242d; border: 1px solid rgba(183,211,213,.18); border-radius: 0; } .ds-map-overlay button:focus-visible { outline: 2px solid #75d4d2; outline-offset: 3px; }"
+    },
+    {
+      "name": "Emergency Action",
+      "kind": "button",
+      "refersTo": "button-emergency",
+      "description": "High-clarity amber call action reserved for immediate help.",
+      "html": "<a class=\"ds-emergency-button\" href=\"tel:911\">CALL 911</a>",
+      "css": ".ds-emergency-button { display: inline-flex; align-items: center; padding: 10px 13px; color: #101820; background: #f2b35f; border: 0; border-radius: 0; font: 600 11px \"IBM Plex Mono\", monospace; text-decoration: none; } .ds-emergency-button:hover { background: #f7ca8b; } .ds-emergency-button:focus-visible { outline: 2px solid #75d4d2; outline-offset: 3px; }"
+    },
+    {
+      "name": "Condition Weather Scene",
+      "kind": "custom",
+      "refersTo": "weather-scene",
+      "description": "Accessible CSS weather scene selected from WMO condition codes, with irregular volumetric cloud depth, atmospheric sun/moon, varied precipitation, restrained storm flash/lightning, and a neutral loading state.",
+      "html": "<div class=\"ds-weather-scene\" role=\"img\" aria-label=\"Waiting for conditions\"><span class=\"ds-weather-scan-orb\" aria-hidden=\"true\"></span></div>",
+      "css": ".ds-weather-scene { position: relative; width: 180px; height: 150px; overflow: hidden; color: #75d4d2; background: #0a1016; perspective: 520px; transform-style: preserve-3d; } .ds-weather-scan-orb { position: absolute; top: 27%; left: 35%; width: 30%; aspect-ratio: 1; border: 1px solid #75d4d2; border-radius: 50%; opacity: .55; box-shadow: 0 0 0 8px rgba(117,212,210,.05), 0 0 0 18px rgba(117,212,210,.03); animation: ds-weather-scan 2.8s ease-in-out infinite; } @keyframes ds-weather-scan { 0%,100% { opacity: .3; transform: translateZ(24px) scale(.86); } 50% { opacity: .8; transform: translateZ(24px) scale(1.08); } } @media (prefers-reduced-motion: reduce) { .ds-weather-scan-orb { animation-duration: .01ms; animation-iteration-count: 1; } }"
+    },
+    {
+      "name": "Weekly Forecast Atmosphere",
+      "kind": "card",
+      "refersTo": "forecast-card",
+      "description": "Square translucent weekly card whose background environment and foreground visual both follow the daily WMO weather code.",
+      "html": "<article class=\"ds-forecast-card\"><div class=\"ds-forecast-environment\" aria-hidden=\"true\"></div><strong>Monday</strong><span>Clear sky</span><b>24°</b></article>",
+      "css": ".ds-forecast-card { position: relative; min-height: 150px; overflow: hidden; isolation: isolate; padding: 18px 12px; color: #edf2ef; background: rgba(23,36,45,.7); border: 1px solid rgba(183,211,213,.18); border-radius: 0; box-shadow: 0 16px 34px rgba(0,0,0,.12); backdrop-filter: blur(10px) saturate(115%); } .ds-forecast-environment { position: absolute; inset: 0; z-index: -1; opacity: .8; background: #13252b; } .ds-forecast-card > *:not(.ds-forecast-environment) { position: relative; z-index: 1; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Synoptic Instrument Desk",
+    "overview": "WeatherWatch is a dark, operational weather workspace: an ink-black ground, paper-white readings, cyan telemetry, and a single amber signal for attention. DM Sans carries the readable interface voice; IBM Plex Mono marks measurements, labels, timestamps, and data-state language. Hairline rules and square modules are joined by selective glass surfaces that add controlled blur, translucent borders, and soft depth only where hierarchy benefits from it.\n\nThe shipped topology makes the decision sequence visible: the persistent Weather Desk rail and header establish navigation and location, the dashboard leads with current conditions and the hourly strip, then risk, alerts, metrics, outlook, and radar follow. Forecast cards use the actual daily WMO code to create a matching atmospheric environment behind readable data. Forecast, Satellite & Radar, Weather History, and Alerts & Safety reuse the same explicit status vocabulary. Real Open-Meteo and RainViewer data remain distinguishable from unavailable, loading, partial, or application-generated information.",
+    "keyCharacteristics": [
+      "Ink-black instrument ground with cool paper readings.",
+      "Cyan is telemetry and interaction; amber is attention; red is severity; green is clear/live state.",
+      "Hairline rules, square panels, dense tabular readings, and selective glass depth.",
+      "WMO-driven weekly forecast atmospheres with readable foreground data.",
+      "Persistent desktop observation rail; compact utility navigation on small screens.",
+      "Loading, unavailable, permission, error, provider, and disclaimer states are written plainly."
+    ],
+    "rules": [
+      { "name": "The Signal Economy Rule", "body": "Cyan communicates telemetry and interaction; amber, red, and green communicate state. Do not use accents as decoration.", "section": "colors" },
+      { "name": "The Explicit State Rule", "body": "A value that is loading, unavailable, permission-blocked, provider-dependent, or application-generated must say so in text rather than looking like a confirmed reading.", "section": "colors" },
+      { "name": "The Readout Rule", "body": "Put confirmed measurements and time-like values in IBM Plex Mono; reserve DM Sans for meaning, explanation, and navigation.", "section": "typography" },
+      { "name": "The Compact Label Rule", "body": "Labels stay short, uppercase, mono, and low-contrast so they orient dense modules without competing with the reading.", "section": "typography" },
+      { "name": "The Density Exception Rule", "body": "Compact IBM Plex Mono labels and the fluid current reading (clamp(58px, 8vw, 104px)) are deliberate readout behaviors, not invitations to compress every text role.", "section": "typography" },
+      { "name": "The Selective Glass Rule", "body": "Use translucency and blur only for the named hierarchy surfaces: header, current reading, hourly strip, risk/alerts, map shell, and weekly forecast cards. Keep the rest of the desk opaque and ruled.", "section": "elevation" },
+      { "name": "The Soft Depth Rule", "body": "Glass surfaces use controlled blur, translucent borders, and low-contrast shadows; never turn the operational desk into a uniformly glossy layer.", "section": "elevation" },
+      { "name": "The Neutral Loading Scene Rule", "body": "Never imply a weather condition before API data arrives; unknown and loading are a neutral state with explicit text, not a guessed sky.", "section": "components" },
+      { "name": "The Weather Volume Rule", "body": "Keep dimensionality inside the weather visual's bounded CSS scene; the surrounding instrument desk remains square, ruled, and operational.", "section": "elevation" },
+      { "name": "The Atmospheric Forecast Rule", "body": "Let the actual daily WMO code choose the weekly card environment; never use a generic decorative sky for an unknown forecast.", "section": "components" }
+    ],
+    "dos": [
+      "Do use the existing custom properties in resources/js/app.css as the source of truth.",
+      "Do keep the visual hierarchy in the order of location, current conditions, forecast sequence, risk/alerts, supporting metrics, then radar/history context.",
+      "Do use real provider names and source notes where data comes from Open-Meteo, RainViewer, Esri imagery, or WeatherWatch assessment logic.",
+      "Do preserve explicit strings such as Loading forecast..., History API not connected, UNAVAILABLE, and Not an official emergency warning when data is incomplete or generated.",
+      "Do maintain keyboard-visible cyan focus treatment and respect prefers-reduced-motion: reduce.",
+      "Do use icons as compact functional marks and pair unfamiliar icon-only controls with an accessible label or title.",
+      "Do use the condition-driven CSS weather scene for WMO-backed visual context, including its atmospheric sun/moon, irregular volumetric cloud, varied-depth particle, restrained storm, and wind layers.",
+      "Do apply glass selectively to the header, current reading, hourly strip, risk/alerts, map shell, and weekly forecast cards, with controlled blur, translucent borders, and soft depth.",
+      "Do keep compact mono labels and current-reading scale as intentional density exceptions; preserve readable labels and data state language around them.",
+      "Do keep unknown/loading weather neutral and expose the condition through the visual's accessible label."
+    ],
+    "donts": [
+      "Don't introduce rounded cards, pill controls, or glass treatment into surfaces outside the named hierarchy; the weather scene's gradients and atmospheric effects are bounded native exceptions.",
+      "Don't turn unavailable or estimated values into visually confident readings.",
+      "Don't use amber, red, or green as general decoration; they carry attention and state meaning.",
+      "Don't replace the desktop observation rail and mobile utility bar with generic marketing navigation.",
+      "Don't hide provider, loading, permission, error, or alert provenance behind ambiguous empty space.",
+      "Don't add a second display typeface or a competing mono treatment without revisiting the instrument hierarchy.",
+      "Don't add Three.js, canvas, or another rendering dependency to the weather scene; the shipped implementation is CSS-based and dependency-free.",
+      "Don't make a loading scene look clear, cloudy, rainy, or severe before weather data is available.",
+      "Don't make weekly forecast environments contradict their daily WMO code or let atmospheric layers reduce the legibility of the card readings."
+    ]
+  }
+}

@@ -4,11 +4,12 @@ import Header from "../components/Header";
 import WeatherEnvironment from "../components/WeatherEnvironment";
 import WeatherIllustration from "../components/WeatherIllustration";
 import { getWeatherType, weatherLabel } from "../components/WeatherVisual";
-import { getCurrentWeather, reverseLocation } from "../services/api";
+import { getCurrentWeather, getForecast, reverseLocation } from "../services/api";
 
 export default function CurrentWeather() {
     const [weather, setWeather] = useState(null);
     const [locationName, setLocationName] = useState("");
+    const [forecast, setForecast] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -19,12 +20,14 @@ export default function CurrentWeather() {
         try {
             // Resolved together so the reading and its location label can
             // never come from two different places.
-            const [weatherData, locationData] = await Promise.all([
+            const [weatherData, forecastData, locationData] = await Promise.all([
                 getCurrentWeather(latitude, longitude),
+                getForecast(latitude, longitude),
                 reverseLocation(latitude, longitude),
             ]);
 
             setWeather(weatherData);
+            setForecast(forecastData);
             setLocationName(
                 searchedLocation
                 || locationData.city
@@ -93,8 +96,21 @@ export default function CurrentWeather() {
                                         <span>{weather.units?.temperature_2m || "°C"}</span>
                                     </div>
                                     <div className="current-weather-condition">
-                                        <WeatherIllustration code={weather.weather_code} isDay={isDay} size={64} />
-                                        {weatherLabel(weather.weather_code)}
+                                        <WeatherIllustration code={weather.weather_code} isDay={isDay} size={58} animated={false} />
+                                        <span>{weatherLabel(weather.weather_code)}</span>
+                                    </div>
+                                    <div className="current-weather-feelslike">
+                                        Feels like {weather.feels_like == null ? "--" : Math.round(weather.feels_like)}{weather.units?.apparent_temperature || "°C"}
+                                    </div>
+                                    <div className="current-weather-summary">
+                                        <span>{locationName || "Current location"}</span>
+                                        <span aria-hidden="true">•</span>
+                                        <span>{weather.time ? new Date(weather.time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
+                                        {forecast?.daily?.temperature_2m_max?.[0] != null && (
+                                            <span className="current-weather-highlow">
+                                                H {Math.round(forecast.daily.temperature_2m_max[0])}{weather.units?.temperature_2m || "°C"} · L {Math.round(forecast.daily.temperature_2m_min?.[0])}{weather.units?.temperature_2m || "°C"}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                                 </div>
