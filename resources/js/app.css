@@ -389,11 +389,6 @@ input { font: inherit; color: inherit; }
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.stat-card-title {
-    font-size: var(--fs-small);
-    color: var(--text-secondary);
-}
-
 .stat-status-good { color: var(--status-good); }
 .stat-status-moderate { color: var(--status-moderate); }
 .stat-status-high { color: var(--status-high); }
@@ -1774,8 +1769,7 @@ input { font: inherit; color: inherit; }
 .eyebrow,
 .map-eyebrow,
 .satellite-reading-label span,
-.radar-info-line span,
-.stat-card-title { font-family: var(--font-data); font-weight: 500; letter-spacing: 0.1em; }
+.radar-info-line span { font-family: var(--font-data); font-weight: 500; letter-spacing: 0.1em; }
 
 .forecast-workspace {
     grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.7fr);
@@ -2143,11 +2137,6 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-.current-weather-composition {
-    display: grid;
-    gap: 18px;
-}
-
 .current-weather-hero {
     min-height: 430px;
 }
@@ -2196,45 +2185,6 @@ body {
     padding-left: 4px;
 }
 
-.current-weather-metrics {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-top: 1px solid var(--hairline-strong);
-    border-bottom: 1px solid var(--hairline);
-}
-
-.current-weather-metric {
-    padding: 18px 18px 20px 0;
-    border-right: 1px solid var(--hairline);
-}
-
-.current-weather-metric:nth-child(4n) {
-    border-right: 0;
-    padding-right: 0;
-}
-
-.current-weather-metric span {
-    display: block;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    margin-bottom: 6px;
-}
-
-.current-weather-metric strong {
-    font-family: var(--font-data);
-    font-size: 1.08rem;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-}
-
-.current-weather-metric strong small {
-    margin-left: 3px;
-    color: var(--text-muted);
-    font-family: var(--font-ui);
-    font-size: 0.72rem;
-    font-weight: 500;
-}
-
 .live-map-section {
     background: rgba(12, 26, 41, 0.72);
     backdrop-filter: blur(14px);
@@ -2264,18 +2214,6 @@ body {
         border-radius: 7px;
     }
 
-    .current-weather-metrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .current-weather-metric:nth-child(2n) {
-        border-right: 0;
-        padding-right: 0;
-    }
-
-    .current-weather-metric:nth-child(4n) {
-        border-right: 0;
-    }
 }
 
 @media (max-width: 560px) {
@@ -2294,18 +2232,6 @@ body {
 
     .current-temperature {
         font-size: clamp(4.7rem, 23vw, 6.5rem);
-    }
-
-    .current-weather-metrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .current-weather-metric {
-        padding: 15px 14px 17px 0;
-    }
-
-    .current-weather-metric:nth-child(2n) {
-        padding-left: 14px;
     }
 
     .forecast-card {

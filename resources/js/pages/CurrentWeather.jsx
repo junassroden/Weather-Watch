@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
+import { Eye, Wind } from "lucide-react";
 
 import Header from "../components/Header";
-import WeatherEnvironment from "../components/WeatherEnvironment";
-import WeatherIllustration from "../components/WeatherIllustration";
-import { getWeatherType, weatherLabel } from "../components/WeatherVisual";
+import WeatherCard from "../components/WeatherCard";
+import StatCard from "../components/StatCard";
+import { getWeatherType } from "../components/WeatherVisual";
 import { getCurrentWeather, getForecast, reverseLocation } from "../services/api";
+import humidityIcon from "../assets/weather-icons/humidity.svg";
+import barometerIcon from "../assets/weather-icons/barometer.svg";
+import uvIcon from "../assets/weather-icons/uv-index.svg";
+import raindropsIcon from "../assets/weather-icons/raindrops.svg";
 
 export default function CurrentWeather() {
     const [weather, setWeather] = useState(null);
@@ -85,72 +90,65 @@ export default function CurrentWeather() {
                     {loading && !weather && <div className="page-loading">Loading current weather...</div>}
 
                     {weather && (
-                        <>
-                            <section className="current-weather-composition">
-                                <div className="current-weather-hero">
-                                <WeatherEnvironment code={weather.weather_code} isDay={isDay} className="hero-scene" />
-                                <div className="current-weather-copy">
-                                    <span className="eyebrow">LIVE CONDITIONS</span>
-                                    <div className="current-temperature">
-                                        {weather.temperature == null ? "--" : Math.round(weather.temperature)}
-                                        <span>{weather.units?.temperature_2m || "°C"}</span>
-                                    </div>
-                                    <div className="current-weather-condition">
-                                        <WeatherIllustration code={weather.weather_code} isDay={isDay} size={58} animated={false} />
-                                        <span>{weatherLabel(weather.weather_code)}</span>
-                                    </div>
-                                    <div className="current-weather-feelslike">
-                                        Feels like {weather.feels_like == null ? "--" : Math.round(weather.feels_like)}{weather.units?.apparent_temperature || "°C"}
-                                    </div>
-                                    <div className="current-weather-summary">
-                                        <span>{locationName || "Current location"}</span>
-                                        <span aria-hidden="true">•</span>
-                                        <span>{weather.time ? new Date(weather.time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
-                                        {forecast?.daily?.temperature_2m_max?.[0] != null && (
-                                            <span className="current-weather-highlow">
-                                                H {Math.round(forecast.daily.temperature_2m_max[0])}{weather.units?.temperature_2m || "°C"} · L {Math.round(forecast.daily.temperature_2m_min?.[0])}{weather.units?.temperature_2m || "°C"}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                </div>
+                        <div className="current-weather-layout">
+                            <WeatherCard
+                                weather={weather}
+                                forecast={forecast}
+                                locationName={locationName}
+                                isDay={isDay}
+                                loading={loading}
+                            />
 
-                                <div className="current-weather-metrics">
-                                    <div className="current-weather-metric metric-primary">
-                                        <span>Feels like</span>
-                                        <strong>{weather.feels_like == null ? "--" : Math.round(weather.feels_like)}<small>{weather.units?.apparent_temperature || "°C"}</small></strong>
-                                    </div>
-                                    <div className="current-weather-metric">
-                                        <span>Humidity</span>
-                                        <strong>{weather.humidity == null ? "--" : Math.round(weather.humidity)}<small>{weather.units?.relative_humidity_2m || "%"}</small></strong>
-                                    </div>
-                                    <div className="current-weather-metric">
-                                        <span>Wind</span>
-                                        <strong>{weather.wind_speed == null ? "--" : Math.round(weather.wind_speed)}<small>{weather.units?.wind_speed_10m || "km/h"}</small></strong>
-                                    </div>
-                                    <div className="current-weather-metric">
-                                        <span>Pressure</span>
-                                        <strong>{weather.pressure == null ? "--" : Math.round(weather.pressure)}<small>{weather.units?.pressure_msl || "hPa"}</small></strong>
-                                    </div>
-                                    <div className="current-weather-metric">
-                                        <span>Visibility</span>
-                                        <strong>{weather.visibility == null ? "--" : Math.round(weather.visibility / 1000)}<small>km</small></strong>
-                                    </div>
-                                    <div className="current-weather-metric">
-                                        <span>UV index</span>
-                                        <strong>{weather.uv_index == null ? "--" : Math.round(weather.uv_index)}</strong>
-                                    </div>
-                                    <div className="current-weather-metric">
-                                        <span>Precipitation</span>
-                                        <strong>{weather.precipitation == null ? "--" : weather.precipitation}<small>{weather.units?.precipitation || "mm"}</small></strong>
-                                    </div>
-                                    <div className="current-weather-metric">
-                                        <span>Wind gust</span>
-                                        <strong>{weather.wind_gust == null ? "--" : Math.round(weather.wind_gust)}<small>{weather.units?.wind_gusts_10m || "km/h"}</small></strong>
-                                    </div>
-                                </div>
-                            </section>
-                        </>
+                            <div className="current-weather-details glass-panel">
+                                <StatCard
+                                    title="Humidity"
+                                    iconSrc={humidityIcon}
+                                    value={weather.humidity == null ? null : Math.round(weather.humidity)}
+                                    unit={weather.units?.relative_humidity_2m || "%"}
+                                />
+
+                                <StatCard
+                                    title="Wind"
+                                    icon={Wind}
+                                    value={weather.wind_speed == null ? null : Math.round(weather.wind_speed)}
+                                    unit={weather.units?.wind_speed_10m || "km/h"}
+                                />
+
+                                <StatCard
+                                    title="Pressure"
+                                    iconSrc={barometerIcon}
+                                    value={weather.pressure == null ? null : Math.round(weather.pressure)}
+                                    unit={weather.units?.pressure_msl || "hPa"}
+                                />
+
+                                <StatCard
+                                    title="Visibility"
+                                    icon={Eye}
+                                    value={weather.visibility == null ? null : Math.round(weather.visibility / 1000)}
+                                    unit="km"
+                                />
+
+                                <StatCard
+                                    title="UV index"
+                                    iconSrc={uvIcon}
+                                    value={weather.uv_index == null ? null : Math.round(weather.uv_index)}
+                                />
+
+                                <StatCard
+                                    title="Precipitation"
+                                    iconSrc={raindropsIcon}
+                                    value={weather.precipitation == null ? null : weather.precipitation}
+                                    unit={weather.units?.precipitation || "mm"}
+                                />
+
+                                <StatCard
+                                    title="Wind gust"
+                                    icon={Wind}
+                                    value={weather.wind_gust == null ? null : Math.round(weather.wind_gust)}
+                                    unit={weather.units?.wind_gusts_10m || "km/h"}
+                                />
+                            </div>
+                        </div>
                     )}
                 </div>
             </main>

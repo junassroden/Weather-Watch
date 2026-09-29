@@ -1,6 +1,9 @@
-/* The single card shape used for every "Today's Overview" tile and, on
-   other pages, for any labelled metric. Title top-left, large value,
-   optional status word, optional icon bottom-right. */
+/* The one supporting-metric row used anywhere a labelled measurement
+   needs to appear — icon, label, value, optional status word. It reads
+   as a line in a list, not a floating box, so five or eight of these in
+   a row stay quiet instead of turning into a grid of equal-weight tiles.
+   Props are unchanged from the previous boxed version, so every existing
+   call site keeps working without edits. */
 export default function StatCard({
     title,
     value,
@@ -14,33 +17,28 @@ export default function StatCard({
     const available = value !== null && value !== undefined && value !== "";
 
     return (
-        <article className="stat-card">
-            <span className="stat-card-title">{title}</span>
+        <div className="overview-metric-row">
+            {iconSrc ? (
+                <img src={iconSrc} alt="" width={22} height={22} aria-hidden="true" />
+            ) : Icon ? (
+                <Icon size={20} strokeWidth={1} aria-hidden="true" />
+            ) : null}
 
-            <div className="stat-card-body">
-                <div className="stat-card-text">
-                    <div className="stat-card-value">
-                        {available ? value : "--"}
-                        {available && unit && <span>{unit}</span>}
-                    </div>
-
-                    {status && (
-                        <span className={`stat-card-status stat-status-${statusTone}`}>
-                            {status}
-                        </span>
-                    )}
-                </div>
-
-                {iconSrc ? (
-                    <img src={iconSrc} alt="" aria-hidden="true" className="stat-card-icon stat-card-icon-img" />
-                ) : Icon ? (
-                    <span className="stat-card-icon" aria-hidden="true">
-                        <Icon size={30} />
-                    </span>
-                ) : null}
+            <div className="overview-metric-text">
+                <span>{title}</span>
+                <strong>
+                    {available ? value : "--"}
+                    {available && unit && <small>{unit}</small>}
+                </strong>
             </div>
 
+            {status && (
+                <span className={`overview-metric-status stat-status-${statusTone}`}>
+                    {status}
+                </span>
+            )}
+
             {children}
-        </article>
+        </div>
     );
 }
