@@ -10,8 +10,9 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libsqlite3-dev \
     && docker-php-ext-install \
-    pdo_mysql \
+    pdo_sqlite \
     mbstring \
     zip \
     exif \
@@ -38,11 +39,15 @@ RUN npm install
 
 COPY . .
 
+RUN touch database/database.sqlite
+
 RUN npm run build
 
 RUN php artisan config:clear
 RUN php artisan route:clear
 RUN php artisan view:clear
+
+RUN php artisan migrate --force
 
 RUN mkdir -p storage/framework/cache \
     storage/framework/sessions \
@@ -51,6 +56,7 @@ RUN mkdir -p storage/framework/cache \
     bootstrap/cache
 
 RUN chmod -R 775 storage bootstrap/cache
+RUN chmod 664 database/database.sqlite
 
 EXPOSE 10000
 
