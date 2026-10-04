@@ -17,7 +17,7 @@ export default defineConfig({
     preview: {
         host: "0.0.0.0",
         allowedHosts: [
-            "weather-watch-rfda.onrender.com",
+            "weather-watch-y12l.onrender.com",
         ],
     },
 });
