@@ -4,12 +4,12 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
+    nodejs \
+    npm \
     libzip-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    nodejs \
-    npm \
     && docker-php-ext-install \
     pdo_mysql \
     mbstring \
