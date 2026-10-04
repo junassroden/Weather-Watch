@@ -1,404 +1,100 @@
-import {
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
+import { CircleMarker, MapContainer, TileLayer, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { Crosshair, Layers3, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import AppHeader from "../components/AppHeader";
+import useWeather from "../hooks/useWeather";
+import { getRadarFrames } from "../services/api";
 
-import {
-    Database,
-    Gauge,
-    CloudLightning,
-    Droplet,
-    Wind,
-    Radar,
-    Satellite,
-} from "lucide-react";
-
-import Header from "../components/Header";
-import LiveWeatherMap from "../components/LiveWeatherMap";
-
-import {
-    getCurrentWeather,
-    getForecast,
-    getRisk,
-    reverseLocation,
-} from "../services/api";
-
-function weatherDescription(code) {
-    if (code >= 95) {
-        return "Thunderstorm activity";
-    }
-
-    if (code >= 80) {
-        return "Rain showers";
-    }
-
-    if (code >= 51) {
-        return "Rain in the forecast";
-    }
-
-    if (code >= 1) {
-        return "Cloud development";
-    }
-
-    return "Clear conditions";
-}
-
-function getLocationLabel(location) {
-    return (
-        location?.locality ||
-        location?.city ||
-        location?.display_name ||
-        "Current location"
-    );
-}
-
-function getStormWatch(forecast) {
-    const daily = forecast?.daily || {};
-    const codes = daily.weather_code || [];
-    const rain = daily.precipitation_probability_max || [];
-    const gusts = daily.wind_gusts_10m_max || [];
-    const stormIndex = codes.findIndex((code) => code >= 95);
-    const heavyRainIndex = rain.findIndex((chance) => chance >= 70);
-    const strongestGust = Math.max(...gusts, 0);
-
-    if (stormIndex >= 0) {
-        return {
-            level: "STORM SIGNAL",
-            detail: `Thunderstorm conditions possible on ${daily.time?.[stormIndex] || "the forecast period"}.`,
-            tone: "severe",
-        };
-    }
-
-    if (heavyRainIndex >= 0 || strongestGust >= 45) {
-        return {
-            level: "ACTIVE WEATHER",
-            detail: `Rain probability reaches ${Math.max(...rain, 0)}% with gusts up to ${strongestGust} km/h.`,
-            tone: "watch",
-        };
-    }
-
-    return {
-        level: "NO STORM SIGNAL",
-        detail: "No thunderstorm codes or strong-wind event detected in the available outlook.",
-        tone: "clear",
-    };
+function Recenter({ coords }) {
+    const map = useMap();
+    useEffect(() => {
+        if (coords?.latitude != null) map.flyTo([coords.latitude, coords.longitude], Math.max(map.getZoom(), 7), { duration: 1.2 });
+    }, [coords?.latitude, coords?.longitude, map]);
+    return null;
 }
 
 export default function SatelliteRadar() {
-    const [radar, setRadar] =
-        useState(null);
-
-    const [coordinates, setCoordinates] =
-        useState(null);
-
-    const [loading, setLoading] =
-        useState(true);
-
-    const [error, setError] =
-        useState("");
-
-    const [weather, setWeather] =
-        useState(null);
-
-    const [forecast, setForecast] =
-        useState(null);
-
-    const [risk, setRisk] =
-        useState(null);
-
-    const [locationName, setLocationName] =
-        useState("Current location");
-
-    const locationRequestRef = useRef(0);
-
-    const handleRadarLoaded = useCallback((data) => {
-        setRadar(data);
-    }, []);
-
-    const handleRadarError = useCallback(() => {
-        // LiveWeatherMap already renders its own radar-specific error
-        // and retry UI inside the map card. Nothing further is needed
-        // here — and critically, this must NOT touch the page-level
-        // `error`/`loading` state below: those track this page's own
-        // weather/forecast/risk fetch, which is a completely separate
-        // network request from the map's radar-frame fetch.
-    }, []);
-
-    const handleLocationSelect = async (result) => {
-        const requestId = ++locationRequestRef.current;
-        const latitude = Number(result.latitude);
-        const longitude = Number(result.longitude);
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
-            || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-            setError("That search result does not include a valid map location.");
-            return;
-        }
-        setCoordinates({ latitude, longitude });
-        setLocationName(result.name);
-        setLoading(true);
-        setError("");
-
-        const results = await Promise.allSettled([
-            getCurrentWeather(latitude, longitude),
-            getForecast(latitude, longitude),
-            getRisk(latitude, longitude),
-        ]);
-        if (requestId !== locationRequestRef.current) return;
-
-        const [weatherResult, forecastResult, riskResult] = results;
-        setWeather(weatherResult.status === "fulfilled" ? weatherResult.value : null);
-        setForecast(forecastResult.status === "fulfilled" ? forecastResult.value : null);
-        setRisk(riskResult.status === "fulfilled" ? riskResult.value : null);
-        setLoading(false);
-    };
+    const state = useWeather();
+    const { coords, locationName, selectLocation, useCurrentLocation } = state;
+    const [radar, setRadar] = useState(null);
+    const [frame, setFrame] = useState(0);
+    const [playing, setPlaying] = useState(false);
+    const [speed, setSpeed] = useState(900);
+    const [showRadar, setShowRadar] = useState(true);
 
     useEffect(() => {
-        const requestId = ++locationRequestRef.current;
-        const controller = new AbortController();
-        let cancelled = false;
+        let active = true;
 
-        if (!navigator.geolocation) {
-            setError("Location access is unavailable.");
-            setLoading(false);
-            return () => controller.abort();
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                if (cancelled || requestId !== locationRequestRef.current) return;
-
-                const { latitude, longitude } = position.coords;
-
-                setCoordinates({
-                    latitude,
-                    longitude,
-                });
-
-                try {
-                    const results = await Promise.allSettled([
-                        getCurrentWeather(latitude, longitude, {
-                            signal: controller.signal,
-                        }),
-                        getForecast(latitude, longitude, {
-                            signal: controller.signal,
-                        }),
-                        getRisk(latitude, longitude, {
-                            signal: controller.signal,
-                        }),
-                        reverseLocation(latitude, longitude, {
-                            signal: controller.signal,
-                        }),
-                    ]);
-
-                    if (cancelled || requestId !== locationRequestRef.current) return;
-
-                    const [weatherResult, forecastResult, riskResult, locationResult] = results;
-
-                    if (weatherResult.status === "fulfilled") {
-                        setWeather(weatherResult.value);
-                    }
-
-                    if (forecastResult.status === "fulfilled") {
-                        setForecast(forecastResult.value);
-                    }
-
-                    if (riskResult.status === "fulfilled") {
-                        setRisk(riskResult.value);
-                    }
-
-                    if (locationResult.status === "fulfilled") {
-                        const location = locationResult.value;
-
-                        setLocationName(
-                            getLocationLabel(location)
-                        );
-                    }
-                } finally {
-                    if (!cancelled && requestId === locationRequestRef.current) {
-                        setLoading(false);
-                    }
-                }
-            },
-            () => {
-                if (cancelled || requestId !== locationRequestRef.current) return;
-                setError("Allow location access to view local satellite telemetry.");
-                setLoading(false);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-        );
+        getRadarFrames()
+            .then((data) => {
+                if (!active) return;
+                setRadar(data);
+                setFrame(Math.max(0, (data.frames?.length || 1) - 1));
+            })
+            .catch(() => {
+                if (active) setRadar(null);
+            });
 
         return () => {
-            cancelled = true;
-            controller.abort();
+            active = false;
         };
     }, []);
 
-    const stormWatch = getStormWatch(forecast);
-    const pressure = weather?.pressure;
-    const nextDay = forecast?.daily?.time?.[1];
-    const nextDayCode = forecast?.daily?.weather_code?.[1];
+    useEffect(() => {
+        if (!playing || !radar?.frames?.length) return;
+        const timer = setInterval(() => setFrame((value) => (value + 1) % radar.frames.length), speed);
+        return () => clearInterval(timer);
+    }, [playing, radar, speed]);
+
+    const activeFrame = radar?.frames?.[frame];
+    const timestamp = useMemo(() => activeFrame?.time ? new Date(activeFrame.time * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "--", [activeFrame]);
+    const hasRadarFrames = (radar?.frames?.length ?? 0) > 0;
 
     return (
-        <div className="weather-app">
+        <div className="ww-app-shell ww-radar-shell">
+            <AppHeader onLocationSelect={selectLocation} onUseLocation={useCurrentLocation} />
+            <main className="ww-radar-page">
+                <div className="ww-radar-map-wrap">
+                    <MapContainer center={[coords?.latitude ?? 13.41, coords?.longitude ?? 121.18]} zoom={7} minZoom={3} maxZoom={12} className="ww-radar-map" zoomControl={false}>
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
+                        {showRadar && activeFrame?.tile_url && <TileLayer key={activeFrame.tile_url} url={activeFrame.tile_url} opacity={0.72} maxNativeZoom={7} zIndex={450} />}
+                        <CircleMarker center={[coords?.latitude ?? 13.41, coords?.longitude ?? 121.18]} radius={6} pathOptions={{ color: "#83CFFF", fillColor: "#2389D7", fillOpacity: 1, weight: 2 }} />
+                        <Recenter coords={coords} />
+                    </MapContainer>
+                    <div className="ww-radar-depth" aria-hidden="true" />
 
-            <Header onLocationSelect={handleLocationSelect} />
-
-            <main className="page-content">
-
-                <div className="container">
-
-                    <div className="page-header">
-                        <span className="eyebrow">SATELLITE & RADAR</span>
-                        <h1>Satellite Weather Intelligence</h1>
-                        <p>
-                            Read precipitation movement, pressure conditions, and
-                            approaching storm signals around your location.
-                        </p>
+                    <div className="ww-radar-title">
+                        <span className="ww-eyebrow">LIVE PRECIPITATION RADAR</span>
+                        <h1>{locationName}</h1>
+                        <p>Atmospheric precipitation layers rendered over the current region.</p>
                     </div>
 
-                    <div className="satellite-status-strip">
-                        <div className="satellite-status-item">
-                            <span>Observing</span>
-                            <strong>{locationName}</strong>
-                        </div>
-                        <div className="satellite-status-divider" aria-hidden="true" />
-                        <div className="satellite-status-item">
-                            <span>Coordinates</span>
-                            <strong>
-                                {coordinates
-                                    ? `${coordinates.latitude.toFixed(4)}, ${coordinates.longitude.toFixed(4)}`
-                                    : "Waiting for device location"}
-                            </strong>
-                        </div>
-                        <div className="satellite-status-divider" aria-hidden="true" />
-                        <div className={`satellite-status-item satellite-status-${stormWatch.tone}`}>
-                            <span>Storm watch</span>
-                            <strong>{stormWatch.level}</strong>
-                        </div>
+                    <div className="ww-radar-controls-floating">
+                        <button onClick={useCurrentLocation}><Crosshair size={17} /> Center</button>
+                        <button className={showRadar ? "is-active" : ""} onClick={() => setShowRadar((v) => !v)} disabled={!hasRadarFrames}><Layers3 size={17} /> Precipitation</button>
                     </div>
 
-                    <div className="satellite-workspace">
-                        <section className="satellite-main-column">
-                            <LiveWeatherMap
-                                latitude={coordinates?.latitude}
-                                longitude={coordinates?.longitude}
-                                locationName={locationName}
-                                requestLocation={false}
-                                onRadarLoaded={handleRadarLoaded}
-                                onRadarError={handleRadarError}
-                            />
+                    {!hasRadarFrames && <div className="ww-inline-alert" role="alert">RainViewer radar data is temporarily unavailable. Please try again shortly.</div>}
 
-                            {radar && (
-                                <div className="radar-information">
-                                    <div className="radar-info-line">
-                                        <Radar size={19} strokeWidth={1} />
-                                        <span>PROVIDER</span>
-                                        <strong>{radar.provider}</strong>
-                                    </div>
-
-                                    <div className="radar-info-line">
-                                        <Database size={19} strokeWidth={1} />
-                                        <span>AVAILABLE FRAMES</span>
-                                        <strong>{radar.frames?.length || 0}</strong>
-                                    </div>
-
-                                    <div className="radar-info-line">
-                                        <Satellite size={19} strokeWidth={1} />
-                                        <span>DATA TYPE</span>
-                                        <strong>Past Radar</strong>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="data-source-note">
-                                Radar data is provided by RainViewer. The satellite-style map background is provided separately by Esri World Imagery.
-                            </div>
-                        </section>
-
-                        <aside className="satellite-side-column">
-                            <section className="satellite-intelligence glass-panel">
-                                <div className="satellite-section-heading">
-                                    <span className="eyebrow">FIELD INTELLIGENCE</span>
-                                    <h2>Conditions around {locationName}</h2>
-                                </div>
-
-                                <div className={`storm-watch storm-watch-${stormWatch.tone}`}>
-                                    <div className="satellite-panel-heading">
-                                        <CloudLightning size={19} strokeWidth={1} />
-                                        <span>STORM WATCH</span>
-                                    </div>
-                                    <strong>{stormWatch.level}</strong>
-                                    <p>{stormWatch.detail}</p>
-                                    <small>Based on the seven-day Open-Meteo outlook</small>
-                                </div>
-
-                                <div className="satellite-reading-list">
-                                    <div className="satellite-reading-row">
-                                        <div className="satellite-reading-label">
-                                            <Gauge size={17} strokeWidth={1} />
-                                            <span>PRESSURE FIELD</span>
-                                        </div>
-                                        <div className="satellite-reading-value">
-                                            <strong>{pressure ?? "--"}</strong>
-                                            <span>hPa</span>
-                                        </div>
-                                        <p>
-                                            {pressure >= 1020
-                                                ? "Higher pressure, generally more stable air."
-                                                : pressure <= 1000
-                                                    ? "Lower pressure, monitor for unsettled weather."
-                                                    : "Mid-range pressure with changing conditions possible."}
-                                        </p>
-                                    </div>
-
-                                    <div className="satellite-reading-row">
-                                        <div className="satellite-reading-label">
-                                            <Droplet size={17} strokeWidth={1} />
-                                            <span>PRECIPITATION OUTLOOK</span>
-                                        </div>
-                                        <div className="satellite-reading-value">
-                                            <strong>{Math.max(...(forecast?.daily?.precipitation_probability_max || []), 0)}</strong>
-                                            <span>% peak chance</span>
-                                        </div>
-                                        <p>{weatherDescription(nextDayCode ?? weather?.weather_code)} · {nextDay || "Next available forecast"}</p>
-                                    </div>
-
-                                    <div className="satellite-reading-row">
-                                        <div className="satellite-reading-label">
-                                            <Wind size={17} strokeWidth={1} />
-                                            <span>HAZARD INDEX</span>
-                                        </div>
-                                        <div className="satellite-reading-value">
-                                            <strong>{risk?.level || "--"}</strong>
-                                            <span>{risk ? `score ${risk.score}` : "pending"}</span>
-                                        </div>
-                                        <p>{risk?.reasons?.[0] || "Calculating local weather risk."}</p>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <div className="satellite-status-region" aria-live="polite">
-                                {loading && (
-                                    <div className="page-loading">
-                                        Loading local weather telemetry...
-                                    </div>
-                                )}
-
-                                {error && (
-                                    <div className="error-panel">
-                                        {error}
-                                    </div>
-                                )}
-                            </div>
-                        </aside>
+                    <div className="ww-radar-legend">
+                        <span>LIGHT</span><i /><i /><i /><i /><i /><span>HEAVY</span>
                     </div>
 
+                    <div className="ww-radar-timeline">
+                        <div className="ww-playback-controls">
+                            <button onClick={() => setFrame((v) => Math.max(0, v - 1))} aria-label="Previous radar frame"><SkipBack size={18} /></button>
+                            <button className="ww-play-button" onClick={() => setPlaying((v) => !v)} aria-label={playing ? "Pause radar" : "Play radar"}>{playing ? <Pause size={19} /> : <Play size={19} />}</button>
+                            <button onClick={() => setFrame((v) => Math.min((radar?.frames?.length || 1) - 1, v + 1))} aria-label="Next radar frame"><SkipForward size={18} /></button>
+                        </div>
+                        <div className="ww-timeline-track">
+                            <div className="ww-timeline-labels"><span>PAST</span><strong>{timestamp}</strong><span>NOW</span></div>
+                            <input type="range" min="0" max={Math.max(0, (radar?.frames?.length || 1) - 1)} value={frame} onChange={(e) => setFrame(Number(e.target.value))} aria-label="Radar timeline" />
+                        </div>
+                        <button className="ww-speed-button" onClick={() => setSpeed((v) => v === 900 ? 500 : v === 500 ? 1300 : 900)}>{speed === 500 ? "2×" : speed === 900 ? "1×" : "0.5×"}</button>
+                    </div>
                 </div>
-
             </main>
-
         </div>
     );
 }

@@ -12,7 +12,7 @@
 
     <meta
         name="theme-color"
-        content="#050a14"
+        content="#071525"
     >
 
     <title>WeatherWatch</title>

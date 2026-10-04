@@ -1,36 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import {
-    BrowserRouter,
-    useLocation,
-    Routes,
-    Route,
-} from "react-router-dom";
-
-import {
-    useLayoutEffect,
-} from "react";
-
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import "../css/app.css";
 import Dashboard from "./pages/Dashboard";
 import Forecast from "./pages/Forecast";
 import SatelliteRadar from "./pages/SatelliteRadar";
-import WeatherHistory from "./pages/WeatherHistory";
 import AlertsSafety from "./pages/AlertsSafety";
-
-import "./app.css";
-import "./weather-log.css";
+import Locations from "./pages/Locations";
 
 function ScrollToTop() {
     const { pathname } = useLocation();
-
-    useLayoutEffect(() => {
-        window.scrollTo({
-            top: 0,
-            left: 0,
-            behavior: "auto",
-        });
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }, [pathname]);
-
     return null;
 }
 
@@ -38,51 +20,19 @@ function App() {
     return (
         <BrowserRouter>
             <ScrollToTop />
-
             <Routes>
-                <Route
-                    path="/"
-                    element={<Dashboard />}
-                />
-
-                <Route
-                    path="/dashboard"
-                    element={<Dashboard />}
-                />
-
-                <Route
-                    path="/current-weather"
-                    element={<Dashboard />}
-                />
-
-                <Route
-                    path="/forecast"
-                    element={<Forecast />}
-                />
-
-                <Route
-                    path="/satellite-radar"
-                    element={<SatelliteRadar />}
-                />
-
-                <Route
-                    path="/weather-history"
-                    element={<WeatherHistory />}
-                />
-
-                <Route
-                    path="/alerts"
-                    element={<AlertsSafety />}
-                />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/current-weather" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/forecast" element={<Forecast />} />
+                <Route path="/satellite-radar" element={<SatelliteRadar />} />
+                <Route path="/radar" element={<Navigate to="/satellite-radar" replace />} />
+                <Route path="/alerts" element={<AlertsSafety />} />
+                <Route path="/locations" element={<Locations />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </BrowserRouter>
     );
 }
 
-ReactDOM.createRoot(
-    document.getElementById("app")
-).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-);
+ReactDOM.createRoot(document.getElementById("app")).render(<React.StrictMode><App /></React.StrictMode>);

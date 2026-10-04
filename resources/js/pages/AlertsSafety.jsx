@@ -1,282 +1,46 @@
-import {
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import AppHeader from "../components/AppHeader";
+import useWeather from "../hooks/useWeather";
+import { AlertTriangle, CheckCircle2, Clock3, MapPin, ShieldCheck } from "lucide-react";
 
-import {
-    TriangleAlert,
-    CircleCheck,
-    Phone,
-    ShieldAlert,
-} from "lucide-react";
-
-import Header from "../components/Header";
-import RiskCard from "../components/RiskCard";
-
-import {
-    getAlerts,
-    getRisk,
-    reverseLocation,
-} from "../services/api";
+function severityFromRisk(level = "LOW") {
+    return { LOW: "advisory", MODERATE: "watch", HIGH: "warning", SEVERE: "severe" }[level] || "advisory";
+}
 
 export default function AlertsSafety() {
-    const [alerts, setAlerts] =
-        useState(null);
-
-    const [risk, setRisk] =
-        useState(null);
-
-    const [loading, setLoading] =
-        useState(true);
-
-    const [error, setError] =
-        useState("");
-
-    const [locationName, setLocationName] =
-        useState("Current location");
-
-    const locationRequestRef = useRef(0);
-
-    const handleLocationSelect = async (result) => {
-        const requestId = ++locationRequestRef.current;
-        const latitude = Number(result.latitude);
-        const longitude = Number(result.longitude);
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
-            || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-            setError("That search result does not include a valid location.");
-            return;
-        }
-        setLocationName(result.name);
-        setLoading(true);
-        setError("");
-
-        const results = await Promise.allSettled([
-            getAlerts(latitude, longitude),
-            getRisk(latitude, longitude),
-        ]);
-        if (requestId !== locationRequestRef.current) return;
-
-        const [alertResult, riskResult] = results;
-        setAlerts(alertResult.status === "fulfilled" ? alertResult.value : null);
-        setRisk(riskResult.status === "fulfilled" ? riskResult.value : null);
-        if (alertResult.status === "rejected" && riskResult.status === "rejected") {
-            setError("Unable to retrieve safety information for this location.");
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        const requestId = ++locationRequestRef.current;
-        if (!navigator.geolocation) {
-            setError(
-                "Geolocation is not supported."
-            );
-
-            setLoading(false);
-
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                if (requestId !== locationRequestRef.current) return;
-                const latitude =
-                    position.coords.latitude;
-
-                const longitude =
-                    position.coords.longitude;
-
-                try {
-                    const [alertData, riskData, locationData] = await Promise.all([
-                        getAlerts(
-                            latitude,
-                            longitude
-                        ),
-                        getRisk(
-                            latitude,
-                            longitude
-                        ),
-                        reverseLocation(latitude, longitude),
-                    ]);
-
-                    if (requestId !== locationRequestRef.current) return;
-                    setAlerts(
-                        alertData
-                    );
-                    setRisk(
-                        riskData
-                    );
-                    setLocationName(locationData.city || locationData.locality || "Current location");
-                } catch {
-                    setError(
-                        "Unable to retrieve safety information."
-                    );
-                } finally {
-                    if (requestId === locationRequestRef.current) {
-                        setLoading(false);
-                    }
-                }
-            },
-            () => {
-                if (requestId !== locationRequestRef.current) return;
-                setError(
-                    "Location permission was denied."
-                );
-
-                setLoading(false);
-            }
-        );
-    }, []);
+    const state = useWeather();
+    const { locationName, locationDetail, risk, alerts, loading, selectLocation, useCurrentLocation } = state;
+    const official = alerts?.official_alerts || [];
+    const level = risk?.level || "LOW";
 
     return (
-        <div className="weather-app">
+        <div className="ww-app-shell">
+            <AppHeader onLocationSelect={selectLocation} onUseLocation={useCurrentLocation} />
+            <main className="ww-main ww-alerts-page">
+                <section className="ww-alerts-hero">
+                    <div><span className="ww-eyebrow">ALERTS / SAFETY</span><h1>Know the risk before it reaches you.</h1><p>Local risk signals from forecast conditions plus any connected official warning sources for {locationName}.</p></div>
+                    <div className={`ww-risk-orb risk-${severityFromRisk(level)}`}><ShieldCheck size={42} strokeWidth={1.2} /><span>{loading ? "CHECKING" : level}</span><small>current risk</small></div>
+                </section>
 
-            <Header onLocationSelect={handleLocationSelect} />
-
-            <main className="page-content">
-
-                <div className="container">
-
-                    <div className="page-header">
-
-                        <span className="eyebrow">
-                            ALERTS & SAFETY
-                        </span>
-
-                        <h1>
-                            Weather Alerts & Safety
-                        </h1>
-
-                        <p>
-                            Monitor weather risks and
-                            available official alerts for {locationName}.
-                        </p>
-
-                    </div>
-
-                    {loading && (
-                        <div className="page-loading">
-                            Checking local weather safety...
-                        </div>
+                <section className="ww-alert-stream">
+                    <div className="ww-alert-stream-heading"><span className="ww-eyebrow">CURRENT STATUS</span><h2>{official.length ? `${official.length} official warning${official.length > 1 ? "s" : ""}` : "No connected official warning"}</h2></div>
+                    {official.length ? official.map((alert, index) => (
+                        <article className="ww-alert-record is-warning" key={alert.id || index}>
+                            <AlertTriangle size={24} strokeWidth={1.4} />
+                            <div><span>OFFICIAL WARNING</span><h3>{alert.event || alert.title || "Weather warning"}</h3><p>{alert.description || alert.message || "Review official guidance for your area."}</p><div className="ww-alert-meta"><span><MapPin size={14} /> {locationName}</span><span><Clock3 size={14} /> {alert.start || "Active now"}</span></div></div>
+                        </article>
+                    )) : (
+                        <article className="ww-alert-record is-clear">
+                            <CheckCircle2 size={26} strokeWidth={1.4} />
+                            <div><span>OFFICIAL SOURCE STATUS</span><h3>No official warnings returned</h3><p>{alerts?.message || "The current alert connection has not returned an active official warning for this location."}</p><div className="ww-alert-meta"><span><MapPin size={14} /> {locationName}{locationDetail ? ` · ${locationDetail}` : ""}</span></div></div>
+                        </article>
                     )}
 
-                    {error && (
-                        <div className="error-panel">
-                            <TriangleAlert
-                                size={19}
-                                strokeWidth={1}
-                            />
-
-                            {error}
-                        </div>
-                    )}
-
-                    {!loading && (
-                        <div className="safety-layout">
-
-                            <section className="safety-section safety-primary">
-
-                                <div className="safety-block">
-                                    <span className="eyebrow">
-                                        RISK ASSESSMENT
-                                    </span>
-
-                                    <RiskCard
-                                        risk={risk}
-                                    />
-                                </div>
-
-                                <div className="safety-block">
-                                    <span className="eyebrow">
-                                        OFFICIAL ALERTS
-                                    </span>
-
-                                    <div className="official-alert-panel">
-
-                                        <div className="official-alert-icon">
-
-                                            {alerts?.official_alerts
-                                                ?.length ? (
-                                                <ShieldAlert
-                                                    size={28}
-                                                    strokeWidth={1}
-                                                />
-                                            ) : (
-                                                <CircleCheck
-                                                    size={28}
-                                                    strokeWidth={1}
-                                                />
-                                            )}
-
-                                        </div>
-
-                                        <div>
-
-                                            <h3>
-                                                {alerts == null
-                                                    ? "Official warning data unavailable"
-                                                    : alerts.official_alerts
-                                                        ?.length
-                                                        ? "Official warnings detected"
-                                                        : "No official warnings available"}
-                                            </h3>
-
-                                            <p>
-                                                {alerts?.message ||
-                                                    (alerts == null
-                                                        ? "The connected alert source has not returned data yet."
-                                                        : "There are currently no connected official weather warnings.")}
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-                                </div>
-
-                            </section>
-
-                            <section className="safety-section">
-                                <div className="emergency-panel">
-
-                                    <div>
-
-                                        <span>
-                                            EMERGENCY
-                                        </span>
-
-                                        <h2>
-                                            Need immediate help?
-                                        </h2>
-
-                                        <p>
-                                            For emergencies
-                                            in the Philippines,
-                                            call the national
-                                            emergency hotline.
-                                        </p>
-
-                                    </div>
-
-                                    <a
-                                        href="tel:911"
-                                        className="emergency-button"
-                                    >
-                                        <Phone size={20} strokeWidth={1} />
-
-                                        CALL 911
-                                    </a>
-
-                                </div>
-                            </section>
-
-                        </div>
-                    )}
-
-                </div>
-
+                    <article className={`ww-alert-record risk-record risk-${severityFromRisk(level)}`}>
+                        <AlertTriangle size={24} strokeWidth={1.4} />
+                        <div><span>WEATHER WATCH RISK MODEL</span><h3>{level} local weather risk</h3><p>{risk?.reasons?.length ? risk.reasons.join(" ") : "No significant risk indicators are present in the available weather data."}</p><div className="ww-alert-meta"><span>Risk score {risk?.score ?? 0}</span><span>Forecast-derived, not an official warning</span></div></div>
+                    </article>
+                </section>
             </main>
-
         </div>
     );
 }

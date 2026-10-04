@@ -56,3 +56,43 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## Weather Watch — local setup
+
+This archive contains the application source and lockfiles. Dependency folders (`vendor` and
+`node_modules`), local environment secrets, generated caches, and the previous compiled frontend
+bundle are intentionally not included. Install dependencies for your machine before running it.
+
+### Requirements
+
+- PHP 8.2 or newer with the Laravel-required extensions
+- Composer
+- Node.js 20.19+ or 22.12+ and npm
+- A database configured in `.env` (SQLite is the default in `.env.example`)
+
+### Install and run
+
+1. Copy `.env.example` to `.env`.
+2. Install PHP dependencies: `composer install`
+3. Install frontend dependencies: `npm install`
+4. Generate the Laravel application key: `php artisan key:generate`
+5. Prepare the configured database: `php artisan migrate`
+6. Build frontend assets: `npm run build`
+7. Start Laravel: `php artisan serve`
+
+For active frontend development, run `npm run dev` in a second terminal while the Laravel server
+is running. Open the URL printed by `php artisan serve`.
+
+### Existing weather integrations
+
+The Laravel weather controllers, services, routes, React API client, location lookup, reverse
+geocoding, device geolocation, forecast/risk/alert data, RainViewer radar frames, and satellite
+imagery integration are retained. The dashboard presentation has been refreshed without changing
+the API endpoint paths or response handling.
+
+### Notes
+
+- Do not commit your local `.env` file. It is deliberately excluded from this archive.
+- If you use a database other than SQLite, update the `DB_*` values in `.env` before migrating.
+- Radar and map tiles require an internet connection.

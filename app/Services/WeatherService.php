@@ -4,6 +4,8 @@ namespace App\Services;
 
 class WeatherService
 {
+    private const TRACE_PRECIPITATION_THRESHOLD = 0.1;
+
     public function __construct(
         private OpenMeteoService $openMeteo
     ) {}
@@ -19,6 +21,46 @@ class WeatherService
 
         $current =
             $data['current'] ?? [];
+
+        $modelWeatherCode = $current['weather_code'] ?? null;
+        $weatherCode = $modelWeatherCode;
+        $conditionNote = null;
+        $precipitationReadings = array_filter(
+            [
+                $current['precipitation'] ?? null,
+                $current['rain'] ?? null,
+                $current['showers'] ?? null,
+            ],
+            fn ($reading) => is_numeric($reading)
+        );
+
+        $maximumPrecipitation = $precipitationReadings === []
+            ? null
+            : max(array_map(
+                fn ($reading) => (float) $reading,
+                $precipitationReadings
+            ));
+
+        if (
+            $this->isPrecipitationCode($modelWeatherCode)
+            && $maximumPrecipitation !== null
+            && $maximumPrecipitation <= self::TRACE_PRECIPITATION_THRESHOLD
+            && is_numeric($current['cloud_cover'] ?? null)
+        ) {
+            $cloudCover = (float) $current['cloud_cover'];
+            $weatherCode = match (true) {
+                $cloudCover <= 10 => 0,
+                $cloudCover <= 30 => 1,
+                $cloudCover <= 75 => 2,
+                default => 3,
+            };
+            $conditionNote = $maximumPrecipitation > 0
+                ? sprintf(
+                    'The model indicates only trace precipitation (%.2f mm); local conditions may differ.',
+                    $maximumPrecipitation
+                )
+                : 'No precipitation is indicated at the latest update; condition is based on cloud cover.';
+        }
 
         return [
             'location' => [
@@ -44,7 +86,11 @@ class WeatherService
 
             'precipitation_probability' => $current['precipitation_probability'] ?? null,
 
-            'weather_code' => $current['weather_code'] ?? null,
+            'weather_code' => $weatherCode,
+
+            'weather_code_model' => $modelWeatherCode,
+
+            'condition_note' => $conditionNote,
 
             'cloud_cover' => $current['cloud_cover'] ?? null,
 
@@ -66,5 +112,19 @@ class WeatherService
 
             'units' => $data['current_units'] ?? [],
         ];
+    }
+
+    private function isPrecipitationCode(mixed $weatherCode): bool
+    {
+        if (! is_numeric($weatherCode)) {
+            return false;
+        }
+
+        $weatherCode = (int) $weatherCode;
+
+        return ($weatherCode >= 51 && $weatherCode <= 67)
+            || ($weatherCode >= 71 && $weatherCode <= 77)
+            || ($weatherCode >= 80 && $weatherCode <= 82)
+            || ($weatherCode >= 95 && $weatherCode <= 99);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class SatelliteService
@@ -13,11 +14,25 @@ class SatelliteService
 
     public function getRadarFrames(): array
     {
-        return Cache::remember(
-            'weatherwatch.radar-frames',
-            120,
-            fn (): array => $this->fetchRadarFrames()
-        );
+        $cacheKey = 'weatherwatch.radar-frames';
+
+        $cached = Cache::get($cacheKey);
+        if (is_array($cached) && ! empty($cached)) {
+            return $cached;
+        }
+
+        try {
+            $data = $this->fetchRadarFrames();
+            Cache::put($cacheKey, $data, 120);
+
+            return $data;
+        } catch (\Throwable $exception) {
+            Log::warning('RainViewer radar request failed.', [
+                'exception' => $exception,
+            ]);
+
+            return $this->fallbackRadarFrames();
+        }
     }
 
     private function fetchRadarFrames(): array
@@ -120,6 +135,22 @@ class SatelliteService
                     : 'Cloud imagery unavailable.',
             ],
 
+            'attribution' => 'Radar data by RainViewer',
+        ];
+    }
+
+    private function fallbackRadarFrames(): array
+    {
+        return [
+            'provider' => 'RainViewer',
+            'data_type' => 'Precipitation Radar',
+            'host' => null,
+            'frames' => [],
+            'cloud_imagery' => [
+                'available' => false,
+                'frames' => [],
+                'message' => 'Radar data is temporarily unavailable. Please try again shortly.',
+            ],
             'attribution' => 'Radar data by RainViewer',
         ];
     }
