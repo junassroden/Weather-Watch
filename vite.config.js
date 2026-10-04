@@ -10,14 +10,6 @@ export default defineConfig({
             ],
             refresh: true,
         }),
-
         react(),
     ],
-
-    preview: {
-        host: "0.0.0.0",
-        allowedHosts: [
-            "weather-watch-y12l.onrender.com",
-        ],
-    },
 });
