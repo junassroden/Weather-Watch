@@ -25,7 +25,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
+COPY . .
 
 RUN composer install \
     --no-dev \
@@ -33,11 +33,7 @@ RUN composer install \
     --prefer-dist \
     --optimize-autoloader
 
-COPY package.json package-lock.json ./
-
 RUN npm install
-
-COPY . .
 
 RUN touch database/database.sqlite
 
